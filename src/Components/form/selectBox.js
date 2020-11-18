@@ -21,6 +21,8 @@ export default function SelectBox(props) {
 
 	useEffect(() => {
 		if (response) {
+			// console.log(props.answers[response])
+			// setValue(props.answers[response])
 			setValue(response)
 		}
 	}, [response])
@@ -28,7 +30,7 @@ export default function SelectBox(props) {
 	const handleChange = (event) => {
 		setValue(event.target.value);
 		let id = props.answers.indexOf(event.target.value)
-		props.returnAnswer(id, index)
+		props.returnAnswer(event.target.value, index)
 	};
 
 	const handleClose = (event) => {

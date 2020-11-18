@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import FormLabel from '@material-ui/core/FormLabel';
 import FormControl from '@material-ui/core/FormControl';
 import FormGroup from '@material-ui/core/FormGroup';
@@ -9,7 +9,15 @@ import { Typography } from '@material-ui/core';
 
 export default function CheckboxesGroup(props) {
     const [state, setState] = React.useState({});
-    const {index, answers, required} = props
+    const [ready, setReady] = useState(false)
+    const {index, answers, required, response} = props
+
+    useEffect(() => {
+		if (response) {
+			setState(response)
+        }
+        setReady(true)
+    }, [response])
 
 
     const handleChange = (event) => {
@@ -18,6 +26,7 @@ export default function CheckboxesGroup(props) {
     };
 
     return (
+        ready ?
         <div>
             <Typography variant="h6" style={{marginBottom: 0, marginTop: 20}}>{props.title}</Typography>
             <FormControl component="fieldset">
@@ -26,12 +35,12 @@ export default function CheckboxesGroup(props) {
                     {answers.map((el, i) => (
                         <FormControlLabel
                             key={i}
-                            control={<Checkbox onChange={handleChange} name={el} />}
+                            control={<Checkbox checked={state[el]} onChange={handleChange} name={el} />}
                             label={el}
                         />
                     ))}
                 </FormGroup>
             </FormControl>
-        </div>
+        </div> : null
     );
 }
