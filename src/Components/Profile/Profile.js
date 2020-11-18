@@ -159,7 +159,7 @@ const Profile = () => {
 
     return (
         currentUser ?
-            <div>
+            <Grid style={{ padding: 30 }}>
                 {redirect && <Redirect to="/" />}
                 {forms}
                 <Grid container style={{ padding: 20 }} justify="center">
@@ -167,7 +167,7 @@ const Profile = () => {
                     {uploaded && <Button variant="outlined" style={{ borderWidth: 2, borderColor: "red", color: 'red', margin: 10 }} onClick={() => setRedirect(true)} >На главную</Button>}
                 </Grid>
 
-            </div>
+            </Grid>
             :
             <Grid container direction="column" style={{ padding: 20 }} justify="center">
                 <Typography align="center" variant="h3">авторизируйтесь</Typography>

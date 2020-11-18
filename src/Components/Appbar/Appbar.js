@@ -152,7 +152,7 @@ export default function PersistentDrawerLeft(props) {
                     [classes.appBarShift]: open,
                 })}
             >
-                <Toolbar>
+                <Toolbar style={{paddingLeft: 15, paddingRight: 15}}>
                     <IconButton
                         color="inherit"
                         aria-label="open drawer"
@@ -163,7 +163,8 @@ export default function PersistentDrawerLeft(props) {
                         <MenuIcon />
                     </IconButton>
                     <Grid container style={{ flexGrow: 1 }}>
-                        <img src="https://kloop.kg/wp-content/uploads/2017/01/kloop_transparent_site.png" alt="Kloop.kg - Новости Кыргызстана" style={{ width: 150, height: 'auto' }} />
+                        <img src="https://kloop.kg/wp-content/uploads/2019/10/kloop_transparent_site.png" alt="Kloop.kg - Новости Кыргызстана" style={{ width: 150, height: 'auto' }} />
+                        {/* <img src="https://kloop.kg/wp-content/uploads/2017/01/kloop_transparent_site.png" alt="Kloop.kg - Новости Кыргызстана" style={{ width: 150, height: 'auto' }} /> */}
                         {/* <Typography variant="h5" style={{ color: "black" }}>Journal</Typography> */}
                     </Grid>
                     {currentUser
