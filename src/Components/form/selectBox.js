@@ -17,7 +17,7 @@ export default function SelectBox(props) {
 	const [value, setValue] = React.useState('');
 	const [open, setOpen] = React.useState(false);
 
-	const {index, response, required} = props
+	const {index, response, required, locked } = props
 
 	useEffect(() => {
 		if (response) {
@@ -44,7 +44,7 @@ export default function SelectBox(props) {
 	return (
 		<div>
 			<Typography variant="h6" style={{marginBottom: 5, marginTop: 20}}>{props.title}</Typography>
-			<FormControl className={classes.formControl} disabled={props.locked ? true : false}>
+			<FormControl className={classes.formControl} disabled={locked}>
 				<InputLabel id="controlled-open-select-label">Выбрать</InputLabel>
 				<Select
 					labelId="controlled-open-select-label"

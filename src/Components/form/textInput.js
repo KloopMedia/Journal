@@ -18,7 +18,7 @@ function BasicTextFields(props) {
 	const classes = useStyles();
 	const [value, setValue] = React.useState('');
 
-	const {index, response, required} = props
+	const {index, response, required, locked} = props
 
 	useEffect(() => {
 		if (response) {
@@ -41,7 +41,7 @@ function BasicTextFields(props) {
 				value={value}
 				onChange={handleChange}
 				// required={required}
-				disabled={props.locked ? true : false}
+				disabled={locked}
 				/>
 		</div>
 	);

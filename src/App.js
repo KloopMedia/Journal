@@ -11,16 +11,14 @@ import { AuthContext } from "./util/Auth";
 
 import Grid from '@material-ui/core/Grid'
 
-import Profile from './Components/Profile/Profile'
 import Appbar from './Components/Appbar/Appbar'
+import Profile from './Components/Profile/Profile'
+import Tasks from './Components/Tasks/Tasks'
+import Task from './Components/Tasks/Task'
+
 
 function Home() {
   return <h2>Home</h2>;
-}
-
-
-function Users() {
-  return <h2>Users</h2>;
 }
 
 const App = () => {
@@ -31,13 +29,16 @@ const App = () => {
         <Grid container justify="center">
           <Appbar>
             <Switch>
-              <Route path="/profile">
+              <Route exact path="/profile">
                 <Profile />
               </Route>
-              <Route path="/users">
-                <Users />
+              <Route exact path="/tasks">
+                <Tasks />
               </Route>
-              <Route path="/">
+              <Route path="/tasks/:id">
+                <Task />
+              </Route>
+              <Route exact path="/">
                 <Home />
               </Route>
             </Switch>
