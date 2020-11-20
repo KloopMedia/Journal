@@ -5,6 +5,7 @@ import SelectBox from "../form/selectBox";
 import RadioButton from "../form/radiobutton";
 import TimePickers from "../form/timePickers";
 import Checkbox from "../form/checkbox"
+import Text from "../form/text"
 
 const Form = (props) => {
 
@@ -24,6 +25,9 @@ const Form = (props) => {
     }
     else if (question.type === 'checkbox') {
         return <Checkbox key={index} index={index} title={question.title} response={response} answers={question.answers} returnAnswer={returnAnswer} required={question.required} locked={locked} />
+    }
+    else if (question.type === 'text') {
+        return <Text key={index} title={question.title} />
     }
     else {
         return null

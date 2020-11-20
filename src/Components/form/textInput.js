@@ -33,15 +33,18 @@ function BasicTextFields(props) {
 
 	return (
 		<div>
-			<Typography variant="h6" style={{marginBottom: 0, marginTop: 20}}>{props.title}</Typography>
+			<Typography variant="h6" style={{marginBottom: 10, marginTop: 20}}>{props.title}</Typography>
 			<TextField 
-				className={classes.root}
 				id={"inputBox" + index}
 				label="Мой ответ"
 				value={value}
 				onChange={handleChange}
 				// required={required}
+				multiline
+				rows={5}
 				disabled={locked}
+				variant="outlined"
+				fullWidth
 				/>
 		</div>
 	);
