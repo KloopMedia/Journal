@@ -16,6 +16,8 @@ import Profile from './Components/Profile/Profile'
 import Tasks from './Components/Tasks/Tasks'
 import Task from './Components/Tasks/Task'
 
+import TasksObserver from './Components/Moderator/TasksObserver'
+
 
 function Home() {
   return <h2>Home</h2>;
@@ -37,6 +39,9 @@ const App = () => {
               </Route>
               <Route path="/tasks/:id">
                 <Task />
+              </Route>
+              <Route exact path="/tasksObserver">
+                <TasksObserver />
               </Route>
               <Route exact path="/">
                 <Home />

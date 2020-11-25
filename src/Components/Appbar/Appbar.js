@@ -239,6 +239,9 @@ export default function PersistentDrawerLeft(props) {
                         <li>
                             <Link to="/tasks">Задания</Link>
                         </li>
+                        <li>
+                            <Link to="/tasksObserver">Модератор</Link>
+                        </li>
                     </ul>
                 </nav>
             </Drawer>

@@ -26,7 +26,7 @@ const Profile = () => {
 			let q = []
 			let r = []
 			let f = []
-			let locked = false
+			let locked = true
 
 
 			console.log("Fired")

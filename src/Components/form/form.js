@@ -27,7 +27,7 @@ const Form = (props) => {
         return <Checkbox key={index} index={index} title={question.title} response={response} answers={question.answers} returnAnswer={returnAnswer} required={question.required} locked={locked} />
     }
     else if (question.type === 'text') {
-        return <Text key={index} title={question.title} />
+        return <Text key={index} title={question.title}/>
     }
     else {
         return null
