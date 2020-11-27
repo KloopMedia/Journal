@@ -4,11 +4,12 @@ import { AuthContext } from "../../util/Auth";
 
 import Form from "../form/form"
 
-import { Button, Grid, Typography } from '@material-ui/core';
+import { Button, Divider, Grid, Typography } from '@material-ui/core';
 import { Redirect, useParams } from 'react-router';
+import { Link } from "react-router-dom";
 
 
-const Profile = () => {
+const Tasks = () => {
 	const [questions, setQuestions] = useState([])
 	const [responses, setResponses] = useState([])
 	const [answers, setAnswers] = useState({})
@@ -17,19 +18,76 @@ const Profile = () => {
 	const [redirect, setRedirect] = useState(false)
 	const [userData, setUserData] = useState({})
 	const [lockButton, setLock] = useState(false)
+	const [caseTasks, setCaseTasks] = useState([])
 
 	const { currentUser } = useContext(AuthContext);
 	const { id } = useParams();
 
 	useEffect(() => {
-		const getData = async () => {
+		const getQuestions = async (taskID) => {
 			let q = []
+
+			await firebase.firestore().collection("tasks").doc(taskID).collection("questions").get()
+				.then((querySnapshot) => {
+					querySnapshot.forEach((doc) => {
+						// console.log(doc.id, " => ", doc.data());
+						q.push({ questionId: doc.id, data: doc.data() })
+					});
+				})
+				.catch((error) => {
+					console.log("Error getting documents: ", error);
+				});
+
+			return q
+		}
+
+
+		const getResponses = async (taskID) => {
 			let r = []
+
+			await firebase.firestore().collection("tasks").doc(taskID).collection("responses").get()
+				.then((querySnapshot) => {
+					querySnapshot.forEach((doc) => {
+						// console.log(doc.id, " => ", doc.data());
+						r.push({ responseId: doc.id, data: doc.data() })
+					});
+				})
+				.catch((error) => {
+					console.log("Error getting documents: ", error);
+				});
+
+			return r
+		}
+
+
+		const getSameCaseTasks = async () => {
+			let sameCaseTasks = []
+
+			await firebase.firestore().collection("tasks").doc(id).get().then(doc => {
+				return doc.data()
+			}).then(async data => {
+				await firebase.firestore().collection("tasks").where("case_id", "==", data.case_id).get().then(snap => {
+					snap.forEach(doc => {
+						if (doc.id !== id) {
+							console.log(doc.id, '=>', doc.data())
+							sameCaseTasks.push({ id: doc.id, ...doc.data() })
+						}
+					})
+				})
+			})
+			return sameCaseTasks
+		}
+
+		const getForms = async () => {
 			let f = []
 			let locked = true
 
+			setForms(null)
+
 
 			console.log("Fired")
+
+
 			await firebase.firestore().collection("tasks").doc(id).collection("user_editable").doc("user_editable").get().then(doc => {
 				if (doc.data().status === 'complete') {
 					locked = true
@@ -40,34 +98,42 @@ const Profile = () => {
 				}
 			})
 
-			await firebase.firestore().collection("tasks").doc(id).collection("questions").get()
-				.then((querySnapshot) => {
-					querySnapshot.forEach((doc) => {
-						// console.log(doc.id, " => ", doc.data());
-						q.push({ questionId: doc.id, data: doc.data() })
-					});
-				})
-				.then(() => {
-					setQuestions(q)
-				})
-				.catch((error) => {
-					console.log("Error getting documents: ", error);
-				});
+			let sq = []
+			let sr = []
 
-			await firebase.firestore().collection("tasks").doc(id).collection("responses").get()
-				.then((querySnapshot) => {
-					querySnapshot.forEach((doc) => {
-						// console.log(doc.id, " => ", doc.data());
-						r.push({ responseId: doc.id, data: doc.data() })
-					});
-				})
-				.then(() => {
-					setResponses(r)
-				})
-				.catch((error) => {
-					console.log("Error getting documents: ", error);
-				});
+			let sameCaseTasks = await getSameCaseTasks()
+			setCaseTasks(sameCaseTasks)
+			if (sameCaseTasks.length > 0) {
 
+				sq = await getQuestions(sameCaseTasks[0].id)
+				sr = await getResponses(sameCaseTasks[0].id)
+			}
+
+			let sf = sq.map((el, i) => {
+				let response = null
+				sr.forEach((res) => {
+					if (el.questionId === res.responseId) {
+						response = res.data.answer
+						returnAnswer(res.data.answer, i)
+						console.log(res.data)
+					}
+				})
+				return <Form key={el.questionId + '_' + i} question={el.data} index={i} response={response} returnAnswer={returnAnswer} locked={true} />
+			})
+
+			sf.push(<div key={"div_divider_stripped"} style={{ height: 25, margin: '20px 0', background: 'repeating-linear-gradient( 45deg, white, white 10px, grey 10px, grey 25px)' }}><br /></div>)
+
+
+			let q = await getQuestions(id)
+			let r = await getResponses(id)
+
+
+			setQuestions(q)
+			setResponses(r)
+
+
+			// let newQ = sq.concat(q)
+			// let newR = sr.concat(r)
 
 			f = q.map((el, i) => {
 				let response = null
@@ -78,14 +144,17 @@ const Profile = () => {
 						console.log(res.data)
 					}
 				})
-				return <Form key={i} question={el.data} index={i} response={response} returnAnswer={returnAnswer} locked={locked} />
+				return <Form key={el.questionId + '_' + i} question={el.data} index={i} response={response} returnAnswer={returnAnswer} locked={locked} />
 			})
-			setForms(f)
+
+			let newF = sf.concat(f)
+			setForms(newF)
 		}
 		if (currentUser) {
-			getData()
+
+			getForms()
 		}
-	}, [currentUser])
+	}, [currentUser, id, lockButton])
 
 
 	const returnAnswer = (answer, index) => {
@@ -105,7 +174,7 @@ const Profile = () => {
 		})
 
 		if (lock) {
-			await firebase.firestore().collection("tasks").doc(id).collection("user_editable").doc("user_editable").update({status: 'complete'})
+			await firebase.firestore().collection("tasks").doc(id).collection("user_editable").doc("user_editable").update({ status: 'complete' })
 			setLock(true)
 		}
 		setUploaded(true)
@@ -115,13 +184,15 @@ const Profile = () => {
 		currentUser ?
 			<Grid style={{ padding: 30 }}>
 				{redirect && <Redirect to="/tasks" />}
+				{/* Предыдущие задания{caseTasks.map((t, i) => <Button key={"case_button_"+i} component={ Link } to={"/tasks/" + t.id}>{t.title}</Button>)} */}
 				{forms}
 				<Grid container style={{ padding: 20 }} justify="center">
 					<Button variant="outlined" style={{ borderWidth: 2, borderColor: "grey", color: 'grey', margin: 5 }} onClick={() => setRedirect(true)}>Назад</Button>
-					{!lockButton && 
-					<div><Button variant="outlined" disabled={lockButton} style={{ borderWidth: 2, borderColor: "#003366", color: '#003366', margin: 5 }} onClick={() => saveToFirebase(false)}>Сохранить</Button>
-					<Button variant="outlined" disabled={lockButton} style={{ borderWidth: 2, borderColor: "red", color: 'red', margin: 5 }} onClick={() => saveToFirebase(true)}>Отправить</Button>
-					</div>}
+					{!lockButton &&
+						<div>
+							<Button key="button_save" variant="outlined" disabled={lockButton} style={{ borderWidth: 2, borderColor: "#003366", color: '#003366', margin: 5 }} onClick={() => saveToFirebase(false)}>Сохранить</Button>
+							<Button key="button_send" variant="outlined" disabled={lockButton} style={{ borderWidth: 2, borderColor: "red", color: 'red', margin: 5 }} onClick={() => saveToFirebase(true)}>Отправить</Button>
+						</div>}
 				</Grid>
 
 			</Grid>
@@ -138,4 +209,4 @@ const Profile = () => {
 
 }
 
-export default Profile
+export default Tasks

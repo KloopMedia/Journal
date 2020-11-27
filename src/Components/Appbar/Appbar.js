@@ -153,7 +153,7 @@ export default function PersistentDrawerLeft(props) {
                     [classes.appBarShift]: open,
                 })}
             >
-                <Toolbar style={{paddingLeft: 15, paddingRight: 15}}>
+                <Toolbar style={{ paddingLeft: 15, paddingRight: 15 }}>
                     <IconButton
                         color="inherit"
                         aria-label="open drawer"
@@ -171,7 +171,7 @@ export default function PersistentDrawerLeft(props) {
                     {currentUser
                         ?
                         <div>
-                        <Button style={{ borderColor: "black", color: 'black', marginLeft: 10, fontSize: 12 }} variant="outlined" size="small" onClick={() => firebase.auth().signOut()}>Выход</Button>
+                            <Button style={{ borderColor: "black", color: 'black', marginLeft: 10, fontSize: 12 }} variant="outlined" size="small" onClick={() => firebase.auth().signOut()}>Выход</Button>
                             {/* <IconButton
                                 aria-label="account of current user"
                                 aria-controls="menu-appbar"
@@ -238,6 +238,9 @@ export default function PersistentDrawerLeft(props) {
                         </li>
                         <li>
                             <Link to="/tasks">Задания</Link>
+                        </li>
+                        <li>
+                            <Link to="/request">Получить задание</Link>
                         </li>
                         <li>
                             <Link to="/tasksObserver">Модератор</Link>

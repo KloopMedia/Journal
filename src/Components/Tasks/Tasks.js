@@ -18,14 +18,6 @@ const Tasks = (props) => {
 	const [allTasks, setTasks] = useState(null)
 	const { currentUser } = useContext(AuthContext);
 
-	const requestTask = () => {
-		firebase.firestore().collection("requests").add({
-			taskType: "String",
-			status: "fulfilled | pending | reject",
-			user: currentUser.uid
-		})
-	}
-
 	useEffect(() => {
 		if (currentUser) {
 			let tasks = []

@@ -15,6 +15,7 @@ import Appbar from './Components/Appbar/Appbar'
 import Profile from './Components/Profile/Profile'
 import Tasks from './Components/Tasks/Tasks'
 import Task from './Components/Tasks/Task'
+import Cases from './Components/Cases/Cases';
 
 import TasksObserver from './Components/Moderator/TasksObserver'
 
@@ -33,6 +34,9 @@ const App = () => {
             <Switch>
               <Route exact path="/profile">
                 <Profile />
+              </Route>
+              <Route exact path="/request">
+                <Cases />
               </Route>
               <Route exact path="/tasks">
                 <Tasks />

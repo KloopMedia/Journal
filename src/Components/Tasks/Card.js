@@ -10,7 +10,7 @@ import { Redirect } from 'react-router';
 
 const useStyles = makeStyles({
 	root: {
-		minWidth: 275
+		minWidth: 250
 	},
 	bullet: {
 		display: 'inline-block',
@@ -26,14 +26,14 @@ const useStyles = makeStyles({
 
 const TaskCard = (props) => {
 	const classes = useStyles();
-	const { title, status, type, language, description, id } = props
+	const { title, status, type, language, description, id, cardColor, sendRequest } = props
 
 	const [redirect, setRedirect] = useState(false)
 
 	return (
 		<div>
 			{redirect && <Redirect to={"/tasks/" + id} />}
-			<Card className={classes.root}>
+			<Card className={classes.root} style={{background: cardColor}}>
 				<CardContent>
 					<Typography variant="h6">
 						{title}
@@ -46,7 +46,11 @@ const TaskCard = (props) => {
 					</Typography>
 				</CardContent>
 				<CardActions>
-					<Button size="small" onClick={() => setRedirect(true)}>Открыть</Button>
+					{sendRequest ? 
+						<Button size="small" onClick={() => sendRequest(type, id)}>{"Получить задание"}</Button>
+						:
+						<Button size="small" onClick={() => setRedirect(true)}>{"Открыть"}</Button>
+					}
 				</CardActions>
 			</Card>
 		</div>

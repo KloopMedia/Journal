@@ -39,19 +39,19 @@ const Profile = () => {
                             response = user[el.key]
                         }
                         if (el.type === 'input') {
-                            return <TextInput key={i} index={i} title={el.question} response={response} returnAnswer={returnAnswer} required={el.required} />
+                            return <TextInput key={"profile_" + i} index={i} title={el.question} response={response} returnAnswer={returnAnswer} required={el.required} />
                         }
                         else if (el.type === 'select') {
-                            return <SelectBox key={i} index={i} title={el.question} response={response} answers={el.answers} returnAnswer={returnAnswer} required={el.required} />
+                            return <SelectBox key={"profile_" + i} index={i} title={el.question} response={response} answers={el.answers} returnAnswer={returnAnswer} required={el.required} />
                         }
                         else if (el.type === 'radio') {
-                            return <RadioButton key={i} index={i} title={el.question} response={response} answers={el.answers} returnAnswer={returnAnswer} required={el.required} />
+                            return <RadioButton key={"profile_" + i} index={i} title={el.question} response={response} answers={el.answers} returnAnswer={returnAnswer} required={el.required} />
                         }
                         else if (el.type === 'time') {
-                            return <TimePickers key={i} index={i} title={el.question} response={response} returnAnswer={returnAnswer} required={el.required} />
+                            return <TimePickers key={"profile_" + i} index={i} title={el.question} response={response} returnAnswer={returnAnswer} required={el.required} />
                         }
                         else if (el.type === 'checkbox') {
-                            return <Checkbox key={i} index={i} title={el.question} response={response} answers={el.answers} returnAnswer={returnAnswer} required={el.required} />
+                            return <Checkbox key={"profile_" + i} index={i} title={el.question} response={response} answers={el.answers} returnAnswer={returnAnswer} required={el.required} />
                         }
                         else {
                             return null
@@ -85,77 +85,14 @@ const Profile = () => {
         }).then(() => setUploaded(true))
     }
 
-    const updateForm = () => {
-        let f = {
-            "questions": [
-              {
-                "question": "Введите ваше имя",
-                "type": "input",
-                "required": true,
-                "key": "name"
-              },
-              {
-                "type": "input",
-                "key": "surname",
-                "required": true,
-                "question": "Введите вашу фамилию"
-              },
-              {
-                "type": "input",
-                "key": "phone",
-                "question": "Введите номер телефона",
-                "required": true
-              },
-              {
-                "answers": [
-                  "Русский",
-                  "Кыргызский",
-                  "Английский"
-                ],
-                "question": "На каких языках вы предпочитаете работать (например, писать, брать интервью)",
-                "required": true,
-                "type": "checkbox",
-                "key": "workingLanguage"
-              },
-              {
-                "type": "checkbox",
-                "question": "На каких языках вы можете общаться на бытовом уровне (например, дать интервью)",
-                "required": true,
-                "answers": [
-                  "Русский",
-                  "Кыргызский",
-                  "Английский"
-                ],
-                "key": "speakingLanguage"
-              },
-              {
-                "required": true,
-                "answers": [
-                  "г. Бишкек",
-                  "г. Ош",
-                  "Чуй",
-                  "Ош",
-                  "Иссык-Куль",
-                  "Нарын",
-                  "Талас",
-                  " Джалал-Абад",
-                  "Баткен"
-                ],
-                "question": "Выберите вашу область",
-                "type": "select",
-                "key": "region"
-              },
-              {
-                "required": true,
-                "type": "input",
-                "question": "Введите район",
-                "key": "district"
-              }
-            ]
-          }
-
-        firebase.firestore().collection("profileTemplate").doc("Template").set(f)
-    }
+    // const addCaseId = () => {
+    //     firebase.firestore().collection("tasks").where("type", "==", "Поиск контактных данных").get().then(snap => {
+    //         snap.forEach( async doc => {
+    //             await firebase.firestore().collection("tasks").doc(doc.id).update({case_id: doc.id})
+    //             console.log(doc.id)
+    //         })
+    //     })
+    // }
 
     return (
         currentUser ?
