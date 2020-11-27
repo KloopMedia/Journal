@@ -40,6 +40,7 @@ const Case = (props) => {
                     });
                 })
                 .then(() => {
+                    tasks.sort((a, b) => parseInt(a.order) - parseInt(b.order))
                     setTasks(tasks)
                     setReady(true)
                 })
