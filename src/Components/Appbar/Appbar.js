@@ -113,6 +113,19 @@ export default function PersistentDrawerLeft(props) {
     const [anchorEl, setAnchorEl] = React.useState(null);
     const menuOpen = Boolean(anchorEl);
 
+    const [moderator, setModerator] = useState(false)
+
+    useEffect(() => {
+        firebase.firestore().collection('editors').get().then((snap) => {
+            snap.forEach(doc => {
+                if (doc.id === currentUser.uid) {
+                    console.log('moderator')
+                    setModerator(true)
+                }
+            })
+        }).catch(() => setModerator(false))
+    }, [currentUser])
+
     const handleDrawerOpen = () => {
         setOpen(true);
     };
@@ -242,9 +255,9 @@ export default function PersistentDrawerLeft(props) {
                         <li>
                             <Link to="/request">Получить задание</Link>
                         </li>
-                        <li>
+                        {moderator ? <li>
                             <Link to="/tasksObserver">Модератор</Link>
-                        </li>
+                        </li> : null}
                     </ul>
                 </nav>
             </Drawer>
