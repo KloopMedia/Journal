@@ -96,7 +96,7 @@ const Case = (props) => {
                 <Grid container justify="center" style={{ padding: 10 }}>
                     {ready && allTasks.map((t, i) => (
                         <Grid item key={i} style={{ padding: 10 }}>
-                            <Card title={t.title} description={t.description} type={"test_type"} id={t.id} cardColor="#F5F5F5" sendRequest={sendRequest} />
+                            <Card title={t.title} description={t.description} type={t.type} id={t.id} cardColor="#F5F5F5" sendRequest={sendRequest} />
                         </Grid>
                     ))}
                 </Grid>

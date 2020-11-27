@@ -47,7 +47,7 @@ const TaskCard = (props) => {
 				</CardContent>
 				<CardActions>
 					{sendRequest ? 
-						<Button size="small" onClick={() => sendRequest(type, id)}>{"Получить задание"}</Button>
+						<Button variant="contained" color="primary" size="small" onClick={() => sendRequest(type, id)}>{"Получить задание"}</Button>
 						:
 						<Button size="small" onClick={() => setRedirect(true)}>{"Открыть"}</Button>
 					}
