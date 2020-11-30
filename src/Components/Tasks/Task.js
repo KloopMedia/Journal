@@ -3,6 +3,7 @@ import firebase, { signInWithGoogle } from '../../util/Firebase'
 import { AuthContext } from "../../util/Auth";
 
 import Form from "../form/form"
+import Dialog from "../Dialog/Dialog"
 
 import { Button, Divider, Grid, Typography } from '@material-ui/core';
 import { Redirect, useParams } from 'react-router';
@@ -19,9 +20,12 @@ const Tasks = () => {
 	const [userData, setUserData] = useState({})
 	const [lockButton, setLock] = useState(false)
 	const [caseTasks, setCaseTasks] = useState([])
+	const [dialogState, setDialog] = useState(false)
+	const [dialogType, setDialogType] = useState(null)
 
 	const { currentUser } = useContext(AuthContext);
 	const { id } = useParams();
+
 
 	useEffect(() => {
 		const getQuestions = async (taskID) => {
@@ -176,13 +180,38 @@ const Tasks = () => {
 		if (lock) {
 			await firebase.firestore().collection("tasks").doc(id).collection("user_editable").doc("user_editable").update({ status: 'complete' })
 			setLock(true)
+			setDialog(false)
 		}
 		setUploaded(true)
+	}
+
+	const handleDialogClose = () => {
+		setDialog(false);
+	};
+
+	const handleDialogOpen = (type) => {
+		if (type === 'send') {
+			setDialogType('send')
+			setDialog(true)
+		}
+		if (type === 'release') {
+			setDialogType('release')
+			setDialog(true)
+		}
+
+	}
+
+	const releaseTask = () => {
+		firebase.firestore().collection("tasks").doc(id).collection("user_editable").doc("user_editable").update({ status: 'released' })
+		setDialog(false)
+		setRedirect(true)
 	}
 
 	return (
 		currentUser ?
 			<Grid style={{ padding: 30 }}>
+				{dialogType === 'send' && <Dialog state={dialogState} handleClose={handleDialogClose} title={"Отправить задание?"} content={"Вы собираетесь отправить задание. Это значит, что вы больше не сможете изменять ответы."} dialogFunction={() => saveToFirebase(true)} />}
+				{dialogType === 'release' && <Dialog state={dialogState} handleClose={handleDialogClose} title={"Освободить задание?"} content={"Вы собираетесь освободить задание. Это значит, что вы больше не сможете к нему вернуться."} dialogFunction={releaseTask} />}
 				{redirect && <Redirect to="/tasks" />}
 				{/* Предыдущие задания{caseTasks.map((t, i) => <Button key={"case_button_"+i} component={ Link } to={"/tasks/" + t.id}>{t.title}</Button>)} */}
 				{forms}
@@ -190,8 +219,9 @@ const Tasks = () => {
 					<Button variant="outlined" style={{ borderWidth: 2, borderColor: "grey", color: 'grey', margin: 5 }} onClick={() => setRedirect(true)}>Назад</Button>
 					{!lockButton &&
 						<div>
-							<Button key="button_save" variant="outlined" disabled={lockButton} style={{ borderWidth: 2, borderColor: "#003366", color: '#003366', margin: 5 }} onClick={() => saveToFirebase(false)}>Сохранить</Button>
-							<Button key="button_send" variant="outlined" disabled={lockButton} style={{ borderWidth: 2, borderColor: "red", color: 'red', margin: 5 }} onClick={() => saveToFirebase(true)}>Отправить</Button>
+							<Button variant="outlined" disabled={lockButton} style={{ borderWidth: 2, borderColor: "#003366", color: '#003366', margin: 5 }} onClick={() => saveToFirebase(false)}>Сохранить</Button>
+							<Button variant="outlined" disabled={lockButton} style={{ borderWidth: 2, borderColor: "red", color: 'red', margin: 5 }} onClick={() => handleDialogOpen('send')}>Отправить</Button>
+							<Button variant="outlined" disabled={lockButton} style={{ borderWidth: 2, borderColor: "red", color: 'red', margin: 5 }} onClick={() => handleDialogOpen('release')}>Освободить</Button>
 						</div>}
 				</Grid>
 
