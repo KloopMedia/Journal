@@ -202,9 +202,12 @@ const Tasks = () => {
 	}
 
 	const releaseTask = () => {
-		firebase.firestore().collection("tasks").doc(id).collection("user_editable").doc("user_editable").update({ status: 'released' })
-		setDialog(false)
-		setRedirect(true)
+		firebase.firestore().collection("tasks").doc(id).collection("user_editable").doc("user_editable").update({ status: 'open' })
+		.then(() => firebase.firestore().collection("tasks").doc(id).collection("user_editable").doc("user_editable").update({ status: 'released' })
+		.then(() => {
+			setDialog(false)
+			setLock(true)
+		}))
 	}
 
 	return (
