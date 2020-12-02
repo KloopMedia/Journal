@@ -3,7 +3,8 @@ import firebase, { signInWithGoogle } from '../../util/Firebase'
 import { AuthContext } from "../../util/Auth";
 
 import Form from "../form/form"
-import Dialog from "../Dialog/FeedbackDialog"
+import Dialog from "../Dialog/Dialog"
+import DialogFeedback from "../Dialog/FeedbackDialog"
 import Feedback from "../form/feedback"
 
 import { Button, Divider, Grid, Typography } from '@material-ui/core';
@@ -230,7 +231,7 @@ const Tasks = () => {
 		currentUser ?
 			<Grid style={{ padding: 30 }}>
 				{dialogType === 'send' && <Dialog state={dialogState} handleClose={handleDialogClose} title={"Отправить задание?"} content={"Вы собираетесь отправить задание. Это значит, что вы больше не сможете изменять ответы."} dialogFunction={() => saveToFirebase(true)} />}
-				{dialogType === 'release' && <Dialog
+				{dialogType === 'release' && <DialogFeedback
 					state={dialogState}
 					feedbackValue={feedbackValue}
 					handleClose={handleDialogClose}
