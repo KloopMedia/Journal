@@ -54,7 +54,7 @@ const Case = (props) => {
     }, [currentUser])
 
     useEffect(() => {
-        firebase.firestore().collection('tasks').where('assigned_users', 'array-contains', currentUser.uid).get().then(snap => {
+        firebase.firestore().collection('tasks').where('assigned_users', 'array-contains', currentUser.uid).where('is_complete', '==', false).get().then(snap => {
             if (snap.empty) {
                 setDisable(false)
                 // firebase.firestore().collection('tasks').where('assigned_users', '==', []).get().then(docs => {
