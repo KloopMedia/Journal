@@ -31,7 +31,7 @@ export default function AlertDialog(props) {
           <Button onClick={props.handleClose} color="primary">
             Отмена
           </Button>
-          <Button onClick={props.dialogFunction} color="primary" autoFocus>
+          <Button onClick={props.dialogFunction} disabled={!props.feedbackValue.reason} color="primary" autoFocus>
             Подтвердить
           </Button>
         </DialogActions>

@@ -10,6 +10,7 @@ import CloseIcon from '@material-ui/icons/Close';
 
 import Card from '../Tasks/Card'
 import { Box, Grid, Typography } from '@material-ui/core'
+import { set } from 'immutable';
 
 
 const Case = (props) => {
@@ -19,6 +20,8 @@ const Case = (props) => {
     const { currentUser } = useContext(AuthContext);
 
     const [open, setOpen] = React.useState(false);
+    const [disableCase, setDisable] = useState(false)
+    const [message, setMessage] = useState('')
 
     const handleClose = (event, reason) => {
         if (reason === 'clickaway') {
@@ -49,6 +52,24 @@ const Case = (props) => {
                 });
         }
     }, [currentUser])
+
+    useEffect(() => {
+        firebase.firestore().collection('tasks').where('assigned_users', 'array-contains', currentUser.uid).get().then(snap => {
+            if (snap.empty) {
+                setDisable(false)
+                // firebase.firestore().collection('tasks').where('assigned_users', '==', []).get().then(docs => {
+                //     if (docs.empty) {
+                //         setAllow(false)
+                //         setMessage('Нет доступных тасков')
+                //     }
+                // })
+            }
+            else {
+                setDisable(true)
+                setMessage('У вас есть активные задания. Сдайте или освободите их, чтобы получить новые.')
+            }
+        })
+    }, [currentUser, disableCase])
 
     const sendRequest = (type, task_type) => {
         firebase.firestore().collection("task_requests").doc(currentUser.uid).collection("requests").add({
@@ -91,12 +112,15 @@ const Case = (props) => {
                     <Box style={{ padding: '10px 10px 5px' }}>
                         <Typography variant="body2">{props.description}</Typography>
                     </Box>
+                    <Box style={{padding: '10px 10px 0px'}}>
+                        <Typography color="error">{message}</Typography>
+                    </Box>
                 </Box>
 
                 <Grid container justify="center" style={{ padding: 10 }}>
                     {ready && allTasks.map((t, i) => (
                         <Grid item key={i} style={{ padding: 10 }}>
-                            <Card title={t.title} description={t.description} type={t.type} id={t.id} cardColor="#F5F5F5" sendRequest={sendRequest} />
+                            <Card title={t.title} description={t.description} type={t.type} id={t.id} cardColor="#F5F5F5" sendRequest={sendRequest} disabled={disableCase} />
                         </Grid>
                     ))}
                 </Grid>

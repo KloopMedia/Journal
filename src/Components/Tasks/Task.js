@@ -190,6 +190,7 @@ const Tasks = () => {
 
 	const handleDialogClose = () => {
 		setDialog(false);
+		setFeedback({})
 	};
 
 	const handleDialogOpen = (type) => {
@@ -231,6 +232,7 @@ const Tasks = () => {
 				{dialogType === 'send' && <Dialog state={dialogState} handleClose={handleDialogClose} title={"Отправить задание?"} content={"Вы собираетесь отправить задание. Это значит, что вы больше не сможете изменять ответы."} dialogFunction={() => saveToFirebase(true)} />}
 				{dialogType === 'release' && <Dialog
 					state={dialogState}
+					feedbackValue={feedbackValue}
 					handleClose={handleDialogClose}
 					title={releaseFeedbackData.title}
 					dialogFunction={releaseTask}

@@ -26,7 +26,7 @@ const useStyles = makeStyles({
 
 const TaskCard = (props) => {
 	const classes = useStyles();
-	const { title, status, type, language, description, id, cardColor, sendRequest } = props
+	const { title, status, type, language, description, id, cardColor, sendRequest, disabled } = props
 
 	const [redirect, setRedirect] = useState(false)
 
@@ -47,7 +47,7 @@ const TaskCard = (props) => {
 				</CardContent>
 				<CardActions>
 					{sendRequest ? 
-						<Button variant="contained" color="primary" size="small" onClick={() => sendRequest(type, id)}>{"Получить задание"}</Button>
+						<Button variant="contained" disabled={disabled} color="primary" size="small" onClick={() => sendRequest(type, id)}>{"Получить задание"}</Button>
 						:
 						<Button size="small" onClick={() => setRedirect(true)}>{"Открыть"}</Button>
 					}
