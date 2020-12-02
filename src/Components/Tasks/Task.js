@@ -3,7 +3,8 @@ import firebase, { signInWithGoogle } from '../../util/Firebase'
 import { AuthContext } from "../../util/Auth";
 
 import Form from "../form/form"
-import Dialog from "../Dialog/Dialog"
+import Dialog from "../Dialog/FeedbackDialog"
+import Feedback from "../form/feedback"
 
 import { Button, Divider, Grid, Typography } from '@material-ui/core';
 import { Redirect, useParams } from 'react-router';
@@ -22,6 +23,8 @@ const Tasks = () => {
 	const [caseTasks, setCaseTasks] = useState([])
 	const [dialogState, setDialog] = useState(false)
 	const [dialogType, setDialogType] = useState(null)
+	const [feedbackValue, setFeedback] = useState({})
+	const [releaseFeedbackData, setReleaseFeedbackData] = useState({})
 
 	const { currentUser } = useContext(AuthContext);
 	const { id } = useParams();
@@ -122,7 +125,7 @@ const Tasks = () => {
 						console.log(res.data)
 					}
 				})
-				return <Form key={el.questionId + '_' + i} question={el.data} index={i} response={response} returnAnswer={returnAnswer} locked={true} />
+				return <Form key={el.questionId + '_' + i} question={el.data} index={i} response={response} returnAnswer={returnAnswer} locked={true} askFeedback={true} />
 			})
 
 			sf.push(<div key={"div_divider_stripped"} style={{ height: 25, margin: '20px 0', background: 'repeating-linear-gradient( 45deg, white, white 10px, grey 10px, grey 25px)' }}><br /></div>)
@@ -201,20 +204,39 @@ const Tasks = () => {
 
 	}
 
+	useEffect(() => {
+		firebase.firestore().collection("schema").doc("structure").collection("feedbacks").doc("release").get().then(doc => {
+			console.log("FEEDBACK", doc.data())
+			setReleaseFeedbackData(doc.data())
+		})
+	}, [])
+
 	const releaseTask = () => {
 		firebase.firestore().collection("tasks").doc(id).collection("user_editable").doc("user_editable").update({ status: 'open' })
-		.then(() => firebase.firestore().collection("tasks").doc(id).collection("user_editable").doc("user_editable").update({ status: 'released' })
-		.then(() => {
-			setDialog(false)
-			setLock(true)
-		}))
+			.then(() => firebase.firestore().collection("tasks").doc(id).collection("user_editable").doc("user_editable").update({ status: 'released', release_status: feedbackValue.reason, release_description: feedbackValue.text })
+				.then(() => {
+					setDialog(false)
+					setLock(true)
+				}))
+		// alert(feedbackValue)
+	}
+
+	const handleFeedbackSave = (value) => {
+		setFeedback(value)
 	}
 
 	return (
 		currentUser ?
 			<Grid style={{ padding: 30 }}>
 				{dialogType === 'send' && <Dialog state={dialogState} handleClose={handleDialogClose} title={"Отправить задание?"} content={"Вы собираетесь отправить задание. Это значит, что вы больше не сможете изменять ответы."} dialogFunction={() => saveToFirebase(true)} />}
-				{dialogType === 'release' && <Dialog state={dialogState} handleClose={handleDialogClose} title={"Освободить задание?"} content={"Вы собираетесь освободить задание. Это значит, что вы больше не сможете к нему вернуться."} dialogFunction={releaseTask} />}
+				{dialogType === 'release' && <Dialog
+					state={dialogState}
+					handleClose={handleDialogClose}
+					title={releaseFeedbackData.title}
+					dialogFunction={releaseTask}
+					answers={releaseFeedbackData.answers}
+					description={releaseFeedbackData.description}
+					returnFeedback={handleFeedbackSave} />}
 				{redirect && <Redirect to="/tasks" />}
 				{/* Предыдущие задания{caseTasks.map((t, i) => <Button key={"case_button_"+i} component={ Link } to={"/tasks/" + t.id}>{t.title}</Button>)} */}
 				{forms}

@@ -1,8 +1,10 @@
-import React, { useEffect } from 'react';
-import {makeStyles} from '@material-ui/core/styles';
+import React, { useEffect, useState } from 'react';
+import { makeStyles } from '@material-ui/core/styles';
 import TextField from '@material-ui/core/TextField';
-import { Typography } from '@material-ui/core';
-
+import { Typography, IconButton, Box } from '@material-ui/core';
+import FeedbackIcon from '@material-ui/icons/Feedback';
+import Dialog from '../Dialog/Dialog'
+import Feedback from './feedback'
 
 const useStyles = makeStyles((theme) => ({
 	root: {
@@ -17,8 +19,12 @@ const useStyles = makeStyles((theme) => ({
 function BasicTextFields(props) {
 	const classes = useStyles();
 	const [value, setValue] = React.useState('');
+	const [dialogOpen, setDialogOpen] = useState(false)
+	const [answer, setAnswer] = useState(null)
 
-	const {index, response, required, locked} = props
+	const { index, response, required, locked } = props
+
+	const showFeedback = false
 
 	useEffect(() => {
 		if (response) {
@@ -31,10 +37,28 @@ function BasicTextFields(props) {
 		props.returnAnswer(event.target.value, props.index)
 	};
 
+	const sendReport = () => {
+		alert(answer)
+	}
+
+
+	const handleDialogClose = () => {
+		setDialogOpen(false)
+	}
+
 	return (
 		<div>
-			<Typography variant="h6" style={{marginBottom: 10, marginTop: 20}}>{props.title}</Typography>
-			<TextField 
+			<Dialog
+				title="Фидбек"
+				content={<Feedback answers={['Нет данных/неверные данные', 'Нет времени/интереса', 'Другое']} returnAnswer={setAnswer} />}
+				dialogFunction={sendReport}
+				state={dialogOpen}
+				handleClose={handleDialogClose} />
+			<Box display="flex" style={{ marginBottom: 10, marginTop: 20 }}>
+				<Typography variant="h6" style={{ paddingRight: 8 }}>{props.title}</Typography>
+				{showFeedback && <IconButton size="small" onClick={() => setDialogOpen(true)}><FeedbackIcon fontSize="medium" color="primary" /></IconButton>}
+			</Box>
+			<TextField
 				id={"inputBox" + index}
 				label="Мой ответ"
 				value={value}
@@ -45,7 +69,7 @@ function BasicTextFields(props) {
 				disabled={locked}
 				variant="outlined"
 				fullWidth
-				/>
+			/>
 		</div>
 	);
 }
