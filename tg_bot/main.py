@@ -39,7 +39,7 @@ def question_handler(message):
 
 
 def is_registered(user_id):
-    return db.collection('users').where(u'tg_id', u'==', user_id).get()
+    return db.collection('users').where(u'tg_id', u'==', str(user_id)).get()
 
 
 def commit_task(message):
@@ -74,13 +74,14 @@ def create_task(message, task_id):
         'available': True,
         'case_id': task_id,
         'case_stage_id': 'answer_the_question',
-        'case_type': 'FAQ',
+        'case_type': 'FAQ'
     }
 
 
 def create_question(message, tasks_ref, task_id):
     question = {'title': message.text,
                 'type': 'input',
+                'chat_id': message.from_user.id,
                 'required': True}
     questions_ref = tasks_ref.document(task_id).collection('questions')
     question_id = questions_ref.document().id
