@@ -23,21 +23,40 @@ def start_handler(message):
     if is_registered(message.from_user.id):
         bot.send_message(message.chat.id, "You are already registered")
     else:
-        bot.send_message(
-            message.chat.id,
-            f"You need to register. Your id is: {message.from_user.id}")
+        bot.send_message(message.chat.id, register_user(message))
 
 
-class Question:
-    def __init__(self, text=None, category=None):
-        self.text = text
-        self.category = category
+def register_user(message):
+    try:
+        transaction = db.transaction()
+        if len(message.text.split(' ')) != 2:  # no token in /start
+            result = False
+        else:
+            token = message.text.split(' ')[1]
+            result = register_in_transaction(transaction, token, message.chat.id)
+        return 'You are succesfully registered' if result else 'You need to register first'
+    except Exception as e:
+        print(e)
+
+
+@firestore.transactional
+def register_in_transaction(transaction, token, chat_id):
+    user = db.collection(u'users')\
+            .where(u'tg_token', u'==', str(token))\
+            .get(transaction=transaction)
+    if not len(user):
+        return False
+    private_ref = db.document(f'users/{user[0].id}/user_private/private')
+    transaction.set(private_ref, {'tg_id': str(chat_id)})
+    return True
 
 
 @bot.message_handler(commands=['ask_question'])
 def ask_question(message):
     if is_registered(message.from_user.id):
-        markup = types.ReplyKeyboardMarkup(row_width=3, one_time_keyboard=True)
+        markup = types.ReplyKeyboardMarkup(row_width=3,
+                                           resize_keyboard=True,
+                                           one_time_keyboard=True)
         buttons = [types.KeyboardButton(cat) for cat in categories]
         markup.add(*buttons)
         bot.send_message(message.chat.id,
@@ -61,9 +80,23 @@ def process_category_step(message):
 
 def process_question_step(message):
     try:
-        bot.reply_to(message, commit_task(message))
+        markup = types.InlineKeyboardMarkup()
+        accept_btn = telebot.types.InlineKeyboardButton(text='Ok', callback_data='Ok')
+        cancel_btn = telebot.types.InlineKeyboardButton(text='Cancel', callback_data='Cancel')
+        markup.add(accept_btn, cancel_btn)
+        bot.reply_to(message, 'Send this question?', reply_markup=markup)
     except Exception as e:
         bot.reply_to(message, 'Something went wrong')
+
+
+@bot.callback_query_handler(func=lambda call: True)
+def query_handler(call):
+    if call.data == 'Ok':
+        bot.reply_to(call.message, commit_task(call.message))
+    else:
+        bot.send_message(call.message.chat.id, 'Cancelled')
+    # hide inline buttons
+    bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id)
 
 
 @bot.message_handler(commands=['get_id'])
@@ -72,7 +105,9 @@ def get_id_handler(message):
 
 
 def is_registered(user_id):
-    return db.collection('users').where(u'tg_id', u'==', str(user_id)).get()
+    return db.collection_group('user_private')\
+            .where(u'tg_id', u'==', str(user_id))\
+            .get()
 
 
 def commit_task(message):
@@ -116,13 +151,17 @@ def create_question(message, tasks_ref, task_id):
         'title': message.text,
         'type': 'input',
         'chat_id': message.from_user.id,
-        'question_category': question_dict.get('category'),
+        'question_category': get_category(question_dict.get('category')),
         'required': True
     }
     questions_ref = tasks_ref.document(task_id).collection('questions')
     question_id = questions_ref.document().id
     question_ref = questions_ref.document(question_id)
     return question_ref, question
+
+
+def get_category(cat):
+    return 'Other' if cat not in categories else cat
 
 
 bot.polling()
