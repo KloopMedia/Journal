@@ -84,6 +84,7 @@ def process_question_step(message):
         accept_btn = telebot.types.InlineKeyboardButton(text='Ok', callback_data='Ok')
         cancel_btn = telebot.types.InlineKeyboardButton(text='Cancel', callback_data='Cancel')
         markup.add(accept_btn, cancel_btn)
+        question_dict['question'] = message.text
         bot.reply_to(message, 'Send this question?', reply_markup=markup)
     except Exception as e:
         bot.reply_to(message, 'Something went wrong')
@@ -92,7 +93,7 @@ def process_question_step(message):
 @bot.callback_query_handler(func=lambda call: True)
 def query_handler(call):
     if call.data == 'Ok':
-        bot.reply_to(call.message, commit_task(call.message))
+        bot.send_message(call.message.chat.id, commit_task(call.message))
     else:
         bot.send_message(call.message.chat.id, 'Cancelled')
     # hide inline buttons
@@ -147,10 +148,11 @@ def create_task(message, task_id):
 
 
 def create_question(message, tasks_ref, task_id):
+    print('question: ', question_dict.get('question'))
     question = {
-        'title': message.text,
+        'title': question_dict.get('question'),
         'type': 'input',
-        'chat_id': message.from_user.id,
+        'chat_id': message.chat.id,
         'question_category': get_category(question_dict.get('category')),
         'required': True
     }
