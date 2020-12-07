@@ -8,6 +8,10 @@ import DialogFeedback from "../Dialog/FeedbackDialog"
 import Feedback from "../form/feedback"
 
 import { Button, Divider, Grid, Typography } from '@material-ui/core';
+import Snackbar from '@material-ui/core/Snackbar';
+import IconButton from '@material-ui/core/IconButton';
+import CloseIcon from '@material-ui/icons/Close';
+
 import { Redirect, useParams } from 'react-router';
 import { Link } from "react-router-dom";
 
@@ -26,9 +30,18 @@ const Tasks = () => {
 	const [dialogType, setDialogType] = useState(null)
 	const [feedbackValue, setFeedback] = useState({})
 	const [releaseFeedbackData, setReleaseFeedbackData] = useState({})
+	const [openSnackbar, setOpenSnackbar] = useState(false);
 
 	const { currentUser } = useContext(AuthContext);
 	const { id } = useParams();
+
+	const handleCloseSnackbar = (event, reason) => {
+        if (reason === 'clickaway') {
+            return;
+        }
+
+        setOpenSnackbar(false);
+    };
 
 
 	useEffect(() => {
@@ -38,7 +51,6 @@ const Tasks = () => {
 			await firebase.firestore().collection("tasks").doc(taskID).collection("questions").get()
 				.then((querySnapshot) => {
 					querySnapshot.forEach((doc) => {
-						// console.log(doc.id, " => ", doc.data());
 						q.push({ questionId: doc.id, data: doc.data() })
 					});
 				})
@@ -56,7 +68,6 @@ const Tasks = () => {
 			await firebase.firestore().collection("tasks").doc(taskID).collection("responses").get()
 				.then((querySnapshot) => {
 					querySnapshot.forEach((doc) => {
-						// console.log(doc.id, " => ", doc.data());
 						r.push({ responseId: doc.id, data: doc.data() })
 					});
 				})
@@ -77,7 +88,6 @@ const Tasks = () => {
 				await firebase.firestore().collection("tasks").where("case_id", "==", data.case_id).get().then(snap => {
 					snap.forEach(doc => {
 						if (doc.id !== id) {
-							console.log(doc.id, '=>', doc.data())
 							sameCaseTasks.push({ id: doc.id, ...doc.data() })
 						}
 					})
@@ -91,10 +101,6 @@ const Tasks = () => {
 			let locked = true
 
 			setForms(null)
-
-
-			console.log("Fired")
-
 
 			await firebase.firestore().collection("tasks").doc(id).collection("user_editable").doc("user_editable").get().then(doc => {
 				if (doc.data().status === 'complete') {
@@ -112,7 +118,6 @@ const Tasks = () => {
 			let sameCaseTasks = await getSameCaseTasks()
 			setCaseTasks(sameCaseTasks)
 			if (sameCaseTasks.length > 0) {
-
 				sq = await getQuestions(sameCaseTasks[0].id)
 				sr = await getResponses(sameCaseTasks[0].id)
 			}
@@ -123,10 +128,9 @@ const Tasks = () => {
 					if (el.questionId === res.responseId) {
 						response = res.data.answer
 						returnAnswer(res.data.answer, i)
-						console.log(res.data)
 					}
 				})
-				return <Form key={el.questionId + '_' + i} question={el.data} index={i} response={response} returnAnswer={returnAnswer} locked={true} askFeedback={true} />
+				return <Form key={el.questionId + '_' + i} question={el.data} index={i} response={response} returnAnswer={returnAnswer} locked={true} askFeedback={true} saveQuestionFeedback={saveQuestionFeedback} id={el.questionId} prevTaskId={sameCaseTasks[0].id} />
 			})
 
 			sf.push(<div key={"div_divider_stripped"} style={{ height: 25, margin: '20px 0', background: 'repeating-linear-gradient( 45deg, white, white 10px, grey 10px, grey 25px)' }}><br /></div>)
@@ -149,7 +153,6 @@ const Tasks = () => {
 					if (el.questionId === res.responseId) {
 						response = res.data.answer
 						returnAnswer(res.data.answer, i)
-						console.log(res.data)
 					}
 				})
 				return <Form key={el.questionId + '_' + i} question={el.data} index={i} response={response} returnAnswer={returnAnswer} locked={locked} />
@@ -169,13 +172,26 @@ const Tasks = () => {
 		const tmp = answers
 		tmp[index] = answer
 		setAnswers(tmp)
-		// console.log(answers)
+	}
+
+	const saveQuestionFeedback = (data, questionId, previousTaskId) => {
+		if (previousTaskId) {
+			firebase.firestore().collection('tasks').doc(previousTaskId).collection('feedbacks').doc(questionId).collection('messages')
+			.add({
+				answer: data.reason, 
+				text: data.text, 
+				user_id: currentUser.uid,
+				timestamp: firebase.firestore.FieldValue.serverTimestamp()
+			})
+			.then(() => setOpenSnackbar(true))
+		}
+		else {
+			alert('Ошибка: Что-то пошло не так при сохранении фидбека. Сообщите программисту!')
+		}
 	}
 
 	const saveToFirebase = async (lock) => {
 		await questions.forEach(async (q, i) => {
-			console.log(q)
-			console.log(answers[i])
 			if (answers[i] || answers[i] === "") {
 				await firebase.firestore().collection("tasks").doc(id).collection("responses").doc(q.questionId).set({ answer: answers[i] })
 			}
@@ -208,7 +224,6 @@ const Tasks = () => {
 
 	useEffect(() => {
 		firebase.firestore().collection("schema").doc("structure").collection("feedbacks").doc("release").get().then(doc => {
-			console.log("FEEDBACK", doc.data())
 			setReleaseFeedbackData(doc.data())
 		})
 	}, [])
@@ -241,6 +256,23 @@ const Tasks = () => {
 					description={releaseFeedbackData.description}
 					returnFeedback={handleFeedbackSave} />}
 				{redirect && <Redirect to="/tasks" />}
+				<Snackbar
+                anchorOrigin={{
+                    vertical: 'bottom',
+                    horizontal: 'left',
+                }}
+                open={openSnackbar}
+                autoHideDuration={6000}
+                onClose={handleCloseSnackbar}
+                message="Фидбек отправлен"
+                action={
+                    <React.Fragment>
+                        <IconButton size="small" aria-label="close" color="inherit" onClick={handleCloseSnackbar}>
+                            <CloseIcon fontSize="small" />
+                        </IconButton>
+                    </React.Fragment>
+                }
+            />
 				{/* Предыдущие задания{caseTasks.map((t, i) => <Button key={"case_button_"+i} component={ Link } to={"/tasks/" + t.id}>{t.title}</Button>)} */}
 				{forms}
 				<Grid container style={{ padding: 20 }} justify="center">

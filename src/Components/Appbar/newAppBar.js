@@ -87,11 +87,11 @@ const useStyles = makeStyles((theme) => ({
 		},
 	},
 	list: {
-    width: 250,
-  },
-  fullList: {
-    width: 'auto',
-  },
+		width: 200,
+	},
+	fullList: {
+		width: 'auto',
+	},
 }));
 
 export default function PrimarySearchAppBar(props) {
@@ -178,39 +178,39 @@ export default function PrimarySearchAppBar(props) {
 	);
 
 	const toggleDrawer = (open) => (event) => {
-    if (event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
-      return;
-    }
+		if (event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
+			return;
+		}
 
-    setState(open);
-  };
+		setState(open);
+	};
 
-  const list = () => (
-    <div
-      className={clsx(classes.list)}
-      role="presentation"
-      onClick={toggleDrawer(false)}
-      onKeyDown={toggleDrawer(false)}
-    >
-      <List>
-        {['Inbox', 'Starred', 'Send email', 'Drafts'].map((text, index) => (
-          <ListItem button key={text}>
-            <ListItemIcon>{index % 2 === 0 ? <InboxIcon /> : <MailIcon />}</ListItemIcon>
-            <ListItemText primary={text} />
-          </ListItem>
-        ))}
-      </List>
-      <Divider />
-      <List>
-        {['All mail', 'Trash', 'Spam'].map((text, index) => (
-          <ListItem button key={text}>
-            <ListItemIcon>{index % 2 === 0 ? <InboxIcon /> : <MailIcon />}</ListItemIcon>
-            <ListItemText primary={text} />
-          </ListItem>
-        ))}
-      </List>
-    </div>
-  );
+	const list = () => (
+		<div
+			className={clsx(classes.list)}
+			role="presentation"
+			onClick={toggleDrawer(false)}
+			onKeyDown={toggleDrawer(false)}
+		>
+			<List>
+				{['Inbox', 'Starred', 'Send email', 'Drafts'].map((text, index) => (
+					<ListItem button key={text}>
+						<ListItemIcon>{index % 2 === 0 ? <InboxIcon /> : <MailIcon />}</ListItemIcon>
+						<ListItemText primary={text} />
+					</ListItem>
+				))}
+			</List>
+			<Divider />
+			<List>
+				{['All mail', 'Trash', 'Spam'].map((text, index) => (
+					<ListItem button key={text}>
+						<ListItemIcon>{index % 2 === 0 ? <InboxIcon /> : <MailIcon />}</ListItemIcon>
+						<ListItemText primary={text} />
+					</ListItem>
+				))}
+			</List>
+		</div>
+	);
 
 	return (
 		<div className={classes.grow}>
@@ -248,7 +248,10 @@ export default function PrimarySearchAppBar(props) {
 								<MailIcon />
 							</Badge>
 						</IconButton>
-						<IconButton aria-label="show 17 new notifications" color="inherit">
+						<IconButton aria-label="show 17 new notifications" color="inherit"
+							aria-controls={menuId}
+							aria-haspopup="true"
+							onClick={handleProfileMenuOpen}>
 							<Badge badgeContent={17} color="secondary">
 								<NotificationsIcon />
 							</Badge>
