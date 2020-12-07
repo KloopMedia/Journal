@@ -166,4 +166,4 @@ def get_category(cat):
     return 'Other' if cat not in categories else cat
 
 
-bot.polling()
+bot.polling(none_stop=True)
