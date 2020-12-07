@@ -1,0 +1,11 @@
+SUCCESSFULLY_REGISTERED = {'ru': 'Вы успешно зарегистрированы', 'kg': ''}
+YOU_ARE_ALREADY_REGISTERED = {'ru': 'Вы уже зарегистрированы', 'kg': ''}
+YOU_NEED_TO_REGISTER = {'ru': 'Вам нужно зарегистрироваться', 'kg': ''}
+CHOOSE_CATEGORY = {'ru': 'Выберите категорию', 'kg': ''}
+YOUR_QUESTION = {'ru': 'Ваш вопрос: ', 'kg': ''}
+SOMETHING_WENT_WRONG = {'ru': 'Что-то пошло не так', 'kg': ''}
+OK = {'ru': 'Ок', 'kg': ''}
+CANCEL = {'ru': 'Отмена', 'kg': ''}
+CANCELLED = {'ru': 'Отменено', 'kg': ''}
+TASK_CREATED = {'ru': 'Задание создано', 'kg': ''}
+SEND_THIS_QUESTION = {'ru': 'Отправить этот вопрос?', 'kg': ''}

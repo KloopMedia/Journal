@@ -5,6 +5,7 @@ from firebase_admin import firestore
 from firebase_admin import credentials
 import os
 import logging
+import strings
 
 cred = credentials.Certificate("private/serviceAccountKey.json")
 firebase_admin.initialize_app(cred)
@@ -21,7 +22,8 @@ question_dict = {}
 @bot.message_handler(commands=['start'])
 def start_handler(message):
     if is_registered(message.from_user.id):
-        bot.send_message(message.chat.id, "You are already registered")
+        bot.send_message(message.chat.id,
+                         get_string('ru', strings.YOU_ARE_ALREADY_REGISTERED))
     else:
         bot.send_message(message.chat.id, register_user(message))
 
@@ -33,8 +35,14 @@ def register_user(message):
             result = False
         else:
             token = message.text.split(' ')[1]
-            result = register_in_transaction(transaction, token, message.chat.id)
-        return 'You are succesfully registered' if result else 'You need to register first'
+            result = register_in_transaction(transaction,
+                                             token,
+                                             message.chat.id)
+        if result:
+            response = get_string('ru', strings.SUCCESSFULLY_REGISTERED)
+        else:
+            response = get_string('ru', strings.YOU_NEED_TO_REGISTER)
+        return response
     except Exception as e:
         print(e)
 
@@ -47,7 +55,7 @@ def register_in_transaction(transaction, token, chat_id):
     if not len(user):
         return False
     private_ref = db.document(f'users/{user[0].id}/user_private/private')
-    transaction.set(private_ref, {'tg_id': str(chat_id)})
+    transaction.update(private_ref, {'tg_id': str(chat_id)})
     return True
 
 
@@ -60,11 +68,11 @@ def ask_question(message):
         buttons = [types.KeyboardButton(cat) for cat in categories]
         markup.add(*buttons)
         bot.send_message(message.chat.id,
-                         "Choose question category",
+                         get_string('ru', strings.CHOOSE_CATEGORY),
                          reply_markup=markup)
         bot.register_next_step_handler(message, process_category_step)
     else:
-        bot.reply_to(message, "You need to register first")
+        bot.reply_to(message, get_string('ru', strings.YOU_NEED_TO_REGISTER))
 
 
 def process_category_step(message):
@@ -72,22 +80,32 @@ def process_category_step(message):
         category = message.text
         question_dict['category'] = category
         markup = types.ForceReply(selective=False)
-        msg = bot.reply_to(message, 'Your question:', reply_markup=markup)
+        msg = bot.reply_to(message,
+                           get_string('ru', strings.YOUR_QUESTION),
+                           reply_markup=markup)
         bot.register_next_step_handler(msg, process_question_step)
     except Exception as e:
-        bot.reply_to(message, 'Something went wrong')
+        print(e)
+        bot.reply_to(message, get_string('ru', strings.SOMETHING_WENT_WRONG))
 
 
 def process_question_step(message):
     try:
         markup = types.InlineKeyboardMarkup()
-        accept_btn = telebot.types.InlineKeyboardButton(text='Ok', callback_data='Ok')
-        cancel_btn = telebot.types.InlineKeyboardButton(text='Cancel', callback_data='Cancel')
+        accept_btn = telebot.types\
+            .InlineKeyboardButton(text=get_string('ru', strings.OK),
+                                  callback_data='Ok')
+        cancel_btn = telebot.types\
+            .InlineKeyboardButton(text=get_string('ru', strings.CANCEL),
+                                  callback_data='Cancel')
         markup.add(accept_btn, cancel_btn)
         question_dict['question'] = message.text
-        bot.reply_to(message, 'Send this question?', reply_markup=markup)
+        bot.reply_to(message,
+                     get_string('ru', strings.SEND_THIS_QUESTION),
+                     reply_markup=markup)
     except Exception as e:
-        bot.reply_to(message, 'Something went wrong')
+        print(e)
+        bot.reply_to(message, get_string('ru', strings.SOMETHING_WENT_WRONG))
 
 
 @bot.callback_query_handler(func=lambda call: True)
@@ -95,9 +113,11 @@ def query_handler(call):
     if call.data == 'Ok':
         bot.send_message(call.message.chat.id, commit_task(call.message))
     else:
-        bot.send_message(call.message.chat.id, 'Cancelled')
+        bot.send_message(call.message.chat.id,
+                         get_string('ru', strings.CANCELLED))
     # hide inline buttons
-    bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id)
+    bot.edit_message_reply_markup(call.message.chat.id,
+                                  call.message.message_id)
 
 
 @bot.message_handler(commands=['get_id'])
@@ -129,7 +149,7 @@ def commit_task(message):
     batch.set(user_editable_ref, {'status': 'open'})
     # commint atomically
     batch.commit()
-    return 'task created'
+    return get_string('ru', strings.TASK_CREATED)
 
 
 def create_task(message, task_id):
@@ -141,6 +161,7 @@ def create_task(message, task_id):
         'prefered_authors': [],
         'is_complete': False,
         'available': True,
+        'selection_list': True,
         'case_id': task_id,
         'case_stage_id': 'answer_the_question',
         'case_type': 'FAQ'
@@ -164,6 +185,10 @@ def create_question(message, tasks_ref, task_id):
 
 def get_category(cat):
     return 'Other' if cat not in categories else cat
+
+
+def get_string(lang, string):
+    return string[lang]
 
 
 bot.polling(none_stop=True)
