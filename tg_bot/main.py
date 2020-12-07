@@ -17,6 +17,7 @@ telebot.logger.setLevel(logging.DEBUG)  # Outputs debug messages to console.
 bot = telebot.TeleBot(os.getenv("JOURNAL_BOT_TOKEN"), parse_mode=None)
 categories = ['Org', 'Tech', 'Other']
 question_dict = {}
+journal_link = 'https://kloopmedia.github.io/Journal'
 
 
 @bot.message_handler(commands=['start'])
@@ -41,7 +42,8 @@ def register_user(message):
         if result:
             response = get_string('ru', strings.SUCCESSFULLY_REGISTERED)
         else:
-            response = get_string('ru', strings.YOU_NEED_TO_REGISTER)
+            response = get_string('ru', strings.YOU_NEED_TO_REGISTER)\
+                    + f'\n{journal_link}'
         return response
     except Exception as e:
         print(e)
