@@ -1,20 +1,20 @@
 import React, { useContext, useEffect, useState } from 'react'
-import firebase from '../../util/Firebase'
+import firebase, {signInWithGoogle} from '../../util/Firebase'
 import { AuthContext } from "../../util/Auth";
 import moment from 'moment';
-import {v1 as uuid} from 'uuid'
-import { Grid, Link, makeStyles, Typography } from '@material-ui/core';
+import { v1 as uuid } from 'uuid'
+import { Button, Grid, Link, makeStyles, Typography } from '@material-ui/core';
 
 const useStyles = makeStyles(theme => ({
-	root: {
+    root: {
         marginTop: 20,
         background: 'lightgreen',
         height: 200,
-		width: 500,
-		[theme.breakpoints.down("sm")] : {
-			maxWidth: 300 
-		}
-	}
+        width: 500,
+        [theme.breakpoints.down("sm")]: {
+            maxWidth: 300
+        }
+    }
 }));
 
 
@@ -56,11 +56,17 @@ const Home = () => {
     }, [currentUser])
 
     return (
-        currentUser && 
-        <Grid container justify="center" direction="column" alignItems="center" className={classes.root}>
-            <Typography style={{paddingBottom: 10}} variant="h5" align="center">Подключите аккаунт к Telegram боту (наблюдателям обязательно!)</Typography>
-            <Link variant="h5" href={"https://telegram.me/journal_tg_bot?start="+token}>Ссылка на бот</Link>
-        </Grid>
+        currentUser ?
+            <Grid container justify="center" direction="column" alignItems="center" className={classes.root}>
+                <Typography style={{ paddingBottom: 10 }} variant="h5" align="center">Подключите аккаунт к Telegram боту (наблюдателям обязательно!)</Typography>
+                <Link variant="h5" href={"https://telegram.me/journal_tg_bot?start=" + token}>Ссылка на бот</Link>
+            </Grid>
+            :
+            <Grid container direction="column" style={{ padding: 20 }} justify="center">
+                <Typography align="center" variant="h3">авторизируйтесь</Typography>
+                <br />
+                <Button variant="contained" onClick={signInWithGoogle}>Войти с помощью аккаунта Google</Button>
+            </Grid>
     )
 }
 

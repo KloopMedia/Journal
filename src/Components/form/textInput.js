@@ -1,10 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { forwardRef, useEffect, useRef, useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import TextField from '@material-ui/core/TextField';
 import { Typography, IconButton, Box } from '@material-ui/core';
 import FeedbackIcon from '@material-ui/icons/Feedback';
-import Dialog from '../Dialog/FeedbackDialog'
+import FeedbackDialog from '../Dialog/FeedbackDialog'
 import Feedback from './feedback'
+import FirebaseFileUploader from './FirebaseFileUploader'
+import File from './file'
 
 import firebase from '../../util/Firebase'
 
@@ -18,7 +20,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 
-function BasicTextFields(props) {
+const BasicTextFields = forwardRef((props, ref) => {
 	const classes = useStyles();
 	const [value, setValue] = React.useState('');
 	const [dialogOpen, setDialogOpen] = useState(false)
@@ -27,7 +29,7 @@ function BasicTextFields(props) {
 	const [feedbackFormData, setFormData] = useState({})
 	const [showFeedback, setShowFeedback] = useState(false)
 
-	const { index, response, required, locked, id, feedbackType, askFeedback, saveQuestionFeedback, prevTaskId } = props
+	const { index, response, returnFile, locked, id, feedbackType, askFeedback, saveQuestionFeedback, prevTaskId, uploadFilesData } = props
 
 	useEffect(() => {
 		if (response) {
@@ -67,11 +69,14 @@ function BasicTextFields(props) {
 		setDialogOpen(false)
 	}
 
+	const handleFilesUpload = (filename, downloadURL) => {
+		uploadFilesData(filename, downloadURL, id)
+	}
+
 	return (
 		<div>
-			<Dialog
+			<FeedbackDialog
 				title={feedbackFormData.title}
-				content={<Feedback answers={['Нет данных/неверные данные', 'Нет времени/интереса', 'Другое']} returnAnswer={setAnswer} />}
 				dialogFunction={sendFeedback}
 				state={dialogOpen}
 				handleClose={handleDialogClose}
@@ -96,8 +101,15 @@ function BasicTextFields(props) {
 				variant="outlined"
 				fullWidth
 			/>
+			{false && <File returnFile={returnFile} locked={locked} id={id} />}
+			{/* <FirebaseFileUploader
+                ref={ref}
+                title={""}
+                index={index}
+                uploadFilesData={handleFilesUpload}
+            /> */}
 		</div>
 	);
-}
+})
 
 export default BasicTextFields
