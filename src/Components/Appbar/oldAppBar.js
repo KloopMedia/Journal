@@ -9,7 +9,7 @@ import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
 import IconButton from '@material-ui/core/IconButton';
 import Button from '@material-ui/core/Button';
-import { Typography } from '@material-ui/core';
+import { Badge, Card, CardActions, CardContent, Typography } from '@material-ui/core';
 import Grid from '@material-ui/core/Grid'
 import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
@@ -23,6 +23,7 @@ import MenuIcon from '@material-ui/icons/Menu'
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft'
 import ChevronRightIcon from '@material-ui/icons/ChevronRight'
 import KloopLogo from '../../kloop_transparent_site.png'
+import NotificationsIcon from '@material-ui/icons/Notifications';
 
 import {
     Link
@@ -95,6 +96,12 @@ const useStyles = makeStyles((theme) => ({
     formControl: {
         margin: theme.spacing(1),
         minWidth: 120,
+    },
+    message: {
+		width: 350,
+		[theme.breakpoints.down("sm")] : {
+			maxWidth: '95%' 
+		}
     }
 }));
 
@@ -114,6 +121,8 @@ export default function PersistentDrawerLeft(props) {
     const menuOpen = Boolean(anchorEl);
 
     const [moderator, setModerator] = useState(false)
+    const [numOfMessages, setNumOfMessages] = useState(0)
+    const [messages, setMessages] = useState([])
 
     useEffect(() => {
         firebase.firestore().collection('editors').get().then((snap) => {
@@ -125,6 +134,29 @@ export default function PersistentDrawerLeft(props) {
             })
         }).catch(() => setModerator(false))
     }, [currentUser])
+
+    useEffect(() => {
+        if (currentUser) {
+            const unsubscribe = firebase.firestore().collection('notifications').where('user_id', '==', currentUser.uid).onSnapshot(async snap => {
+                console.log(snap.size)
+                let m = []
+                let count = 0
+                snap.forEach(doc => {
+                    if (!doc.data().shown) {
+                        m.push({ id: doc.id, ...doc.data() })
+                        count++
+                    }
+                })
+                setNumOfMessages(count)
+                setMessages(m)
+            })
+            return () => unsubscribe()
+        }
+    }, [currentUser])
+
+    const updateFirestoreStatus = (id, index) => {
+        firebase.firestore().collection('notifications').doc(id).update({ shown: true })
+    }
 
     const handleDrawerOpen = () => {
         setOpen(true);
@@ -148,7 +180,6 @@ export default function PersistentDrawerLeft(props) {
 
     const handleMenuClose = () => {
         setAnchorEl(null)
-        console.log(currentUser)
     }
 
     //   const copyToClipboard = (text) => {
@@ -181,11 +212,9 @@ export default function PersistentDrawerLeft(props) {
                         {/* <img src="https://kloop.kg/wp-content/uploads/2017/01/kloop_transparent_site.png" alt="Kloop.kg - Новости Кыргызстана" style={{ width: 150, height: 'auto' }} /> */}
                         {/* <Typography variant="h5" style={{ color: "black" }}>Journal</Typography> */}
                     </Grid>
-                    {currentUser
-                        ?
+                    {currentUser &&
                         <div>
-                            <Button style={{ borderColor: "black", color: 'black', marginLeft: 10, fontSize: 12 }} variant="outlined" size="small" onClick={() => firebase.auth().signOut()}>Выход</Button>
-                            {/* <IconButton
+                            <IconButton
                                 aria-label="account of current user"
                                 aria-controls="menu-appbar"
                                 aria-haspopup="true"
@@ -193,9 +222,11 @@ export default function PersistentDrawerLeft(props) {
                                 color="inherit"
                                 size="small"
                             >
-                                <Avatar src={currentUser.photoURL} className={classes.small} />
-                            </IconButton> */}
-                            {/* <Menu
+                                <Badge badgeContent={numOfMessages} color="secondary" overlap="circle" >
+                                    <NotificationsIcon style={{ fill: 'grey', fontSize: '28px' }} />
+                                </Badge>
+                            </IconButton>
+                            <Menu
                                 id="menu-appbar"
                                 anchorEl={anchorEl}
                                 anchorOrigin={{
@@ -210,15 +241,19 @@ export default function PersistentDrawerLeft(props) {
                                 open={menuOpen}
                                 onClose={handleMenuClose}
                             >
-                                <Grid container direction="column" alignItems="center" style={{ padding: 10 }}>
-                                    <Avatar src={currentUser.photoURL} style={{ marginBottom: 8 }} />
-                                    <Typography variant="body2">{currentUser.displayName}</Typography>
-                                    <Typography variant="body2">{currentUser.email}</Typography>
-                                    <Typography variant="body2">ID: <Typography component="span" variant="subtitle2">{currentUser.uid}</Typography></Typography>
+                                <Grid container direction="column" alignItems="center" >
+                                    {messages.length > 0 ? messages.map(message => (
+                                        <Grid container className={classes.message} justify="flex-start" style={{padding: 0}}>
+                                                <Typography style={{flex: 1, padding: 10}}>{message.title}</Typography>
+                                                <Button style={{padding: 10}} onClick={() => updateFirestoreStatus(message.id)} size="small">скрыть</Button>
+                                        </Grid>
+                                    )): <Typography className={classes.message} align="center" style={{padding: 10}}>Нет новых уведомлений</Typography>}
                                 </Grid>
-                                <MenuItem onClick={() => firebase.auth().signOut()}>Выход</MenuItem>
-                            </Menu> */}
-                        </div>
+                            </Menu>
+                        </div>}
+                    {currentUser
+                        ?
+                        <Button style={{ borderColor: "black", color: 'black', marginLeft: 10, fontSize: 12 }} variant="outlined" size="small" onClick={() => firebase.auth().signOut()}>Выход</Button>
                         : <Button style={{ borderColor: "black", color: 'black', marginLeft: 10, fontSize: 12 }} size="small" variant="outlined" onClick={signInWithGoogle}>вход</Button>
                     }
                 </Toolbar>
@@ -238,9 +273,6 @@ export default function PersistentDrawerLeft(props) {
                     </IconButton>
                 </div>
                 <Divider />
-                <Grid>
-                    <Button>Профиль</Button>
-                </Grid>
                 <nav>
                     <ul>
                         <li>
@@ -254,6 +286,9 @@ export default function PersistentDrawerLeft(props) {
                         </li>
                         <li>
                             <Link to="/request">Получить задание</Link>
+                        </li>
+                        <li>
+                            <Link to="/notifications">Уведомления</Link>
                         </li>
                         {moderator ? <li>
                             <Link to="/tasksObserver">Модератор</Link>

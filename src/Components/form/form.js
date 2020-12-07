@@ -9,10 +9,10 @@ import Text from "../form/text"
 
 const Form = (props) => {
 
-    const {question, index, response, returnAnswer, locked, askFeedback} = props 
+    const {question, index, response, returnAnswer, locked, askFeedback, saveQuestionFeedback, id, prevTaskId} = props 
 
     if (question.type === 'input') {
-        return <TextInput key={index} index={index} title={question.title} response={response} returnAnswer={returnAnswer} required={question.required} locked={locked} askFeedback={askFeedback} />
+        return <TextInput key={index} index={index} title={question.title} response={response} returnAnswer={returnAnswer} required={question.required} locked={locked} askFeedback={askFeedback} feedbackType={question.feedback_type} saveQuestionFeedback={saveQuestionFeedback} id={id} prevTaskId={prevTaskId}/>
     }
     else if (question.type === 'select') {
         return <SelectBox key={index} index={index} title={question.title} response={response} answers={question.answers} returnAnswer={returnAnswer} required={question.required} locked={locked} />
