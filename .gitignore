@@ -5,6 +5,9 @@
 /.pnp
 .pnp.js
 
+# private keys
+/tg_bot/private/*
+
 # testing
 /coverage
 
