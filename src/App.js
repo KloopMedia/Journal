@@ -23,6 +23,7 @@ import Home from './Components/Home/Home'
 import TasksObserver from './Components/Moderator/TasksObserver'
 import Signin from './Components/Auth/Signin';
 import PrivateRoute from './util/PrivateRoute';
+import FAQ from './Components/FAQ/FAQ';
 
 
 const App = () => {
@@ -53,9 +54,9 @@ const App = () => {
             <Route exact path="/signin">
               <Signin />
             </Route>
-            {/* <Route exact path="/">
-              <Home />
-            </Route> */}
+            <Route exact path="/faq">
+              <FAQ />
+            </Route>
             <PrivateRoute path="/" component={Home} />
           </Switch>
         </Appbar>

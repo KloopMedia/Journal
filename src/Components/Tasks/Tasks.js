@@ -1,14 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react'
 import firebase, { signInWithGoogle } from '../../util/Firebase'
 import { AuthContext } from "../../util/Auth";
-import { Redirect } from 'react-router';
-
-import TextInput from "../form/textInput";
-import SelectBox from "../form/selectBox";
-import RadioButton from "../form/radiobutton";
-import TimePickers from "../form/timePickers";
-import Checkbox from "../form/checkbox"
-import { Button, Grid, Typography } from '@material-ui/core';
+import { Grid, Typography } from '@material-ui/core';
 
 import TaskCard from './Card'
 

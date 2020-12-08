@@ -38,7 +38,6 @@ const Case = (props) => {
             firebase.firestore().collection("schema").doc("structure").collection("cases").doc(caseId).collection("stages").get()
                 .then((querySnapshot) => {
                     querySnapshot.forEach((doc) => {
-                        console.log(doc.id, " => ", doc.data());
                         tasks.push({ id: doc.id, ...doc.data() })
                     });
                 })
@@ -56,14 +55,9 @@ const Case = (props) => {
     useEffect(() => {
         if (currentUser) {
             firebase.firestore().collection('tasks').where('assigned_users', 'array-contains', currentUser.uid).where('is_complete', '==', false).get().then(snap => {
-                if (snap.empty) {
+                if (snap.size < 3) {
+                    console.log("SIZE", snap.size)
                     setDisable(false)
-                    // firebase.firestore().collection('tasks').where('assigned_users', '==', []).get().then(docs => {
-                    //     if (docs.empty) {
-                    //         setAllow(false)
-                    //         setMessage('Нет доступных тасков')
-                    //     }
-                    // })
                 }
                 else {
                     setDisable(true)
@@ -71,7 +65,7 @@ const Case = (props) => {
                 }
             })
         }
-    }, [currentUser, disableCase])
+    }, [currentUser, disableCase, open])
 
     const sendRequest = (type, task_type) => {
         firebase.firestore().collection("task_requests").doc(currentUser.uid).collection("requests").add({

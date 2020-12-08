@@ -151,6 +151,9 @@ function ResponsiveDrawer(props) {
 					{moderator ? <li>
 						<Link to="/tasksObserver">Модератор</Link>
 					</li> : null}
+					{moderator ? <li>
+						<Link to="/faq">FAQ для модераторов</Link>
+					</li> : null}
 				</ul>
 			</nav>
 		</div>

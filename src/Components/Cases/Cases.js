@@ -18,14 +18,12 @@ const Cases = () => {
             firebase.firestore().collection("schema").doc("structure").collection("cases").get()
             .then((querySnapshot) => {
                 querySnapshot.forEach((doc) => {
-                    console.log(doc.id, " => ", doc.data());
                     cases.push({ id: doc.id, ...doc.data() })
                 });
             })
             .then(() => {
                 setCases(cases)
                 setReady(true)
-                console.log(cases)
             })
             .catch((error) => {
                 console.log("Error getting documents: ", error);
