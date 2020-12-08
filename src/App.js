@@ -21,6 +21,8 @@ import Cases from './Components/Cases/Cases';
 import Notifications from './Components/Notifications/Notifications'
 import Home from './Components/Home/Home'
 import TasksObserver from './Components/Moderator/TasksObserver'
+import Signin from './Components/Auth/Signin';
+import PrivateRoute from './util/PrivateRoute';
 
 
 const App = () => {
@@ -48,9 +50,13 @@ const App = () => {
             <Route exact path="/notifications">
               <Notifications />
             </Route>
-            <Route exact path="/">
-              <Home />
+            <Route exact path="/signin">
+              <Signin />
             </Route>
+            {/* <Route exact path="/">
+              <Home />
+            </Route> */}
+            <PrivateRoute path="/" component={Home} />
           </Switch>
         </Appbar>
       </Grid>

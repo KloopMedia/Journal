@@ -54,21 +54,23 @@ const Case = (props) => {
     }, [currentUser])
 
     useEffect(() => {
-        firebase.firestore().collection('tasks').where('assigned_users', 'array-contains', currentUser.uid).where('is_complete', '==', false).get().then(snap => {
-            if (snap.empty) {
-                setDisable(false)
-                // firebase.firestore().collection('tasks').where('assigned_users', '==', []).get().then(docs => {
-                //     if (docs.empty) {
-                //         setAllow(false)
-                //         setMessage('Нет доступных тасков')
-                //     }
-                // })
-            }
-            else {
-                setDisable(true)
-                setMessage('У вас есть активные задания. Сдайте или освободите их, чтобы получить новые.')
-            }
-        })
+        if (currentUser) {
+            firebase.firestore().collection('tasks').where('assigned_users', 'array-contains', currentUser.uid).where('is_complete', '==', false).get().then(snap => {
+                if (snap.empty) {
+                    setDisable(false)
+                    // firebase.firestore().collection('tasks').where('assigned_users', '==', []).get().then(docs => {
+                    //     if (docs.empty) {
+                    //         setAllow(false)
+                    //         setMessage('Нет доступных тасков')
+                    //     }
+                    // })
+                }
+                else {
+                    setDisable(true)
+                    setMessage('У вас есть активные задания. Сдайте или освободите их, чтобы получить новые.')
+                }
+            })
+        }
     }, [currentUser, disableCase])
 
     const sendRequest = (type, task_type) => {
@@ -112,7 +114,7 @@ const Case = (props) => {
                     <Box style={{ padding: '10px 10px 5px' }}>
                         <Typography variant="body2">{props.description}</Typography>
                     </Box>
-                    <Box style={{padding: '10px 10px 0px'}}>
+                    <Box style={{ padding: '10px 10px 0px' }}>
                         <Typography color="error">{message}</Typography>
                     </Box>
                 </Box>
