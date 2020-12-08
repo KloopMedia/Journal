@@ -29,7 +29,7 @@ const BasicTextFields = forwardRef((props, ref) => {
 	const [feedbackFormData, setFormData] = useState({})
 	const [showFeedback, setShowFeedback] = useState(false)
 
-	const { index, response, returnFile, locked, id, feedbackType, askFeedback, saveQuestionFeedback, prevTaskId, uploadFilesData } = props
+	const { index, response, returnFile, locked, id, feedbackType, askFeedback, saveQuestionFeedback, prevTaskId, uploadFilesData, attachMaterials } = props
 
 	useEffect(() => {
 		if (response) {
@@ -101,7 +101,7 @@ const BasicTextFields = forwardRef((props, ref) => {
 				variant="outlined"
 				fullWidth
 			/>
-			{false && <File returnFile={returnFile} locked={locked} id={id} />}
+			{!locked && attachMaterials && <File returnFile={returnFile} locked={locked} id={id} />}
 			{/* <FirebaseFileUploader
                 ref={ref}
                 title={""}

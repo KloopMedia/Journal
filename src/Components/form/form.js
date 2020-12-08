@@ -30,6 +30,7 @@ const Form = forwardRef((props, ref) => {
             uploadFilesData={uploadFilesData}
             uploadsRef={uploadsRef}
             returnFile={returnFile}
+            attachMaterials={question.attachMaterials}
         />
     }
     else if (question.type === 'select') {

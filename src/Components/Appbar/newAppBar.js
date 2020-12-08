@@ -1,293 +1,273 @@
-import React from 'react';
-import { fade, makeStyles } from '@material-ui/core/styles';
+import React, { useContext, useState, useEffect } from 'react';
+import { AuthContext } from '../../util/Auth';
+import firebase, { signInWithGoogle } from '../../util/Firebase'
+import PropTypes from 'prop-types';
 import AppBar from '@material-ui/core/AppBar';
-import Toolbar from '@material-ui/core/Toolbar';
-import IconButton from '@material-ui/core/IconButton';
-import Typography from '@material-ui/core/Typography';
-import InputBase from '@material-ui/core/InputBase';
-import Badge from '@material-ui/core/Badge';
-import MenuItem from '@material-ui/core/MenuItem';
-import Menu from '@material-ui/core/Menu';
-import MenuIcon from '@material-ui/icons/Menu';
-import SearchIcon from '@material-ui/icons/Search';
-import AccountCircle from '@material-ui/icons/AccountCircle';
-import MailIcon from '@material-ui/icons/Mail';
-import NotificationsIcon from '@material-ui/icons/Notifications';
-import MoreIcon from '@material-ui/icons/MoreVert';
-import clsx from 'clsx';
-import Drawer from '@material-ui/core/Drawer';
-import Button from '@material-ui/core/Button';
-import List from '@material-ui/core/List';
+import CssBaseline from '@material-ui/core/CssBaseline';
 import Divider from '@material-ui/core/Divider';
+import Drawer from '@material-ui/core/Drawer';
+import Hidden from '@material-ui/core/Hidden';
+import IconButton from '@material-ui/core/IconButton';
+import InboxIcon from '@material-ui/icons/MoveToInbox';
+import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
-import InboxIcon from '@material-ui/icons/MoveToInbox';
+import MailIcon from '@material-ui/icons/Mail';
+import MenuIcon from '@material-ui/icons/Menu';
+import Menu from '@material-ui/core/Menu';
+import Toolbar from '@material-ui/core/Toolbar';
+import Button from '@material-ui/core/Button';
+import Typography from '@material-ui/core/Typography';
+import { makeStyles, useTheme } from '@material-ui/core/styles';
+import KloopLogo from '../../kloop_transparent_site.png'
+import NotificationsIcon from '@material-ui/icons/Notifications';
+import { Badge } from '@material-ui/core';
+import Grid from '@material-ui/core/Grid'
+
+import {
+	Link
+} from "react-router-dom";
+
+const drawerWidth = 240;
 
 const useStyles = makeStyles((theme) => ({
-	grow: {
-		flexGrow: 1,
+	root: {
+		display: 'flex',
+	},
+	drawer: {
+		[theme.breakpoints.up('sm')]: {
+			width: drawerWidth,
+			flexShrink: 0,
+		},
+	},
+	appBar: {
+		background: 'white',
+		boxShadow: 'none',
+		[theme.breakpoints.up('sm')]: {
+			width: `calc(100% - ${drawerWidth}px)`,
+			marginLeft: drawerWidth,
+		},
 	},
 	menuButton: {
+		color: 'black',
 		marginRight: theme.spacing(2),
-	},
-	title: {
-		display: 'none',
 		[theme.breakpoints.up('sm')]: {
-			display: 'block',
-		},
-	},
-	search: {
-		position: 'relative',
-		borderRadius: theme.shape.borderRadius,
-		backgroundColor: fade(theme.palette.common.white, 0.15),
-		'&:hover': {
-			backgroundColor: fade(theme.palette.common.white, 0.25),
-		},
-		marginRight: theme.spacing(2),
-		marginLeft: 0,
-		width: '100%',
-		[theme.breakpoints.up('sm')]: {
-			marginLeft: theme.spacing(3),
-			width: 'auto',
-		},
-	},
-	searchIcon: {
-		padding: theme.spacing(0, 2),
-		height: '100%',
-		position: 'absolute',
-		pointerEvents: 'none',
-		display: 'flex',
-		alignItems: 'center',
-		justifyContent: 'center',
-	},
-	inputRoot: {
-		color: 'inherit',
-	},
-	inputInput: {
-		padding: theme.spacing(1, 1, 1, 0),
-		// vertical padding + font size from searchIcon
-		paddingLeft: `calc(1em + ${theme.spacing(4)}px)`,
-		transition: theme.transitions.create('width'),
-		width: '100%',
-		[theme.breakpoints.up('md')]: {
-			width: '20ch',
-		},
-	},
-	sectionDesktop: {
-		display: 'none',
-		[theme.breakpoints.up('md')]: {
-			display: 'flex',
-		},
-	},
-	sectionMobile: {
-		display: 'flex',
-		[theme.breakpoints.up('md')]: {
 			display: 'none',
 		},
 	},
-	list: {
-		width: 200,
+	// necessary for content to be below app bar
+	toolbar: theme.mixins.toolbar,
+	drawerPaper: {
+		width: drawerWidth,
 	},
-	fullList: {
-		width: 'auto',
+	content: {
+		flexGrow: 1,
+		padding: theme.spacing(3),
 	},
 }));
 
-export default function PrimarySearchAppBar(props) {
+function ResponsiveDrawer(props) {
+	const { window } = props;
 	const classes = useStyles();
+	const theme = useTheme();
+	const [mobileOpen, setMobileOpen] = React.useState(false);
+	const { currentUser } = useContext(AuthContext);
 	const [anchorEl, setAnchorEl] = React.useState(null);
-	const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = React.useState(null);
-	const [state, setState] = React.useState(false);
+	const menuOpen = Boolean(anchorEl);
 
-	const isMenuOpen = Boolean(anchorEl);
-	const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
+	const handleDrawerToggle = () => {
+		setMobileOpen(!mobileOpen);
+	};
 
-	const handleProfileMenuOpen = (event) => {
+
+	const [moderator, setModerator] = useState(false)
+	const [numOfMessages, setNumOfMessages] = useState(0)
+	const [messages, setMessages] = useState([])
+
+	useEffect(() => {
+		firebase.firestore().collection('editors').get().then((snap) => {
+			snap.forEach(doc => {
+				if (doc.id === currentUser.uid) {
+					console.log('moderator')
+					setModerator(true)
+				}
+			})
+		}).catch(() => setModerator(false))
+	}, [currentUser])
+
+	useEffect(() => {
+		if (currentUser) {
+			const unsubscribe = firebase.firestore().collection('notifications').where('user_id', 'array-contains', currentUser.uid).onSnapshot(async snap => {
+				console.log(snap.size)
+				let m = []
+				let count = 0
+				snap.forEach(doc => {
+					if (!doc.data().shown) {
+						m.push({ id: doc.id, ...doc.data() })
+						count++
+					}
+				})
+				setNumOfMessages(count)
+				setMessages(m)
+			})
+			return () => unsubscribe()
+		}
+	}, [currentUser])
+
+	const updateFirestoreStatus = (id, index) => {
+		firebase.firestore().collection('notifications').doc(id).update({ shown: true })
+	}
+
+	const handleMenu = (event) => {
 		setAnchorEl(event.currentTarget);
 	};
 
-	const handleMobileMenuClose = () => {
-		setMobileMoreAnchorEl(null);
-	};
-
 	const handleMenuClose = () => {
-		setAnchorEl(null);
-		handleMobileMenuClose();
-	};
+		setAnchorEl(null)
+	}
 
-	const handleMobileMenuOpen = (event) => {
-		setMobileMoreAnchorEl(event.currentTarget);
-	};
-
-	const menuId = 'primary-search-account-menu';
-	const renderMenu = (
-		<Menu
-			anchorEl={anchorEl}
-			anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-			id={menuId}
-			keepMounted
-			transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-			open={isMenuOpen}
-			onClose={handleMenuClose}
-		>
-			<MenuItem onClick={handleMenuClose}>Profile</MenuItem>
-			<MenuItem onClick={handleMenuClose}>My account</MenuItem>
-		</Menu>
-	);
-
-	const mobileMenuId = 'primary-search-account-menu-mobile';
-	const renderMobileMenu = (
-		<Menu
-			anchorEl={mobileMoreAnchorEl}
-			anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-			id={mobileMenuId}
-			keepMounted
-			transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-			open={isMobileMenuOpen}
-			onClose={handleMobileMenuClose}
-		>
-			<MenuItem>
-				<IconButton aria-label="show 4 new mails" color="inherit">
-					<Badge badgeContent={4} color="secondary">
-						<MailIcon />
-					</Badge>
-				</IconButton>
-				<p>Messages</p>
-			</MenuItem>
-			<MenuItem>
-				<IconButton aria-label="show 11 new notifications" color="inherit">
-					<Badge badgeContent={11} color="secondary">
-						<NotificationsIcon />
-					</Badge>
-				</IconButton>
-				<p>Notifications</p>
-			</MenuItem>
-			<MenuItem onClick={handleProfileMenuOpen}>
-				<IconButton
-					aria-label="account of current user"
-					aria-controls="primary-search-account-menu"
-					aria-haspopup="true"
-					color="inherit"
-				>
-					<AccountCircle />
-				</IconButton>
-				<p>Profile</p>
-			</MenuItem>
-		</Menu>
-	);
-
-	const toggleDrawer = (open) => (event) => {
-		if (event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
-			return;
-		}
-
-		setState(open);
-	};
-
-	const list = () => (
-		<div
-			className={clsx(classes.list)}
-			role="presentation"
-			onClick={toggleDrawer(false)}
-			onKeyDown={toggleDrawer(false)}
-		>
-			<List>
-				{['Inbox', 'Starred', 'Send email', 'Drafts'].map((text, index) => (
-					<ListItem button key={text}>
-						<ListItemIcon>{index % 2 === 0 ? <InboxIcon /> : <MailIcon />}</ListItemIcon>
-						<ListItemText primary={text} />
-					</ListItem>
-				))}
-			</List>
+	const drawer = (
+		<div>
+			<div className={classes.toolbar} />
 			<Divider />
-			<List>
-				{['All mail', 'Trash', 'Spam'].map((text, index) => (
-					<ListItem button key={text}>
-						<ListItemIcon>{index % 2 === 0 ? <InboxIcon /> : <MailIcon />}</ListItemIcon>
-						<ListItemText primary={text} />
-					</ListItem>
-				))}
-			</List>
+			<nav>
+				<ul>
+					<li>
+						<Link to="/">Главная</Link>
+					</li>
+					<li>
+						<Link to="/profile">Профиль</Link>
+					</li>
+					<li>
+						<Link to="/tasks">Задания</Link>
+					</li>
+					<li>
+						<Link to="/request">Получить задание</Link>
+					</li>
+					<li>
+						<Link to="/notifications">Уведомления</Link>
+					</li>
+					{moderator ? <li>
+						<Link to="/tasksObserver">Модератор</Link>
+					</li> : null}
+				</ul>
+			</nav>
 		</div>
 	);
 
+	const container = window !== undefined ? () => window().document.body : undefined;
+
 	return (
-		<div className={classes.grow}>
-			<AppBar position="static">
+		<div className={classes.root}>
+			<CssBaseline />
+			<AppBar position="fixed" className={classes.appBar}>
 				<Toolbar>
 					<IconButton
-						edge="start"
-						className={classes.menuButton}
 						color="inherit"
 						aria-label="open drawer"
-						onClick={toggleDrawer(true)}
+						edge="start"
+						onClick={handleDrawerToggle}
+						className={classes.menuButton}
 					>
 						<MenuIcon />
 					</IconButton>
-					<Typography className={classes.title} variant="h6" noWrap>
-						Material-UI
-          </Typography>
-					<div className={classes.search}>
-						<div className={classes.searchIcon}>
-							<SearchIcon />
-						</div>
-						<InputBase
-							placeholder="Search…"
-							classes={{
-								root: classes.inputRoot,
-								input: classes.inputInput,
-							}}
-							inputProps={{ 'aria-label': 'search' }}
-						/>
-					</div>
-					<div className={classes.grow} />
-					<div className={classes.sectionDesktop}>
-						<IconButton aria-label="show 4 new mails" color="inherit">
-							<Badge badgeContent={4} color="secondary">
-								<MailIcon />
-							</Badge>
-						</IconButton>
-						<IconButton aria-label="show 17 new notifications" color="inherit"
-							aria-controls={menuId}
-							aria-haspopup="true"
-							onClick={handleProfileMenuOpen}>
-							<Badge badgeContent={17} color="secondary">
-								<NotificationsIcon />
-							</Badge>
-						</IconButton>
-						<IconButton
-							edge="end"
-							aria-label="account of current user"
-							aria-controls={menuId}
-							aria-haspopup="true"
-							onClick={handleProfileMenuOpen}
-							color="inherit"
-						>
-							<AccountCircle />
-						</IconButton>
-					</div>
-					<div className={classes.sectionMobile}>
-						<IconButton
-							aria-label="show more"
-							aria-controls={mobileMenuId}
-							aria-haspopup="true"
-							onClick={handleMobileMenuOpen}
-							color="inherit"
-						>
-							<MoreIcon />
-						</IconButton>
-					</div>
+					<Grid container style={{ flexGrow: 1 }}>
+						<img src={KloopLogo} alt="Kloop.kg - Новости Кыргызстана" style={{ width: 150, height: 'auto' }} />
+						{/* <img src="https://kloop.kg/wp-content/uploads/2017/01/kloop_transparent_site.png" alt="Kloop.kg - Новости Кыргызстана" style={{ width: 150, height: 'auto' }} /> */}
+						{/* <Typography variant="h5" style={{ color: "black" }}>Journal</Typography> */}
+					</Grid>
+					{currentUser &&
+						<div>
+							<IconButton
+								aria-label="account of current user"
+								aria-controls="menu-appbar"
+								aria-haspopup="true"
+								onClick={handleMenu}
+								color="inherit"
+								size="small"
+							>
+								<Badge badgeContent={numOfMessages} color="secondary" overlap="circle" >
+									<NotificationsIcon style={{ fill: 'grey', fontSize: '28px' }} />
+								</Badge>
+							</IconButton>
+							<Menu
+								id="menu-appbar"
+								anchorEl={anchorEl}
+								anchorOrigin={{
+									vertical: 'top',
+									horizontal: 'right',
+								}}
+								keepMounted
+								transformOrigin={{
+									vertical: 'top',
+									horizontal: 'right',
+								}}
+								open={menuOpen}
+								onClose={handleMenuClose}
+							>
+								<Grid container direction="column" alignItems="center" >
+									{messages.length > 0 ? messages.map((message, i) => (
+										<Grid container key={"notification_"+i} className={classes.message} justify="flex-start" style={{ padding: 0 }}>
+											<Typography style={{ flex: 1, padding: 10 }}>{message.title}</Typography>
+											<Button style={{ padding: 10 }} onClick={() => updateFirestoreStatus(message.id)} size="small">скрыть</Button>
+										</Grid>
+									)) : <Typography className={classes.message} align="center" style={{ padding: 10 }}>Нет новых уведомлений</Typography>}
+								</Grid>
+							</Menu>
+						</div>}
+					{currentUser
+						?
+						<Button style={{ borderColor: "black", color: 'black', marginLeft: 10, fontSize: 12 }} variant="outlined" size="small" onClick={() => firebase.auth().signOut()}>Выход</Button>
+						: <Button style={{ borderColor: "black", color: 'black', marginLeft: 10, fontSize: 12 }} size="small" variant="outlined" onClick={signInWithGoogle}>вход</Button>
+					}
 				</Toolbar>
 			</AppBar>
-			{renderMobileMenu}
-			{renderMenu}
-			<React.Fragment>
-				<Drawer anchor={'left'} open={state} onClose={toggleDrawer(false)}>
-					{list()}
-				</Drawer>
-			</React.Fragment>
-			{props.children}
+			<nav className={classes.drawer} aria-label="mailbox folders">
+				{/* The implementation can be swapped with js to avoid SEO duplication of links. */}
+				<Hidden smUp implementation="css">
+					<Drawer
+						container={container}
+						variant="temporary"
+						anchor={theme.direction === 'rtl' ? 'right' : 'left'}
+						open={mobileOpen}
+						onClose={handleDrawerToggle}
+						classes={{
+							paper: classes.drawerPaper,
+						}}
+						ModalProps={{
+							keepMounted: true, // Better open performance on mobile.
+						}}
+					>
+						{drawer}
+					</Drawer>
+				</Hidden>
+				<Hidden xsDown implementation="css">
+					<Drawer
+						classes={{
+							paper: classes.drawerPaper,
+						}}
+						variant="permanent"
+						open
+					>
+						{drawer}
+					</Drawer>
+				</Hidden>
+			</nav>
+			<main className={classes.content}>
+				<div className={classes.toolbar} />
+				{props.children}
+			</main>
 		</div>
 	);
 }
+
+ResponsiveDrawer.propTypes = {
+	/**
+	 * Injected by the documentation to work in an iframe.
+	 * You won't need it on your project.
+	 */
+	window: PropTypes.func,
+};
+
+export default ResponsiveDrawer;

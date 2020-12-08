@@ -63,9 +63,9 @@ const Home = () => {
             </Grid>
             :
             <Grid container direction="column" style={{ padding: 20 }} justify="center">
-                <Typography align="center" variant="h3">авторизируйтесь</Typography>
+                <Typography align="center" variant="h3">Регистрация</Typography>
                 <br />
-                <Button variant="contained" onClick={signInWithGoogle}>Войти с помощью аккаунта Google</Button>
+                <Button size="large" color="primary" variant="contained" onClick={signInWithGoogle}>Войти с помощью аккаунта Google</Button>
             </Grid>
     )
 }

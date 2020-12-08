@@ -12,8 +12,8 @@ import { AuthContext } from "./util/Auth";
 import Grid from '@material-ui/core/Grid'
 
 // import Appbar from './Components/Appbar/Appbar'
-import Appbar from './Components/Appbar/oldAppBar'
-// import Appbar from './Components/Appbar/newAppBar'
+// import Appbar from './Components/Appbar/oldAppBar'
+import Appbar from './Components/Appbar/newAppBar'
 import Profile from './Components/Profile/Profile'
 import Tasks from './Components/Tasks/Tasks'
 import Task from './Components/Tasks/Task'
