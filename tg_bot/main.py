@@ -15,9 +15,18 @@ logger = telebot.logger
 telebot.logger.setLevel(logging.DEBUG)  # Outputs debug messages to console.
 
 bot = telebot.TeleBot(os.getenv("JOURNAL_BOT_TOKEN"), parse_mode=None)
-categories = ['Org', 'Tech', 'Other']
 question_dict = {}
-journal_link = 'https://kloopmedia.github.io/Journal'
+
+
+def get_string(lang, string):
+    return string[lang]
+
+
+categories = [
+    get_string('ru', strings.ORG_CAT),
+    get_string('ru', strings.TECH_CAT),
+    get_string('ru', strings.OTHER_CAT)
+]
 
 
 @bot.message_handler(commands=['start'])
@@ -42,8 +51,7 @@ def register_user(message):
         if result:
             response = get_string('ru', strings.SUCCESSFULLY_REGISTERED)
         else:
-            response = get_string('ru', strings.YOU_NEED_TO_REGISTER)\
-                    + f'\n{journal_link}'
+            response = get_string('ru', strings.YOU_NEED_TO_REGISTER)
         return response
     except Exception as e:
         print(e)
@@ -189,8 +197,6 @@ def get_category(cat):
     return 'Other' if cat not in categories else cat
 
 
-def get_string(lang, string):
-    return string[lang]
 
 
 bot.polling(none_stop=True)
