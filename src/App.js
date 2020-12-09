@@ -12,8 +12,8 @@ import { AuthContext } from "./util/Auth";
 import Grid from '@material-ui/core/Grid'
 
 // import Appbar from './Components/Appbar/Appbar'
-import Appbar from './Components/Appbar/oldAppBar'
-// import Appbar from './Components/Appbar/newAppBar'
+// import Appbar from './Components/Appbar/oldAppBar'
+import Appbar from './Components/Appbar/newAppBar'
 import Profile from './Components/Profile/Profile'
 import Tasks from './Components/Tasks/Tasks'
 import Task from './Components/Tasks/Task'
@@ -21,6 +21,9 @@ import Cases from './Components/Cases/Cases';
 import Notifications from './Components/Notifications/Notifications'
 import Home from './Components/Home/Home'
 import TasksObserver from './Components/Moderator/TasksObserver'
+import Signin from './Components/Auth/Signin';
+import PrivateRoute from './util/PrivateRoute';
+import FAQ from './Components/FAQ/FAQ';
 
 
 const App = () => {
@@ -48,9 +51,13 @@ const App = () => {
             <Route exact path="/notifications">
               <Notifications />
             </Route>
-            <Route exact path="/">
-              <Home />
+            <Route exact path="/signin">
+              <Signin />
             </Route>
+            <Route exact path="/faq">
+              <FAQ />
+            </Route>
+            <PrivateRoute path="/" component={Home} />
           </Switch>
         </Appbar>
       </Grid>

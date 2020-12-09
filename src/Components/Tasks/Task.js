@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react'
+import React, { useState, useEffect, useContext, useRef } from 'react'
 import firebase, { signInWithGoogle } from '../../util/Firebase'
 import { AuthContext } from "../../util/Auth";
 
@@ -31,18 +31,20 @@ const Tasks = () => {
 	const [feedbackValue, setFeedback] = useState({})
 	const [releaseFeedbackData, setReleaseFeedbackData] = useState({})
 	const [openSnackbar, setOpenSnackbar] = useState(false);
+	const [files, setFiles] = useState({})
 
 	const { currentUser } = useContext(AuthContext);
 	const { id } = useParams();
 
 	const handleCloseSnackbar = (event, reason) => {
-        if (reason === 'clickaway') {
-            return;
-        }
+		if (reason === 'clickaway') {
+			return;
+		}
 
-        setOpenSnackbar(false);
-    };
+		setOpenSnackbar(false);
+	};
 
+	// const uploadsRef = useRef();
 
 	useEffect(() => {
 		const getQuestions = async (taskID) => {
@@ -118,8 +120,18 @@ const Tasks = () => {
 			let sameCaseTasks = await getSameCaseTasks()
 			setCaseTasks(sameCaseTasks)
 			if (sameCaseTasks.length > 0) {
-				sq = await getQuestions(sameCaseTasks[0].id)
-				sr = await getResponses(sameCaseTasks[0].id)
+				let ques = sameCaseTasks.map(t => {
+					return getQuestions(t.id)
+				})
+				let resp = sameCaseTasks.map(t => {
+					return getResponses(t.id)
+				})
+				console.log(ques)
+				await Promise.all(ques).then(data => data.forEach(d => sq.push(...d)))
+				await Promise.all(resp).then(data => data.forEach(d => sr.push(...d)))
+
+				console.log(sq)
+				console.log(sr)
 			}
 
 			let sf = sq.map((el, i) => {
@@ -155,14 +167,25 @@ const Tasks = () => {
 						returnAnswer(res.data.answer, i)
 					}
 				})
-				return <Form key={el.questionId + '_' + i} question={el.data} index={i} response={response} returnAnswer={returnAnswer} locked={locked} />
+				return (
+					<Form
+						key={el.questionId + '_' + i}
+						question={el.data}
+						index={i}
+						response={response}
+						returnFile={returnFile}
+						returnAnswer={returnAnswer}
+						id={el.questionId}
+						locked={locked}
+						// ref={uploadsRef}
+						uploadFilesData={uploadFilesData} />
+				)
 			})
 
 			let newF = sf.concat(f)
 			setForms(newF)
 		}
 		if (currentUser) {
-
 			getForms()
 		}
 	}, [currentUser, id, lockButton])
@@ -174,16 +197,35 @@ const Tasks = () => {
 		setAnswers(tmp)
 	}
 
+	const returnFile = (file, questionId) => {
+		let arr = [...file]
+		let tmp = files
+		tmp[questionId] = arr
+		setFiles(tmp)
+		console.log([...file], questionId)
+	}
+
+	const upload = () => {
+		// uploadsRef.current.startUpload()
+		if (Object.keys(files).length > 0) {
+			console.log('files')
+			for (const [key, value] of Object.entries(files)) {
+				let ref = firebase.storage().ref(id).child(key).child(currentUser.uid)
+				value.forEach(v => ref.child(v.name).put(v).then(snap => snap.ref.getDownloadURL().then(url => uploadFilesData(v.name, url, key))))
+			}
+		}
+	}
+
 	const saveQuestionFeedback = (data, questionId, previousTaskId) => {
 		if (previousTaskId) {
 			firebase.firestore().collection('tasks').doc(previousTaskId).collection('feedbacks').doc(questionId).collection('messages')
-			.add({
-				answer: data.reason, 
-				text: data.text, 
-				user_id: currentUser.uid,
-				timestamp: firebase.firestore.FieldValue.serverTimestamp()
-			})
-			.then(() => setOpenSnackbar(true))
+				.add({
+					answer: data.reason,
+					text: data.text,
+					user_id: currentUser.uid,
+					timestamp: firebase.firestore.FieldValue.serverTimestamp()
+				})
+				.then(() => setOpenSnackbar(true))
 		}
 		else {
 			alert('Ошибка: Что-то пошло не так при сохранении фидбека. Сообщите программисту!')
@@ -191,9 +233,10 @@ const Tasks = () => {
 	}
 
 	const saveToFirebase = async (lock) => {
-		await questions.forEach(async (q, i) => {
+		upload()
+		questions.forEach(async (q, i) => {
 			if (answers[i] || answers[i] === "") {
-				await firebase.firestore().collection("tasks").doc(id).collection("responses").doc(q.questionId).set({ answer: answers[i] })
+				await firebase.firestore().collection("tasks").doc(id).collection("responses").doc(q.questionId).set({ answer: answers[i] }, { merge: true })
 			}
 		})
 
@@ -204,6 +247,18 @@ const Tasks = () => {
 		}
 		setUploaded(true)
 	}
+
+	const uploadFilesData = async (filename, url, questionId) => {
+		let rootRef = firebase.firestore().collection("tasks").doc(id).collection("responses").doc(questionId)
+		console.log("Файл отправлен")
+		if (filename && url) {
+			rootRef.set(
+				{
+					files: firebase.firestore.FieldValue.arrayUnion({ public_url: url, filename: filename })
+				}, { merge: true }
+			).then(() => console.log('super'))
+		}
+	};
 
 	const handleDialogClose = () => {
 		setDialog(false);
@@ -257,22 +312,22 @@ const Tasks = () => {
 					returnFeedback={handleFeedbackSave} />}
 				{redirect && <Redirect to="/tasks" />}
 				<Snackbar
-                anchorOrigin={{
-                    vertical: 'bottom',
-                    horizontal: 'left',
-                }}
-                open={openSnackbar}
-                autoHideDuration={6000}
-                onClose={handleCloseSnackbar}
-                message="Фидбек отправлен"
-                action={
-                    <React.Fragment>
-                        <IconButton size="small" aria-label="close" color="inherit" onClick={handleCloseSnackbar}>
-                            <CloseIcon fontSize="small" />
-                        </IconButton>
-                    </React.Fragment>
-                }
-            />
+					anchorOrigin={{
+						vertical: 'bottom',
+						horizontal: 'left',
+					}}
+					open={openSnackbar}
+					autoHideDuration={6000}
+					onClose={handleCloseSnackbar}
+					message="Фидбек отправлен"
+					action={
+						<React.Fragment>
+							<IconButton size="small" aria-label="close" color="inherit" onClick={handleCloseSnackbar}>
+								<CloseIcon fontSize="small" />
+							</IconButton>
+						</React.Fragment>
+					}
+				/>
 				{/* Предыдущие задания{caseTasks.map((t, i) => <Button key={"case_button_"+i} component={ Link } to={"/tasks/" + t.id}>{t.title}</Button>)} */}
 				{forms}
 				<Grid container style={{ padding: 20 }} justify="center">
@@ -292,9 +347,6 @@ const Tasks = () => {
 				<br />
 				<Button variant="contained" onClick={signInWithGoogle}>Войти с помощью аккаунта Google</Button>
 			</Grid>
-		// <div>
-		// 	{forms}
-		// </div>
 	)
 
 }

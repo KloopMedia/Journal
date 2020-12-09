@@ -17,7 +17,7 @@ const Notifications = () => {
 
     useEffect(() => {
         if (currentUser) {
-            const unsubscribe = firebase.firestore().collection('notifications').where('user_id', '==', currentUser.uid).onSnapshot(async snap => {
+            const unsubscribe = firebase.firestore().collection('notifications').where('user_id', 'array-contains', currentUser.uid).onSnapshot(async snap => {
                 let messages = []
                 snap.forEach((doc, i) => {
                     messages.push({ id: doc.id, ...doc.data() })
