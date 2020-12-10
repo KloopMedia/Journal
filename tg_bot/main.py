@@ -109,6 +109,7 @@ def ask_question(message):
 def categories_handler(call):
     for cat in categories:
         if call.data == get_callback_data(cat):
+            question_dict['category'] = call.data
             markup = types.InlineKeyboardMarkup(row_width=1)
             ask_question_btn = types.InlineKeyboardButton(
                 text=get_string('ru', strings.ASK_YOUR_OWN_QUESTION),
@@ -127,8 +128,6 @@ def categories_handler(call):
 )
 def question_handler(call):
     try:
-        category = call.message.text
-        question_dict['category'] = category
         markup = types.ForceReply(selective=False)
         msg = bot.reply_to(call.message,
                            get_string('ru', strings.YOUR_QUESTION),
@@ -215,12 +214,14 @@ def create_task(message, task_id):
         'selection_list': True,
         'case_id': task_id,
         'case_stage_id': 'answer_the_question',
-        'case_type': 'FAQ'
+        'case_type': 'FAQ',
+        'timestamp': firestore.SERVER_TIMESTAMP
     }
 
 
 def create_question(message, tasks_ref, task_id):
     print('question: ', question_dict.get('question'))
+    print('category: ', question_dict.get('category'))
     question = {
         'title': question_dict.get('question'),
         'type': 'input',
@@ -235,7 +236,7 @@ def create_question(message, tasks_ref, task_id):
 
 
 def get_category(cat):
-    return 'Other' if cat not in categories else cat
+    return 'Other' if cat not in [get_callback_data(cat) for cat in categories] else cat
 
 
 bot.polling(none_stop=True)
