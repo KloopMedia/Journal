@@ -100,7 +100,7 @@ function ResponsiveDrawer(props) {
 
 	useEffect(() => {
 		if (currentUser) {
-			const unsubscribe = firebase.firestore().collection('notifications').where('user_id', 'array-contains', currentUser.uid).onSnapshot(async snap => {
+			const unsubscribe = firebase.firestore().collection('notifications').where('user_id', 'array-contains', currentUser.uid).orderBy('timestamp', 'desc').onSnapshot(async snap => {
 				console.log(snap.size)
 				let m = []
 				let count = 0
@@ -110,6 +110,7 @@ function ResponsiveDrawer(props) {
 						count++
 					}
 				})
+				m.sort((a, b) => b.created_date.toDate() - a.created_date.toDate())
 				setNumOfMessages(count)
 				setMessages(m)
 			})

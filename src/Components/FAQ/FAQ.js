@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useContext } from 'react';
 import firebase from '../../util/Firebase'
 
-import { Button, Grid, makeStyles } from '@material-ui/core';
+import { Button, Grid, makeStyles, Typography } from '@material-ui/core';
 
 import NativeSelect from '@material-ui/core/NativeSelect';
 import FormHelperText from '@material-ui/core/FormHelperText';
@@ -13,7 +13,7 @@ import Card from './Card'
 
 const useStyles = makeStyles((theme) => ({
     select: {
-		width: 500,
+        width: 500,
         [theme.breakpoints.down("sm")]: {
             maxWidth: 300
         }
@@ -49,17 +49,17 @@ const FAQ = (props) => {
         if (taskType !== 'ВСЕ') {
             tasksRef = tasksRef.where("type", "==", taskType)
         }
-
-        // await tasksRef.get().then(docs => {
-        //     docs.forEach(doc => {
-        //         doc.ref.collection('questions').get().then(snap => {
-        //             snap.forEach(taskData => )
-        //         })
-        //         tasksList.push({ id: doc.id, ...doc.data() })
-        //     })
-
-        //     setTasks(tasksList)
-        // })
+        console.log('fired')
+        await tasksRef.get().then(docs => {
+            docs.forEach(doc => {
+                // doc.ref.collection('questions').get().then(snap => {
+                //     snap.forEach(taskData => )
+                // })
+                tasksList.push({ id: doc.id, ...doc.data() })
+            })
+            console.log(tasksList)
+            setTasks(tasksList)
+        })
     }
 
 
@@ -71,7 +71,6 @@ const FAQ = (props) => {
                         value={taskType}
                         onChange={setTaskTypeHandler}
                         name="filterTaskType"
-                    //inputProps={{ 'aria-label': 'filterViolation' }}
                     >
                         {
                             taskTypes.map(taskType => (
@@ -99,7 +98,8 @@ const FAQ = (props) => {
 
             <Grid container justify="center">
                 {tasks.map((task, i) => <Card key={'FAQ_' + i} title="test" />)}
-                <Card key={'FAQ'} title="test" />
+                {tasks.length === 0 && <Typography style={{ padding: 30}}>Нет новых вопросов</Typography>}
+                {/* <Card key={'FAQ'} title="test" /> */}
             </Grid>
         </Grid>
     );

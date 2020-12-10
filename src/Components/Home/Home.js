@@ -82,9 +82,10 @@ const Home = () => {
 
     return (
         currentUser ?
-            <Grid container justify="center" direction="column" alignItems="center" className={classes.root}>
+            <Grid container justify="center" direction="column" alignItems="center" className={classes.root} >
                 <Typography style={{ paddingBottom: 10 }} variant="h5" align="center">Подключите аккаунт к Telegram боту (наблюдателям обязательно!)</Typography>
-                <Link variant="h5" href={"https://telegram.me/journal_tg_bot?start=" + token}>Ссылка на бот</Link>
+                {token ? <Link variant="h5" href={"https://telegram.me/journal_tg_bot?start=" + token}>Ссылка на бот</Link> 
+                : <Typography>Подождите. Ссылка создается</Typography>}
             </Grid>
             :
             <Grid container direction="column" style={{ padding: 20 }} justify="center">
