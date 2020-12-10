@@ -65,7 +65,10 @@ def register_in_transaction(transaction, token, chat_id):
     if not len(user):
         return False
     private_ref = db.document(f'users/{user[0].id}/user_private/private')
-    transaction.update(private_ref, {'tg_id': str(chat_id)})
+    if private_ref.get().exists:
+        transaction.update(private_ref, {'tg_id': str(chat_id)})
+    else:
+        transaction.set(private_ref, {'tg_id': str(chat_id)})
     return True
 
 
