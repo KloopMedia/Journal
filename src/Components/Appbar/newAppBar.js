@@ -86,14 +86,16 @@ function ResponsiveDrawer(props) {
 	const [messages, setMessages] = useState([])
 
 	useEffect(() => {
-		firebase.firestore().collection('editors').get().then((snap) => {
-			snap.forEach(doc => {
-				if (doc.id === currentUser.uid) {
-					console.log('moderator')
-					setModerator(true)
-				}
-			})
-		}).catch(() => setModerator(false))
+		if (currentUser) {
+			firebase.firestore().collection('editors').get().then((snap) => {
+				snap.forEach(doc => {
+					if (doc.id === currentUser.uid) {
+						console.log('moderator')
+						setModerator(true)
+					}
+				})
+			}).catch(() => setModerator(false))
+		}
 	}, [currentUser])
 
 	useEffect(() => {
@@ -211,7 +213,7 @@ function ResponsiveDrawer(props) {
 							>
 								<Grid container direction="column" alignItems="center" >
 									{messages.length > 0 ? messages.map((message, i) => (
-										<Grid container key={"notification_"+i} className={classes.message} justify="flex-start" style={{ padding: 0 }}>
+										<Grid container key={"notification_" + i} className={classes.message} justify="flex-start" style={{ padding: 0 }}>
 											<Typography style={{ flex: 1, padding: 10 }}>{message.title}</Typography>
 											<Button style={{ padding: 10 }} onClick={() => updateFirestoreStatus(message.id)} size="small">скрыть</Button>
 										</Grid>

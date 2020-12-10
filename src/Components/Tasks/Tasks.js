@@ -9,21 +9,30 @@ import TaskCard from './Card'
 const Tasks = (props) => {
 
 	const [allTasks, setTasks] = useState(null)
+	const [submittedTasks, setSubmitted] = useState(null)
 	const { currentUser } = useContext(AuthContext);
 
 	useEffect(() => {
 		if (currentUser) {
 			let tasks = []
+			let submitted = []
 			console.log("Fired")
 			firebase.firestore().collection("tasks").where("assigned_users", "array-contains", currentUser.uid).get()
 				.then((querySnapshot) => {
 					querySnapshot.forEach((doc) => {
 						console.log(doc.id, " => ", doc.data());
-						tasks.push({ id: doc.id, data: doc.data() })
+						if (doc.data().is_complete) {
+							submitted.push({ id: doc.id, ...doc.data() })
+						}
+						else {
+							tasks.push({ id: doc.id, ...doc.data() })
+						}
+
 					});
 				})
 				.then(() => {
 					setTasks(tasks)
+					setSubmitted(submitted)
 				})
 				.catch((error) => {
 					console.log("Error getting documents: ", error);
@@ -42,8 +51,13 @@ const Tasks = (props) => {
 			<Typography variant="h4">Задания</Typography>
 
 			{allTasks && allTasks.map((task, i) => (
-				<Grid key={i} style={{padding: 10}}>
-					<TaskCard title={task.data.title} description={task.data.description} type={task.data.type} id={task.id} />
+				<Grid key={'active_task_'+i} style={{ padding: 10 }}>
+					<TaskCard title={task.title} complete={task.is_complete} description={task.description} type={task.type} id={task.id} />
+				</Grid>
+			))}
+			{submittedTasks && submittedTasks.map((task, i) => (
+				<Grid key={'submitted_task_'+i} style={{ padding: 10 }}>
+					<TaskCard title={task.title} complete={task.is_complete} description={task.description} type={task.type} id={task.id} />
 				</Grid>
 			))}
 

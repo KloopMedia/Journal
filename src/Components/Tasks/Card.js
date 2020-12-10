@@ -7,6 +7,7 @@ import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
 
 import { Redirect } from 'react-router';
+import { Box, Grid } from '@material-ui/core';
 
 const useStyles = makeStyles({
 	root: {
@@ -26,18 +27,23 @@ const useStyles = makeStyles({
 
 const TaskCard = (props) => {
 	const classes = useStyles();
-	const { title, status, type, language, description, id, cardColor, sendRequest, disabled } = props
+	const { title, complete, type, language, description, id, cardColor, sendRequest, disabled } = props
 
 	const [redirect, setRedirect] = useState(false)
 
 	return (
 		<div>
 			{redirect && <Redirect to={"/tasks/" + id} />}
-			<Card className={classes.root} style={{background: cardColor}}>
+			<Card className={classes.root} style={{ background: cardColor }}>
 				<CardContent>
-					<Typography variant="h6">
-						{title}
-					</Typography>
+					<Box display="flex" justifyContent="space-between" alignItems="center">
+						<Typography variant="h6">
+							{title}
+						</Typography>
+						{complete && <Typography color="error">
+							Сдано
+						</Typography>}
+					</Box>
 					<Typography variant="subtitle1" className={classes.pos} color="textSecondary">
 						#{type}
 					</Typography>
@@ -46,7 +52,7 @@ const TaskCard = (props) => {
 					</Typography>
 				</CardContent>
 				<CardActions>
-					{sendRequest ? 
+					{sendRequest ?
 						<Button variant="contained" disabled={disabled} color="primary" size="small" onClick={() => sendRequest(type, id)}>{"Получить задание"}</Button>
 						:
 						<Button size="small" onClick={() => setRedirect(true)}>{"Открыть"}</Button>

@@ -1,9 +1,11 @@
 import React, { useContext, useEffect, useState } from 'react'
-import firebase, {signInWithGoogle} from '../../util/Firebase'
+import firebase, { signInWithGoogle } from '../../util/Firebase'
 import { AuthContext } from "../../util/Auth";
 import moment from 'moment';
 import { v1 as uuid } from 'uuid'
 import { Button, Grid, Link, makeStyles, Typography } from '@material-ui/core';
+
+const queryString = require('query-string');
 
 const useStyles = makeStyles(theme => ({
     root: {
@@ -53,6 +55,29 @@ const Home = () => {
             })
         }
 
+    }, [currentUser])
+
+    useEffect(() => {
+        if (currentUser) {
+            let urlString = queryString.parse(window.location.search)
+            if (urlString.rank) {
+                console.log(urlString.rank)
+                firebase.firestore().collection('schema').doc('structure').collection('ranks').doc(urlString.rank).get().then(doc => {
+                    if (doc.exists) {
+                        console.log('creating request')
+                        firebase.firestore().collection('rank_requests').add({
+                            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                            user_id: currentUser.uid,
+                            processed: false,
+                            rank: doc.id
+                        })
+                    }
+                    else {
+                        console.log('no rank')
+                    }
+                })
+            }
+        }
     }, [currentUser])
 
     return (

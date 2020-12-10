@@ -14,7 +14,7 @@ import { set } from 'immutable';
 
 
 const Case = (props) => {
-    const { caseId } = props
+    const { caseId, userRanks } = props
     const [allTasks, setTasks] = useState(null)
     const [ready, setReady] = useState(false)
     const { currentUser } = useContext(AuthContext);
@@ -38,7 +38,20 @@ const Case = (props) => {
             firebase.firestore().collection("schema").doc("structure").collection("cases").doc(caseId).collection("stages").get()
                 .then((querySnapshot) => {
                     querySnapshot.forEach((doc) => {
+                        // before change
                         tasks.push({ id: doc.id, ...doc.data() })
+
+                        // after change
+                        // const ranks = doc.data().ranks
+                        // console.log(userRanks)
+                        // if (ranks && userRanks.some(userRank => ranks.includes(userRank))) {
+                        //     tasks.push({ id: doc.id, ...doc.data(), disabled: false })
+                        // }
+                        // else {
+                        //     tasks.push({ id: doc.id, ...doc.data(), disabled: true })
+                        //     setMessage(<Typography color="error" display="block">Получите достижение <Typography component="span" display="inline" color="primary" align="justify">Первопроходец Battle For Azeroth</Typography> чтобы активировать следующее задание</Typography>)
+                        // }
+                        
                     });
                 })
                 .then(() => {
@@ -61,7 +74,7 @@ const Case = (props) => {
                 }
                 else {
                     setDisable(true)
-                    setMessage('У вас есть активные задания. Сдайте или освободите их, чтобы получить новые.')
+                    setMessage(<Typography color="error">У вас есть активные задания. Сдайте или освободите их, чтобы получить новые.</Typography>)
                 }
             })
         }
@@ -109,14 +122,14 @@ const Case = (props) => {
                         <Typography variant="body2">{props.description}</Typography>
                     </Box>
                     <Box style={{ padding: '10px 10px 0px' }}>
-                        <Typography color="error">{message}</Typography>
+                        {message}
                     </Box>
                 </Box>
 
                 <Grid container justify="center" style={{ padding: 10 }}>
                     {ready && allTasks.map((t, i) => (
                         <Grid item key={i} style={{ padding: 10 }}>
-                            <Card title={t.title} description={t.description} type={t.type} id={t.id} cardColor="#F5F5F5" sendRequest={sendRequest} disabled={disableCase} />
+                            <Card title={t.title} description={t.description} type={t.type} id={t.id} cardColor="#F5F5F5" sendRequest={sendRequest} disabled={disableCase || t.disabled} />
                         </Grid>
                     ))}
                 </Grid>
