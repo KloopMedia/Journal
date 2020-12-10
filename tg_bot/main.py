@@ -22,10 +22,22 @@ def get_string(lang, string):
     return string[lang]
 
 
+def get_callback_data(category):
+    return category.get('callback_data')
+
+
+def get_text(category):
+    try:
+        return db.document(f'faq_texts/{category.get("callback_data")}')\
+                .get()\
+                .get('text').replace('\\n', '\n')
+    except Exception as e:
+        print(e)
+
+
 categories = [
-    get_string('ru', strings.ORG_CAT),
-    get_string('ru', strings.TECH_CAT),
-    get_string('ru', strings.OTHER_CAT)
+    strings.PAYMENT, strings.SCHEDULE, strings.STUDY, strings.MY_SITE,
+    strings.TECH_CAT
 ]
 
 
@@ -75,31 +87,56 @@ def register_in_transaction(transaction, token, chat_id):
 @bot.message_handler(commands=['ask_question'])
 def ask_question(message):
     if is_registered(message.from_user.id):
-        markup = types.ReplyKeyboardMarkup(row_width=3,
-                                           resize_keyboard=True,
-                                           one_time_keyboard=True)
-        buttons = [types.KeyboardButton(cat) for cat in categories]
+        markup = types.InlineKeyboardMarkup(row_width=3)
+        buttons = []
+        for cat in categories:
+            buttons.append(
+                types.InlineKeyboardButton(
+                    text=get_string('ru', cat),
+                    callback_data=get_callback_data(cat)))
+
         markup.add(*buttons)
         bot.send_message(message.chat.id,
                          get_string('ru', strings.CHOOSE_CATEGORY),
                          reply_markup=markup)
-        bot.register_next_step_handler(message, process_category_step)
     else:
         bot.reply_to(message, get_string('ru', strings.YOU_NEED_TO_REGISTER))
 
 
-def process_category_step(message):
+@bot.callback_query_handler(
+    func=lambda call: True
+    if call.data in [get_callback_data(cat) for cat in categories] else False)
+def categories_handler(call):
+    for cat in categories:
+        if call.data == get_callback_data(cat):
+            markup = types.InlineKeyboardMarkup(row_width=1)
+            ask_question_btn = types.InlineKeyboardButton(
+                text=get_string('ru', strings.ASK_YOUR_OWN_QUESTION),
+                callback_data=get_callback_data(strings.ASK_YOUR_OWN_QUESTION))
+            markup.add(ask_question_btn)
+            bot.send_message(call.message.chat.id,
+                             get_text(cat),
+                             reply_markup=markup,
+                             parse_mode='markdown')
+            break
+
+
+@bot.callback_query_handler(
+    func=lambda call: True
+    if call.data == get_callback_data(strings.ASK_YOUR_OWN_QUESTION) else False
+)
+def question_handler(call):
     try:
-        category = message.text
+        category = call.message.text
         question_dict['category'] = category
         markup = types.ForceReply(selective=False)
-        msg = bot.reply_to(message,
+        msg = bot.reply_to(call.message,
                            get_string('ru', strings.YOUR_QUESTION),
                            reply_markup=markup)
         bot.register_next_step_handler(msg, process_question_step)
     except Exception as e:
         print(e)
-        bot.reply_to(message, get_string('ru', strings.SOMETHING_WENT_WRONG))
+        bot.reply_to(call.message, get_string('ru', strings.SOMETHING_WENT_WRONG))
 
 
 def process_question_step(message):
@@ -121,7 +158,8 @@ def process_question_step(message):
         bot.reply_to(message, get_string('ru', strings.SOMETHING_WENT_WRONG))
 
 
-@bot.callback_query_handler(func=lambda call: True)
+@bot.callback_query_handler(func=lambda call: True
+                            if call.data in ['Ok', 'Cancel'] else False)
 def query_handler(call):
     if call.data == 'Ok':
         bot.send_message(call.message.chat.id, commit_task(call.message))
@@ -198,8 +236,6 @@ def create_question(message, tasks_ref, task_id):
 
 def get_category(cat):
     return 'Other' if cat not in categories else cat
-
-
 
 
 bot.polling(none_stop=True)

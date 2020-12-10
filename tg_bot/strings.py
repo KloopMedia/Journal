@@ -32,5 +32,14 @@ TASK_CREATED = {
 }
 SEND_THIS_QUESTION = {'ru': 'Отправить этот вопрос?', 'kg': ''}
 ORG_CAT = {'ru': 'Организационные вопросы', 'kg': ''}
-TECH_CAT = {'ru': 'Технические вопросы', 'kg': ''}
+TECH_CAT = {'ru': 'Технические вопросы', 'kg': '', 'callback_data': 'tech_cat'}
 OTHER_CAT = {'ru': 'Другое', 'kg': ''}
+PAYMENT = {'ru': 'Оплата', 'kg': '', 'callback_data': 'payment'}
+SCHEDULE = {'ru': 'Расписание', 'kg': '', 'callback_data': 'schedule'}
+STUDY = {'ru': 'Обучение', 'kg': '', 'callback_data': 'study'}
+MY_SITE = {'ru': 'Мой участок', 'kg': '', 'callback_data': 'my_site'}
+ASK_YOUR_OWN_QUESTION = {
+    'ru': 'Задать свой вопрос',
+    'kg': '',
+    'callback_data': 'ask_own_question'
+}
