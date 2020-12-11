@@ -6,6 +6,7 @@ from firebase_admin import credentials
 import os
 import logging
 import strings
+import time
 
 cred = credentials.Certificate("private/serviceAccountKey.json")
 firebase_admin.initialize_app(cred)
@@ -87,14 +88,8 @@ def register_in_transaction(transaction, token, chat_id):
 @bot.message_handler(commands=['ask_question'])
 def ask_question(message):
     if is_registered(message.from_user.id):
-        markup = types.InlineKeyboardMarkup(row_width=3)
-        buttons = []
-        for cat in categories:
-            buttons.append(
-                types.InlineKeyboardButton(
-                    text=get_string('ru', cat),
-                    callback_data=get_callback_data(cat)))
-
+        markup = types.InlineKeyboardMarkup(row_width=2)
+        buttons = get_buttons(categories)
         markup.add(*buttons)
         bot.send_message(message.chat.id,
                          get_string('ru', strings.CHOOSE_CATEGORY),
@@ -110,11 +105,13 @@ def categories_handler(call):
     for cat in categories:
         if call.data == get_callback_data(cat):
             question_dict['category'] = call.data
-            markup = types.InlineKeyboardMarkup(row_width=1)
+            markup = types.InlineKeyboardMarkup(row_width=2)
+            buttons = get_buttons(categories)
             ask_question_btn = types.InlineKeyboardButton(
                 text=get_string('ru', strings.ASK_YOUR_OWN_QUESTION),
                 callback_data=get_callback_data(strings.ASK_YOUR_OWN_QUESTION))
-            markup.add(ask_question_btn)
+            buttons.append(ask_question_btn)
+            markup.add(*buttons)
             bot.send_message(call.message.chat.id,
                              get_text(cat),
                              reply_markup=markup,
@@ -173,6 +170,7 @@ def query_handler(call):
 @bot.message_handler(commands=['get_id'])
 def get_id_handler(message):
     bot.send_message(message.chat.id, message.from_user.id)
+
 
 
 def is_registered(user_id):
@@ -238,5 +236,18 @@ def create_question(message, tasks_ref, task_id):
 def get_category(cat):
     return 'Other' if cat not in [get_callback_data(cat) for cat in categories] else cat
 
+def get_buttons(categories):
+    buttons = []
+    for cat in categories:
+        buttons.append(
+            types.InlineKeyboardButton(
+                text=get_string('ru', cat),
+                callback_data=get_callback_data(cat)))
+    return buttons
 
-bot.polling(none_stop=True)
+while True:
+    try:
+        bot.infinity_polling()
+    except Exception as e:
+        logger.error(e)
+        time.sleep(15)
