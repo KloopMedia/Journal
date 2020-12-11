@@ -13,6 +13,7 @@ import Card from './Card'
 
 const useStyles = makeStyles((theme) => ({
     select: {
+        margin: '20px 0',
         width: 500,
         [theme.breakpoints.down("sm")]: {
             maxWidth: 300
@@ -33,13 +34,15 @@ const FAQ = (props) => {
 
     const [tasks, setTasks] = React.useState([]);
     const [taskType, setTaskType] = React.useState(taskTypes[0]);
+    const [questions, setQuestions] = useState([])
 
     const setTaskTypeHandler = (event) => {
         setTaskType(event.target.value);
     };
 
-    const handleClickApplyFilters = (event) => {
-        getTasks()
+    const handleClickApplyFilters = async (event) => {
+        let tasklist = await getTasks()
+        getQuestions(tasklist)
     }
 
     const getTasks = async () => {
@@ -52,14 +55,30 @@ const FAQ = (props) => {
         console.log('fired')
         await tasksRef.get().then(docs => {
             docs.forEach(doc => {
-                // doc.ref.collection('questions').get().then(snap => {
-                //     snap.forEach(taskData => )
-                // })
                 tasksList.push({ id: doc.id, ...doc.data() })
             })
-            console.log(tasksList)
+            tasksList.sort((a, b) => b.timestamp.toDate() - a.timestamp.toDate())
             setTasks(tasksList)
         })
+        return tasksList
+    }
+
+    const getQuestions = async (taskList) => {
+        let questionList = await taskList.map(async task => {
+            let arr = []
+            await firebase.firestore().collection('tasks').doc(task.id).collection('questions').get().then(snap => {
+                snap.forEach(doc => {
+                    arr.push({ taskId: task.id, questionId: doc.id, timestamp: task.timestamp.toDate(), ...doc.data() })
+                })
+            })
+            return arr
+        })
+        Promise.all(questionList).then(q => setQuestions([].concat.apply([], q)))
+    }
+
+    const sendAnswer = (taskId, questionId, answer) => {
+        firebase.firestore().collection('tasks').doc(taskId).collection('responses').doc(questionId).set({ answer: answer })
+        console.log(taskId, answer)
     }
 
 
@@ -73,8 +92,8 @@ const FAQ = (props) => {
                         name="filterTaskType"
                     >
                         {
-                            taskTypes.map(taskType => (
-                                <option value={taskType}>{taskType}</option>
+                            taskTypes.map((taskType, i) => (
+                                <option key={taskType} value={taskType}>{taskType}</option>
                             ))
                         }
                     </NativeSelect>
@@ -97,9 +116,9 @@ const FAQ = (props) => {
             </Grid>
 
             <Grid container justify="center">
-                {tasks.map((task, i) => <Card key={'FAQ_' + i} title="test" />)}
-                {tasks.length === 0 && <Typography style={{ padding: 30}}>Нет новых вопросов</Typography>}
-                {/* <Card key={'FAQ'} title="test" /> */}
+                {questions
+                    ? questions.map((task, i) => <Card key={'task_' + i} taskId={task.taskId} questionId={task.questionId} title={task.title} sendAnswer={sendAnswer} />)
+                    : <Typography style={{ padding: 30 }}>Нет новых вопросов</Typography>}
             </Grid>
         </Grid>
     );

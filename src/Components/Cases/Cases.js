@@ -12,6 +12,7 @@ const Cases = () => {
     const [ready, setReady] = useState(false)
     const [userRanks, setRanks] = useState([])
 
+    // New
     // useEffect(() => {
     //     if (currentUser) {
     //         firebase.firestore().collection('users').doc(currentUser.uid).collection('user_private').doc('private').get().then(doc => {
@@ -25,6 +26,8 @@ const Cases = () => {
     //     }
     // }, [currentUser])
 
+
+    /////// Old ////////
     useEffect(() => {
         if (currentUser) {
             let cases = []
@@ -44,6 +47,7 @@ const Cases = () => {
                 });
         }
     }, [currentUser])
+    //////////////
 
     const getCasesFromFirebase = (ranks) => {
         let cases = []

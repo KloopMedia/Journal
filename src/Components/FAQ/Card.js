@@ -3,8 +3,6 @@ import { makeStyles } from '@material-ui/core/styles';
 import TextField from '@material-ui/core/TextField';
 import { Typography, Box, Button, Grid } from '@material-ui/core';
 
-import firebase from '../../util/Firebase'
-
 const useStyles = makeStyles((theme) => ({
     root: {
         border: '2px grey solid',
@@ -28,7 +26,7 @@ const BasicTextFields = forwardRef((props, ref) => {
     const classes = useStyles();
     const [value, setValue] = React.useState('');
 
-    const { title, index } = props
+    const { title, sendAnswer, taskId, questionId } = props
 
     const handleChange = (event) => {
         setValue(event.target.value)
@@ -40,7 +38,6 @@ const BasicTextFields = forwardRef((props, ref) => {
                 <Typography variant="h6" style={{ paddingRight: 8 }}>{title}</Typography>
             </Box>
             <TextField
-                id={"inputBox" + index}
                 label="Мой ответ"
                 value={value}
                 style={{ background: 'white' }}
@@ -51,7 +48,7 @@ const BasicTextFields = forwardRef((props, ref) => {
                 fullWidth
             />
             <Grid container justify="flex-end">
-                <Button className={classes.button}>Отправить</Button>
+                <Button className={classes.button} onClick={() => sendAnswer(taskId, questionId, value)}>Отправить</Button>
             </Grid>
 
         </div>

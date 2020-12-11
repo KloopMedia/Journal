@@ -17,13 +17,15 @@ export const AuthProvider = ({ children }) => {
         userRef.get().then(doc => {
           if (doc && doc.exists) {
               // pass
+              console.log('User Exist')
           }
           else {
             console.log("Creating user")
             userRef.set(
               {
                 username: user.displayName,
-                email: user.email
+                email: user.email,
+                created_date: firebase.firestore.FieldValue.serverTimestamp()
               }
             )
           }

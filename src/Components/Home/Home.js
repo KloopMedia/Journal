@@ -30,8 +30,16 @@ const Home = () => {
             return uuid().toString() + '_' + Date.now()
         }
         if (currentUser) {
-            firebase.firestore().collection('users').doc(currentUser.uid).get().then(doc => {
-                const oldToken = doc.data().tg_token
+            const unsubscribe = firebase.firestore().collection('users').doc(currentUser.uid).onSnapshot(doc => {
+                let oldToken;
+                if (doc.exists && doc.data().tg_token) {
+                    oldToken = doc.data().tg_token
+                }
+                else {
+                    oldToken = false
+                }
+                
+                console.log(oldToken)
                 if (oldToken) {
                     console.log(oldToken)
                     let oldDate = parseInt(oldToken.substring(oldToken.indexOf('_') + 1))
@@ -53,8 +61,8 @@ const Home = () => {
                     setToken(newToken)
                 }
             })
+            return () => unsubscribe()
         }
-
     }, [currentUser])
 
     useEffect(() => {
@@ -83,9 +91,9 @@ const Home = () => {
     return (
         currentUser ?
             <Grid container justify="center" direction="column" alignItems="center" className={classes.root} >
-                <Typography style={{ paddingBottom: 10 }} variant="h5" align="center">Подключите аккаунт к Telegram боту (наблюдателям обязательно!)</Typography>
+                <Typography style={{ paddingBottom: 10 }} variant="h5" align="center">Вы почти зарегистрировались! Осталось нажать на ссылку ниже.</Typography>
                 {token ? <Link variant="h5" href={"https://telegram.me/journal_tg_bot?start=" + token}>Ссылка на бот</Link> 
-                : <Typography>Подождите. Ссылка создается</Typography>}
+                : <Typography variant="body2">Если ссылка не создалась в течение 5 секунд, перезагрузите страницу</Typography>}
             </Grid>
             :
             <Grid container direction="column" style={{ padding: 20 }} justify="center">

@@ -21,7 +21,7 @@ const TasksObserver = (props) => {
     const taskTypes = ['ВСЕ', 'Поиск контактных данных', 'interview']   
 
     //TODO load from SCHEMA        
-    const taskTitles = ['ВСЕ', 'Задание № 1.1', 'Задание № 1.2', 'Задание № 1.3', 'Задание № 2.1']  
+    const taskTitles = ['ВСЕ', 'Задание № 1.1', 'Задание № 1.2', 'Задание № 1.3', 'Задание № 2.1', 'Задание № 2.2', 'Задание № 2.3', 'Задание 3.1', 'Задание 3.2', 'Задание 3.3']  
 
     //TODO load from SCHEMA        
     const taskReviewStatuses = ['ВСЕ', 'pending', 'passed', 'not passed', 'verified', 'not verified']
