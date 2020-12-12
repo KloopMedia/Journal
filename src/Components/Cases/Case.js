@@ -39,11 +39,13 @@ const Case = (props) => {
                 .then((querySnapshot) => {
                     querySnapshot.forEach((doc) => {
                         // before change
-                        tasks.push({ id: doc.id, ...doc.data() })
+                        //tasks.push({ id: doc.id, ...doc.data() }) 
 
-                        // after change
-                        // const ranks = doc.data().ranks
-                        // console.log(userRanks)
+                        //after change
+                        const ranks = doc.data().ranks
+                        console.log('RANKS')
+                        console.log(ranks)
+                        console.log(userRanks)
                         // if (ranks && userRanks.some(userRank => ranks.includes(userRank))) {
                         //     tasks.push({ id: doc.id, ...doc.data(), disabled: false })
                         // }
@@ -51,6 +53,7 @@ const Case = (props) => {
                         //     tasks.push({ id: doc.id, ...doc.data(), disabled: true })
                         //     setMessage(<Typography color="error" display="block">Получите достижение <Typography component="span" display="inline" color="primary" align="justify">Первопроходец Battle For Azeroth</Typography> чтобы активировать следующее задание</Typography>)
                         // }
+                        tasks.push({ id: doc.id, ...doc.data(), disabled: false })
                         
                     });
                 })

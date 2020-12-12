@@ -13,41 +13,43 @@ const Cases = () => {
     const [userRanks, setRanks] = useState([])
 
     // New
-    // useEffect(() => {
-    //     if (currentUser) {
-    //         firebase.firestore().collection('users').doc(currentUser.uid).collection('user_private').doc('private').get().then(doc => {
-    //             if (doc && doc.exists) {
-    //                 let ranks = doc.data().ranks
-    //                 console.log(ranks)
-    //                 setRanks(ranks)
-    //                 getCasesFromFirebase(ranks)
-    //             }
-    //         })
-    //     }
-    // }, [currentUser])
-
-
-    /////// Old ////////
     useEffect(() => {
         if (currentUser) {
-            let cases = []
-            console.log("Fired")
-            firebase.firestore().collection("schema").doc("structure").collection("cases").get()
-                .then((querySnapshot) => {
-                    querySnapshot.forEach((doc) => {
-                        cases.push({ id: doc.id, ...doc.data() })
-                    });
-                })
-                .then(() => {
-                    setCases(cases)
-                    setReady(true)
-                })
-                .catch((error) => {
-                    console.log("Error getting documents: ", error);
-                });
+            firebase.firestore().collection('users').doc(currentUser.uid).collection('user_private').doc('private').get().then(doc => {
+                
+                if (doc && doc.exists) {                
+
+                    let ranks = doc.data().ranks
+                    console.log(ranks)
+                    setRanks(ranks)
+                    getCasesFromFirebase(ranks)
+                }
+            })
         }
     }, [currentUser])
-    //////////////
+
+
+    // /////// Old ////////
+    // useEffect(() => {
+    //     if (currentUser) {
+    //         let cases = []
+    //         console.log("Fired")
+    //         firebase.firestore().collection("schema").doc("structure").collection("cases").get()
+    //             .then((querySnapshot) => {
+    //                 querySnapshot.forEach((doc) => {
+    //                     cases.push({ id: doc.id, ...doc.data() })
+    //                 });
+    //             })
+    //             .then(() => {
+    //                 setCases(cases)
+    //                 setReady(true)
+    //             })
+    //             .catch((error) => {
+    //                 console.log("Error getting documents: ", error);
+    //             });
+    //     }
+    // }, [currentUser])
+    // //////////////
 
     const getCasesFromFirebase = (ranks) => {
         let cases = []
