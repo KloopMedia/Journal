@@ -23,7 +23,7 @@ WEBHOOK_URL_PATH = "/%s/" % (API_TOKEN)
 logger = telebot.logger
 telebot.logger.setLevel(logging.INFO)
 
-bot = telebot.TeleBot(API_TOKEN)
+bot = telebot.TeleBot(API_TOKEN, threaded=False)
 app = flask.Flask(__name__)
 
 cred = credentials.Certificate("private/serviceAccountKey.json")
@@ -32,6 +32,11 @@ global db
 db = firestore.client()
 
 question_dict = {}
+# lang = 'ru'
+categories = [
+    strings.PAYMENT, strings.SCHEDULE, strings.STUDY, strings.MY_SITE,
+    strings.TECH_CAT
+]
 
 # Empty webserver index, return nothing, just http 200
 @app.route('/', methods=['GET', 'HEAD'])
@@ -58,28 +63,85 @@ def get_callback_data(category):
     return category.get('callback_data')
 
 
-def get_text(category):
+def get_text(category, lang='ru'):
     try:
         return db.document(f'faq_texts/{category.get("callback_data")}')\
                 .get()\
-                .get('text').replace('\\n', '\n')
+                .get(lang).replace('\\n', '\n')
     except Exception as e:
         print(e)
 
 
-categories = [
-    strings.PAYMENT, strings.SCHEDULE, strings.STUDY, strings.MY_SITE,
-    strings.TECH_CAT
-]
+def get_user(tg_id):
+    user = None
+    tg_id = str(tg_id)
+    print('tg_id: ', tg_id)
+    try:
+        user_private = db.collection_group(u'user_private')\
+                         .where(u'tg_id', u'==', str(tg_id))\
+                         .limit(1)\
+                         .get()[0]
+        # if user_private.exists:
+        user_id = user_private.reference.path.split('/')[1]
+        user = db.document(f'users/{user_id}').get()
+    except Exception as e:
+        print(e)
+    finally:
+        return user
+
+
+def update_language(tg_id, lang):
+    user = get_user(tg_id)
+    if user:
+        user.reference.update({'interface_lang': lang})
+        return True
+    else:
+        print(f'user {tg_id} doesn\'t exists')
+        return False
 
 
 @bot.message_handler(commands=['start'])
 def start_handler(message):
     if is_registered(message.from_user.id):
-        bot.send_message(message.chat.id,
-                         get_string('ru', strings.YOU_ARE_ALREADY_REGISTERED))
+        print(f'user {message.chat.id} is already registered')
+        user = get_user(message.from_user.id)
+        lang = user.to_dict().get('interface_lang')
+        if not lang:
+            choose_lang_hadler(message)
+        else:
+            bot.send_message(message.chat.id,
+                             get_string(lang, strings.YOU_ARE_ALREADY_REGISTERED))
     else:
+        print(f'user {message.chat.id} is not registered')
         bot.send_message(message.chat.id, register_user(message))
+
+
+@bot.message_handler(commands=['choose_language'])
+def choose_lang_hadler(message):
+    markup = types.InlineKeyboardMarkup(row_width=1)
+    buttons = []
+    for lang in strings.LANGUAGES:
+        buttons.append(
+            types.InlineKeyboardButton(text=get_string('ru', lang) + ' / ' +
+                                       get_string('kg', lang),
+                                       callback_data=get_callback_data(lang)))
+    markup.add(*buttons)
+    bot.send_message(message.chat.id,
+                     text=get_string('ru', strings.CHOOSE_LANG) + ' / ' +
+                     get_string('kg', strings.CHOOSE_LANG),
+                     reply_markup=markup)
+
+
+@bot.callback_query_handler(
+    func=lambda call: True
+    if call.data in [get_callback_data(lang)
+                     for lang in strings.LANGUAGES] else False)
+def language_handler(call):
+    if is_registered(call.message.chat.id):
+        result = update_language(call.message.chat.id, call.data)
+        if result:
+            bot.send_message(call.message.chat.id,
+                             get_string(call.data, strings.LANGUAGE_CHANGED))
 
 
 def register_user(message):
@@ -94,8 +156,11 @@ def register_user(message):
                                              message.chat.id)
         if result:
             response = get_string('ru', strings.SUCCESSFULLY_REGISTERED)
+            print(f'user {message.chat.id} registered successfully')
         else:
-            response = get_string('ru', strings.YOU_NEED_TO_REGISTER)
+            response = get_string('ru', strings.YOU_NEED_TO_REGISTER)\
+                     + '\n\n'\
+                     + get_string('kg', strings.YOU_NEED_TO_REGISTER)
         return response
     except Exception as e:
         print(e)
@@ -109,6 +174,7 @@ def register_in_transaction(transaction, token, chat_id):
     if not len(user):
         return False
     private_ref = db.document(f'users/{user[0].id}/user_private/private')
+    transaction.update(user[0].reference, {'interface_lang': 'ru'})
     if private_ref.get().exists:
         transaction.update(private_ref, {'tg_id': str(chat_id)})
     else:
@@ -119,12 +185,17 @@ def register_in_transaction(transaction, token, chat_id):
 @bot.message_handler(commands=['ask_question'])
 def ask_question(message):
     if is_registered(message.from_user.id):
-        markup = types.InlineKeyboardMarkup(row_width=2)
-        buttons = get_buttons(categories)
-        markup.add(*buttons)
-        bot.send_message(message.chat.id,
-                         get_string('ru', strings.CHOOSE_CATEGORY),
-                         reply_markup=markup)
+        user = get_user(message.from_user.id)
+        lang = user.to_dict().get('interface_lang')
+        if not lang:
+            choose_lang_hadler(message)
+        else:
+            markup = types.InlineKeyboardMarkup(row_width=2)
+            buttons = get_buttons(categories, lang)
+            markup.add(*buttons)
+            bot.send_message(message.chat.id,
+                             get_string(lang, strings.CHOOSE_CATEGORY),
+                             reply_markup=markup)
     else:
         bot.reply_to(message, get_string('ru', strings.YOU_NEED_TO_REGISTER))
 
@@ -135,16 +206,18 @@ def ask_question(message):
 def categories_handler(call):
     for cat in categories:
         if call.data == get_callback_data(cat):
+            user = get_user(call.message.chat.id)
+            lang = user.get('interface_lang')
             question_dict['category'] = call.data
             markup = types.InlineKeyboardMarkup(row_width=2)
-            buttons = get_buttons(categories)
+            buttons = get_buttons(categories, lang)
             ask_question_btn = types.InlineKeyboardButton(
-                text=get_string('ru', strings.ASK_YOUR_OWN_QUESTION),
+                text=get_string(lang, strings.ASK_YOUR_OWN_QUESTION),
                 callback_data=get_callback_data(strings.ASK_YOUR_OWN_QUESTION))
             buttons.append(ask_question_btn)
             markup.add(*buttons)
             bot.send_message(call.message.chat.id,
-                             get_text(cat),
+                             get_text(cat, lang),
                              reply_markup=markup,
                              parse_mode='markdown')
             break
@@ -156,9 +229,11 @@ def categories_handler(call):
 )
 def question_handler(call):
     try:
+        user = get_user(call.message.chat.id)
+        lang = user.get('interface_lang')
         markup = types.ForceReply(selective=False)
         msg = bot.reply_to(call.message,
-                           get_string('ru', strings.YOUR_QUESTION),
+                           get_string(lang, strings.YOUR_QUESTION),
                            reply_markup=markup)
         bot.register_next_step_handler(msg, process_question_step)
     except Exception as e:
@@ -168,17 +243,19 @@ def question_handler(call):
 
 def process_question_step(message):
     try:
+        user = get_user(message.from_user.id)
+        lang = user.get('interface_lang')
         markup = types.InlineKeyboardMarkup()
         accept_btn = telebot.types\
-            .InlineKeyboardButton(text=get_string('ru', strings.OK),
+            .InlineKeyboardButton(text=get_string(lang, strings.OK),
                                   callback_data='Ok')
         cancel_btn = telebot.types\
-            .InlineKeyboardButton(text=get_string('ru', strings.CANCEL),
+            .InlineKeyboardButton(text=get_string(lang, strings.CANCEL),
                                   callback_data='Cancel')
         markup.add(accept_btn, cancel_btn)
         question_dict['question'] = message.text
         bot.reply_to(message,
-                     get_string('ru', strings.SEND_THIS_QUESTION),
+                     get_string(lang, strings.SEND_THIS_QUESTION),
                      reply_markup=markup)
     except Exception as e:
         print(e)
@@ -188,11 +265,13 @@ def process_question_step(message):
 @bot.callback_query_handler(func=lambda call: True
                             if call.data in ['Ok', 'Cancel'] else False)
 def query_handler(call):
+    user = get_user(call.message.chat.id)
+    lang = user.get('interface_lang')
     if call.data == 'Ok':
-        bot.send_message(call.message.chat.id, commit_task(call.message))
+        bot.send_message(call.message.chat.id, commit_task(call.message, lang))
     else:
         bot.send_message(call.message.chat.id,
-                         get_string('ru', strings.CANCELLED))
+                         get_string(lang, strings.CANCELLED))
     # hide inline buttons
     bot.edit_message_reply_markup(call.message.chat.id,
                                   call.message.message_id)
@@ -205,11 +284,11 @@ def get_id_handler(message):
 
 def is_registered(user_id):
     return db.collection_group('user_private')\
-            .where(u'tg_id', u'==', str(user_id))\
-            .get()
+             .where(u'tg_id', u'==', str(user_id))\
+             .get()
 
 
-def commit_task(message):
+def commit_task(message, lang='ru'):
     batch = db.batch()
     tasks_ref = db.collection('tasks')
     task_id = tasks_ref.document().id
@@ -227,7 +306,7 @@ def commit_task(message):
     batch.set(user_editable_ref, {'status': 'open'})
     # commint atomically
     batch.commit()
-    return get_string('ru', strings.TASK_CREATED)
+    return get_string(lang, strings.TASK_CREATED)
 
 
 def create_task(message, task_id):
@@ -269,12 +348,12 @@ def get_category(cat):
     ] else cat
 
 
-def get_buttons(categories):
+def get_buttons(categories, lang='ru'):
     buttons = []
     for cat in categories:
         buttons.append(
             types.InlineKeyboardButton(
-                text=get_string('ru', cat),
+                text=get_string(lang, cat),
                 callback_data=get_callback_data(cat)))
     return buttons
 
