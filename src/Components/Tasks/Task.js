@@ -205,13 +205,17 @@ const Tasks = () => {
 		console.log([...file], questionId)
 	}
 
-	const upload = () => {
+	const upload = async () => {
 		// uploadsRef.current.startUpload()
 		if (Object.keys(files).length > 0) {
 			console.log('files')
 			for (const [key, value] of Object.entries(files)) {
 				let ref = firebase.storage().ref(id).child(key).child(currentUser.uid)
-				value.forEach(v => ref.child(v.name).put(v).then(snap => snap.ref.getDownloadURL().then(url => uploadFilesData(v.name, url, key))))
+				await Promise.all(value.map(async v => {
+					let snap = await ref.child(v.name).put(v)
+					let url = await snap.ref.getDownloadURL()
+					await uploadFilesData(v.name, url, key)
+				}));
 			}
 		}
 	}
@@ -233,7 +237,7 @@ const Tasks = () => {
 	}
 
 	const saveToFirebase = async (lock) => {
-		upload()
+		await upload()
 		questions.forEach(async (q, i) => {
 			if (answers[i] || answers[i] === "") {
 				await firebase.firestore().collection("tasks").doc(id).collection("responses").doc(q.questionId).set({ answer: answers[i] }, { merge: true })
@@ -243,6 +247,7 @@ const Tasks = () => {
 		if (lock) {
 			await firebase.firestore().collection("tasks").doc(id).collection("user_editable").doc("user_editable").update({ status: 'complete' })
 			setLock(true)
+			console.log("Task Locked")
 			setDialog(false)
 		}
 		setUploaded(true)
