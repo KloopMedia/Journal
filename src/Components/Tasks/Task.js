@@ -11,6 +11,7 @@ import { Button, Divider, Grid, Typography } from '@material-ui/core';
 import Snackbar from '@material-ui/core/Snackbar';
 import IconButton from '@material-ui/core/IconButton';
 import CloseIcon from '@material-ui/icons/Close';
+import CircularProgress from '@material-ui/core/CircularProgress';
 
 import { Redirect, useParams } from 'react-router';
 import { Link } from "react-router-dom";
@@ -220,6 +221,7 @@ const Tasks = () => {
 					await uploadFilesData(v.name, url_wo_token, key)
 				}));
 			}
+			setUploaded(true)
 			setUploading(false)
 		}
 	}
@@ -254,7 +256,6 @@ const Tasks = () => {
 			console.log("Task Locked")
 			setDialog(false)
 		}
-		setUploaded(true)
 	}
 
 	const uploadFilesData = async (filename, url, questionId) => {
@@ -312,9 +313,9 @@ const Tasks = () => {
 				{dialogType === 'send' && <Dialog
 					state={dialogState}
 					handleClose={handleDialogClose}
-					hideActions={uploading}
-					title={"Отправить задание?"}
-					content={uploading ? "Загрузка файлов" : "Вы собираетесь отправить задание. Это значит, что вы больше не сможете изменять ответы."}
+					hideActions={uploading || uploaded}
+					title={uploading ? "Загрузка файлов" : uploaded ? "Файлы загружены" : "Отправить задание?"}
+					content={uploading ? <CircularProgress /> : uploaded ? "Спасибо" : "Вы собираетесь отправить задание. Это значит, что вы больше не сможете изменять ответы."}
 					dialogFunction={() => saveToFirebase(true)} />}
 				{dialogType === 'release' && <DialogFeedback
 					state={dialogState}
