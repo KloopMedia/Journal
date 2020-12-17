@@ -32,6 +32,7 @@ const Tasks = () => {
 	const [releaseFeedbackData, setReleaseFeedbackData] = useState({})
 	const [openSnackbar, setOpenSnackbar] = useState(false);
 	const [files, setFiles] = useState({})
+	const [uploading, setUploading] = useState(false)
 
 	const { currentUser } = useContext(AuthContext);
 	const { id } = useParams();
@@ -209,6 +210,7 @@ const Tasks = () => {
 		// uploadsRef.current.startUpload()
 		if (Object.keys(files).length > 0) {
 			console.log('files')
+			setUploading(true)
 			for (const [key, value] of Object.entries(files)) {
 				let ref = firebase.storage().ref(id).child(key).child(currentUser.uid)
 				await Promise.all(value.map(async v => {
@@ -218,6 +220,7 @@ const Tasks = () => {
 					await uploadFilesData(v.name, url_wo_token, key)
 				}));
 			}
+			setUploading(false)
 		}
 	}
 
@@ -306,7 +309,13 @@ const Tasks = () => {
 	return (
 		currentUser ?
 			<Grid style={{ padding: 30 }}>
-				{dialogType === 'send' && <Dialog state={dialogState} handleClose={handleDialogClose} title={"Отправить задание?"} content={"Вы собираетесь отправить задание. Это значит, что вы больше не сможете изменять ответы."} dialogFunction={() => saveToFirebase(true)} />}
+				{dialogType === 'send' && <Dialog
+					state={dialogState}
+					handleClose={handleDialogClose}
+					hideActions={uploading}
+					title={"Отправить задание?"}
+					content={uploading ? "Загрузка файлов" : "Вы собираетесь отправить задание. Это значит, что вы больше не сможете изменять ответы."}
+					dialogFunction={() => saveToFirebase(true)} />}
 				{dialogType === 'release' && <DialogFeedback
 					state={dialogState}
 					feedbackValue={feedbackValue}
