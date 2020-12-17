@@ -9,6 +9,7 @@ import { Typography } from '@material-ui/core';
 const useStyles = makeStyles((theme) => ({
 	formControl: {
 		minWidth: 120,
+		maxWidth: 400
 	},
 }));
 
