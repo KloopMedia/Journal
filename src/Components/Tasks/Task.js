@@ -214,7 +214,8 @@ const Tasks = () => {
 				await Promise.all(value.map(async v => {
 					let snap = await ref.child(v.name).put(v)
 					let url = await snap.ref.getDownloadURL()
-					await uploadFilesData(v.name, url, key)
+					let url_wo_token = url.split("?")[0]
+					await uploadFilesData(v.name, url_wo_token, key)
 				}));
 			}
 		}
