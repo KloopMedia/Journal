@@ -66,59 +66,36 @@ const Tasks = () => {
 
 		ref.collection("responses")
 			.onSnapshot(snapshot => {
-				let copyOfFormResponses = null
+				const changes = {}
+				const deletes = []
 				let modifyResponses = false
 				snapshot.docChanges().forEach(change => {
 					if (change.type === "added" || change.type === "modified") {
 						const contents = change.doc.data().contents
 						console.log("Response Added: ", contents);
-						if (formResponses.hasOwnProperty(change.doc.id)) {
-							if (!isEqual(formResponses[change.doc.id], change.doc.data().contents)) {
+							//if (!isEqual(formResponses[change.doc.id], change.doc.data().contents)) {
 								console.log("Properties in database and frontend do not match. Property id: ", change.doc.id)
 								console.log("Database data (note contents): ", contents)
 								console.log("Frontend data: ", formResponses[change.doc.id])
-								if (copyOfFormResponses === null) {
-									console.log("Start copying responses: ", copyOfFormResponses)
-									copyOfFormResponses = cloneDeep(formResponses)
-									console.log("Finished copying responses without id: ", copyOfFormResponses, copyOfFormResponses[change.doc.id])
-									console.log("Finished copying responses with id: ", copyOfFormResponses[change.doc.id])
-									console.log("Finished copying responses: id itself ", change.doc.id)
-								}
-								copyOfFormResponses[change.doc.id] = change.doc.data().contents
-								console.log("Modified copied responses: ", copyOfFormResponses)
+								changes[change.doc.id] = contents
 								modifyResponses = true
-							}
-						} else {
-							if (contents !== undefined) {
-								console.log("Property exists in database and not in frontend. Property id: ", change.doc.id)
-								console.log("Database data (note contents): ", contents)
-								console.log("Frontend data: ", formResponses[change.doc.id])
-								if (copyOfFormResponses === null) {
-									console.log("Start copying responses: ", copyOfFormResponses)
-									copyOfFormResponses = cloneDeep(formResponses)
-									console.log("Finished copying responses without id: ", copyOfFormResponses, copyOfFormResponses[change.doc.id])
-									console.log("Finished copying responses with id: ", copyOfFormResponses[change.doc.id])
-									console.log("Finished copying responses: id itself ", change.doc.id)
-								}
-								copyOfFormResponses[change.doc.id] = contents
-								modifyResponses = true
-							}
-						}
-
+							//}
 					}
 					if (change.type === "removed") {
-						if (formResponses.hasOwnProperty(change.doc.id)) {
+						//if (formResponses.hasOwnProperty(change.doc.id)) {
 							console.log("Response Removed: ", change.doc.data());
-							if (copyOfFormResponses === null) {
-								copyOfFormResponses = cloneDeep(formResponses)
-							}
-							delete copyOfFormResponses[change.doc.id]
+							deletes.push(change.doc.id)
 							modifyResponses = true
-						}
+						//}
 					}
 				});
 				if (modifyResponses) {
-					setFormResponses(copyOfFormResponses)
+					setFormResponses(prevState => {
+						const newState = cloneDeep(prevState)
+						deletes.forEach(d => delete newState[d])
+						Object.keys(changes).forEach(key => newState[key] = changes[key])
+						return newState
+					})
 				}
 			});
 
