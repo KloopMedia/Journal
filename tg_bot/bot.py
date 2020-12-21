@@ -6,7 +6,9 @@ import os
 from telebot import types
 import firebase_admin
 from firebase_admin import firestore
+from firebase_admin import storage
 from firebase_admin import credentials
+from pprint import pprint
 import strings
 
 
@@ -27,9 +29,12 @@ bot = telebot.TeleBot(API_TOKEN, threaded=False)
 app = flask.Flask(__name__)
 
 cred = credentials.Certificate("private/serviceAccountKey.json")
-firebase_admin.initialize_app(cred)
+firebase_admin.initialize_app(cred,
+                              {'storageBucket': 'journal-bb5e3.appspot.com'})
 global db
 db = firestore.client()
+global bucket
+bucket = storage.bucket()
 
 question_dict = {}
 # lang = 'ru'
@@ -46,12 +51,16 @@ def index():
 
 @app.route(WEBHOOK_URL_PATH, methods=['POST'])
 def webhook():
-    if flask.request.headers.get('content-type') == 'application/json':
-        json_string = flask.request.get_data().decode('utf-8')
-        update = telebot.types.Update.de_json(json_string)
-        bot.process_new_updates([update])
-        return ''
-    else:
+    try:
+        if flask.request.headers.get('content-type') == 'application/json':
+            json_string = flask.request.get_data().decode('utf-8')
+            update = telebot.types.Update.de_json(json_string)
+            bot.process_new_updates([update])
+            return ''
+        else:
+            flask.abort(403)
+    except Exception as e:
+        print(e)
         flask.abort(403)
 
 
@@ -102,6 +111,7 @@ def update_language(tg_id, lang):
 
 @bot.message_handler(commands=['start'])
 def start_handler(message):
+    # try:
     if is_registered(message.from_user.id):
         print(f'user {message.chat.id} is already registered')
         user = get_user(message.from_user.id)
@@ -110,10 +120,13 @@ def start_handler(message):
             choose_lang_hadler(message)
         else:
             bot.send_message(message.chat.id,
-                             get_string(lang, strings.YOU_ARE_ALREADY_REGISTERED))
+                             get_text(strings.YOU_ARE_ALREADY_REGISTERED, lang),
+                             parse_mode='markdown')
     else:
         print(f'user {message.chat.id} is not registered')
         bot.send_message(message.chat.id, register_user(message))
+    # except Exception as e:
+    # print(e)
 
 
 @bot.message_handler(commands=['choose_language'])
@@ -204,23 +217,31 @@ def ask_question(message):
     func=lambda call: True
     if call.data in [get_callback_data(cat) for cat in categories] else False)
 def categories_handler(call):
-    for cat in categories:
-        if call.data == get_callback_data(cat):
-            user = get_user(call.message.chat.id)
-            lang = user.get('interface_lang')
-            question_dict['category'] = call.data
-            markup = types.InlineKeyboardMarkup(row_width=2)
-            buttons = get_buttons(categories, lang)
-            ask_question_btn = types.InlineKeyboardButton(
-                text=get_string(lang, strings.ASK_YOUR_OWN_QUESTION),
-                callback_data=get_callback_data(strings.ASK_YOUR_OWN_QUESTION))
-            buttons.append(ask_question_btn)
-            markup.add(*buttons)
-            bot.send_message(call.message.chat.id,
-                             get_text(cat, lang),
-                             reply_markup=markup,
-                             parse_mode='markdown')
-            break
+    try:
+        for cat in categories:
+            if call.data == get_callback_data(cat):
+                user = get_user(call.message.chat.id)
+                if user:
+                    print(user.to_dict())
+                    lang = user.get('interface_lang')
+                    question_dict['category'] = call.data
+                    markup = types.InlineKeyboardMarkup(row_width=2)
+                    buttons = get_buttons(categories, lang)
+                    ask_question_btn = types.InlineKeyboardButton(
+                        text=get_string(lang, strings.ASK_YOUR_OWN_QUESTION),
+                        callback_data=get_callback_data(
+                            strings.ASK_YOUR_OWN_QUESTION))
+                    buttons.append(ask_question_btn)
+                    markup.add(*buttons)
+                    bot.send_message(call.message.chat.id,
+                                     get_text(cat, lang),
+                                     reply_markup=markup,
+                                     parse_mode='markdown')
+                else:
+                    print(f'no user {call.message.chat.id}')
+                break
+    except Exception as e:
+        print(e)
 
 
 @bot.callback_query_handler(
@@ -282,6 +303,84 @@ def get_id_handler(message):
     bot.send_message(message.chat.id, message.from_user.id)
 
 
+@bot.message_handler(commands=['attach_files'])
+def attach_file_handler(message):
+    if len(message.text.split(' ')) != 3:  # no task_id or question_id
+        print('no token')
+    else:
+        if is_registered(message.chat.id):
+            bot.reply_to(message, 'registered')
+            user = get_user(message.chat.id)
+            task_id = message.text.split(' ')[1]
+            question_id = message.text.split(' ')[2]
+            user_tg_id = message.chat.id
+            if can_attach_files(user, user_tg_id, task_id):
+                bot.reply_to(message, 'can attach')
+                bot.send_message(message.chat.id, 'attach files')
+                bot.register_next_step_handler(message, process_attach_files,
+                                               user.id, task_id, question_id)
+            else:
+                bot.send_message(message.chat.id, 'you can\'t attach files')
+        else:
+            bot.reply_to(message, 'not registered')
+
+
+def process_attach_files(message, user_id, task_id, question_id):
+    path = f'{task_id}/{question_id}/{user_id}'
+    files, paths = get_files(message, path)
+    urls = upload_files(list(zip(files, paths)))
+    create_response(list(zip(urls, paths)), task_id, question_id)
+    bot.reply_to(message, 'files uploaded')
+
+
+def get_files(message, path):
+    files = []
+    paths = []
+    if message.photo:
+        for photo in message.photo:
+            file_info = bot.get_file(photo.file_id)
+            files.append(bot.download_file(file_info.file_path))
+            paths.append(f'{path}/{file_info.file_unique_id}')
+    if message.video:
+        file_info = bot.get_file(message.video.file_id)
+        files.append(bot.download_file(file_info.file_path))
+        paths.append(f'{path}/{file_info.file_unique_id}')
+    return files, paths
+
+
+def upload_files(files):
+    urls = []
+    for user_file, file_path in files:
+        blob = bucket.blob(file_path)
+        blob.upload_from_string(user_file)
+        urls.append(blob.public_url)
+    return urls
+
+
+def create_response(urls_with_paths, task_id, question_id):
+    response = {
+        'files': [{
+            'public_url': url,
+            'filename': path.split('/')[-1]
+        } for url, path in urls_with_paths]
+    }
+    db.document(f'tasks/{task_id}/responses/{question_id}')\
+        .set(response)
+
+
+def can_attach_files(user, tg_id, task_id):
+    result = False
+    task = db.document(f'tasks/{task_id}').get()
+    task = task.to_dict()
+    user_private = db.document(user.reference.path + '/user_private/private').get()
+    if user.id in task.get('assigned_users') or any([
+            rank in task.get('ranks_write')
+            for rank in user_private.to_dict().get('ranks')
+    ]):
+        result = True
+    return result
+
+
 def is_registered(user_id):
     return db.collection_group('user_private')\
              .where(u'tg_id', u'==', str(user_id))\
@@ -322,7 +421,10 @@ def create_task(message, task_id):
         'case_id': task_id,
         'case_stage_id': 'answer_the_question',
         'case_type': 'FAQ',
-        'timestamp': firestore.SERVER_TIMESTAMP
+        'quick': True,
+        'ranks_read': ['faq_moderator', 'election_observer'],
+        'ranks_write': ['faq_moderator'],
+        'created_date': firestore.SERVER_TIMESTAMP
     }
 
 
