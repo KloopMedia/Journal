@@ -22,14 +22,14 @@ export default function AlertDialog(props) {
             {props.content}
           </DialogContentText>
         </DialogContent>
-        <DialogActions>
+        {props.hideActions ? "" : <DialogActions>
           <Button onClick={props.handleClose} color="primary">
             Отмена
           </Button>
           <Button onClick={props.dialogFunction} color="primary" autoFocus>
             Подтвердить
           </Button>
-        </DialogActions>
+        </DialogActions>}
       </Dialog>
     </div>
   );

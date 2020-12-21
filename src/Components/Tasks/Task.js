@@ -11,6 +11,7 @@ import { Button, Divider, Grid, Typography } from '@material-ui/core';
 import Snackbar from '@material-ui/core/Snackbar';
 import IconButton from '@material-ui/core/IconButton';
 import CloseIcon from '@material-ui/icons/Close';
+import CircularProgress from '@material-ui/core/CircularProgress';
 
 import { Redirect, useParams } from 'react-router';
 import { Link } from "react-router-dom";
@@ -32,6 +33,7 @@ const Tasks = () => {
 	const [releaseFeedbackData, setReleaseFeedbackData] = useState({})
 	const [openSnackbar, setOpenSnackbar] = useState(false);
 	const [files, setFiles] = useState({})
+	const [uploading, setUploading] = useState(false)
 
 	const { currentUser } = useContext(AuthContext);
 	const { id } = useParams();
@@ -205,14 +207,22 @@ const Tasks = () => {
 		console.log([...file], questionId)
 	}
 
-	const upload = () => {
+	const upload = async () => {
 		// uploadsRef.current.startUpload()
 		if (Object.keys(files).length > 0) {
 			console.log('files')
+			setUploading(true)
 			for (const [key, value] of Object.entries(files)) {
 				let ref = firebase.storage().ref(id).child(key).child(currentUser.uid)
-				value.forEach(v => ref.child(v.name).put(v).then(snap => snap.ref.getDownloadURL().then(url => uploadFilesData(v.name, url, key))))
+				await Promise.all(value.map(async v => {
+					let snap = await ref.child(v.name).put(v)
+					let url = await snap.ref.getDownloadURL()
+					let url_wo_token = url.split("?")[0]
+					await uploadFilesData(v.name, url_wo_token, key)
+				}));
 			}
+			setUploaded(true)
+			setUploading(false)
 		}
 	}
 
@@ -233,7 +243,7 @@ const Tasks = () => {
 	}
 
 	const saveToFirebase = async (lock) => {
-		upload()
+		await upload()
 		questions.forEach(async (q, i) => {
 			if (answers[i] || answers[i] === "") {
 				await firebase.firestore().collection("tasks").doc(id).collection("responses").doc(q.questionId).set({ answer: answers[i] }, { merge: true })
@@ -243,9 +253,9 @@ const Tasks = () => {
 		if (lock) {
 			await firebase.firestore().collection("tasks").doc(id).collection("user_editable").doc("user_editable").update({ status: 'complete' })
 			setLock(true)
+			console.log("Task Locked")
 			setDialog(false)
 		}
-		setUploaded(true)
 	}
 
 	const uploadFilesData = async (filename, url, questionId) => {
@@ -300,7 +310,13 @@ const Tasks = () => {
 	return (
 		currentUser ?
 			<Grid style={{ padding: 30 }}>
-				{dialogType === 'send' && <Dialog state={dialogState} handleClose={handleDialogClose} title={"Отправить задание?"} content={"Вы собираетесь отправить задание. Это значит, что вы больше не сможете изменять ответы."} dialogFunction={() => saveToFirebase(true)} />}
+				{dialogType === 'send' && <Dialog
+					state={dialogState}
+					handleClose={handleDialogClose}
+					hideActions={uploading || uploaded}
+					title={uploading ? "Загрузка файлов" : uploaded ? "Файлы загружены" : "Отправить задание?"}
+					content={uploading ? <CircularProgress /> : uploaded ? "Спасибо" : "Вы собираетесь отправить задание. Это значит, что вы больше не сможете изменять ответы."}
+					dialogFunction={() => saveToFirebase(true)} />}
 				{dialogType === 'release' && <DialogFeedback
 					state={dialogState}
 					feedbackValue={feedbackValue}
