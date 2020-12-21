@@ -25,6 +25,8 @@ const Tasks = () => {
 	const [formResponses, setFormResponses] = useState({})
 	const [formQuestions, setFormQuestions] = useState({})
 	const [formResponsesChanged, setFormResponsesChanged] = useState(false)
+	const [currentFocus, setCurrentFocus] = useState("")
+	const [lastBlur, setLastBlur] = useState("")
 
 	const [questions, setQuestions] = useState([])
 	const [responses, setResponses] = useState([])
@@ -65,21 +67,42 @@ const Tasks = () => {
 		ref.collection("responses")
 			.onSnapshot(snapshot => {
 				let copyOfFormResponses = null
+				let modifyResponses = false
 				snapshot.docChanges().forEach(change => {
 					if (change.type === "added" || change.type === "modified") {
-						console.log("Response Added: ", change.doc.data());
+						const contents = change.doc.data().contents
+						console.log("Response Added: ", contents);
 						if (formResponses.hasOwnProperty(change.doc.id)) {
-							if (!isEqual(formResponses[change.doc.id], change.doc.data.contents)) {
+							if (!isEqual(formResponses[change.doc.id], change.doc.data().contents)) {
+								console.log("Properties in database and frontend do not match. Property id: ", change.doc.id)
+								console.log("Database data (note contents): ", contents)
+								console.log("Frontend data: ", formResponses[change.doc.id])
 								if (copyOfFormResponses === null) {
+									console.log("Start copying responses: ", copyOfFormResponses)
 									copyOfFormResponses = cloneDeep(formResponses)
+									console.log("Finished copying responses without id: ", copyOfFormResponses, copyOfFormResponses[change.doc.id])
+									console.log("Finished copying responses with id: ", copyOfFormResponses[change.doc.id])
+									console.log("Finished copying responses: id itself ", change.doc.id)
 								}
 								copyOfFormResponses[change.doc.id] = change.doc.data().contents
+								console.log("Modified copied responses: ", copyOfFormResponses)
+								modifyResponses = true
 							}
 						} else {
-							if (copyOfFormResponses === null) {
-								copyOfFormResponses = cloneDeep(formResponses)
+							if (contents !== undefined) {
+								console.log("Property exists in database and not in frontend. Property id: ", change.doc.id)
+								console.log("Database data (note contents): ", contents)
+								console.log("Frontend data: ", formResponses[change.doc.id])
+								if (copyOfFormResponses === null) {
+									console.log("Start copying responses: ", copyOfFormResponses)
+									copyOfFormResponses = cloneDeep(formResponses)
+									console.log("Finished copying responses without id: ", copyOfFormResponses, copyOfFormResponses[change.doc.id])
+									console.log("Finished copying responses with id: ", copyOfFormResponses[change.doc.id])
+									console.log("Finished copying responses: id itself ", change.doc.id)
+								}
+								copyOfFormResponses[change.doc.id] = contents
+								modifyResponses = true
 							}
-							copyOfFormResponses[change.doc.id] = change.doc.data().contents
 						}
 
 					}
@@ -90,9 +113,13 @@ const Tasks = () => {
 								copyOfFormResponses = cloneDeep(formResponses)
 							}
 							delete copyOfFormResponses[change.doc.id]
+							modifyResponses = true
 						}
 					}
 				});
+				if (modifyResponses) {
+					setFormResponses(copyOfFormResponses)
+				}
 			});
 
 		ref.collection("questions")
@@ -123,6 +150,19 @@ const Tasks = () => {
 	// 	return () => clearTimeout(timer);
 	// }, [formResponsesChanged, formResponses]);
 
+
+	const handleFormChange = e => {
+		setFormResponses(e.formData)
+	};
+
+	const handleBlur = e => {
+		const docID = e.split("_")[1]
+		ref.collection("responses")
+			.doc(docID)
+			.set({contents: formResponses[docID] ? formResponses[docID] : firebase.firestore.FieldValue.delete()},
+				{merge: true})
+		console.log("That is what was blured", e)
+	}
 
 
 	useEffect(() => {
@@ -435,13 +475,12 @@ const Tasks = () => {
 
 				<JSchemaForm schema={formQuestions}
 				formData={formResponses}
-				onChange={e => {
-					setFormResponses(formResponses)
-					setFormResponsesChanged(true)
-					console.log("That is what changed", e)
+				onChange={e => {handleFormChange(e)}}
+				onFocus={e => {
+					console.log("That is what was focused", e)
+					setCurrentFocus(e.split("_")[1])
 				}}
-				onFocus={e => {console.log("That is what was focused", e)}}
-				onBlur={e => {console.log("That is what was blured", e)}}/>
+				onBlur={e => {handleBlur(e)}}/>
 
 			</Grid>
 			:
