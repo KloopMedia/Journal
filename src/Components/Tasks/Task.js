@@ -13,11 +13,19 @@ import IconButton from '@material-ui/core/IconButton';
 import CloseIcon from '@material-ui/icons/Close';
 import CircularProgress from '@material-ui/core/CircularProgress';
 
+import JSchemaForm from "@rjsf/core";
+import { cloneDeep, isEqual } from 'lodash'
+
 import { Redirect, useParams } from 'react-router';
 import { Link } from "react-router-dom";
 
+const AUTOSAVE_INTERVAL = 1;
 
 const Tasks = () => {
+	const [formResponses, setFormResponses] = useState({})
+	const [formQuestions, setFormQuestions] = useState({})
+	const [formResponsesChanged, setFormResponsesChanged] = useState(false)
+
 	const [questions, setQuestions] = useState([])
 	const [responses, setResponses] = useState([])
 	const [answers, setAnswers] = useState({})
@@ -37,6 +45,10 @@ const Tasks = () => {
 
 	const { currentUser } = useContext(AuthContext);
 	const { id } = useParams();
+	const ref = firebase
+		.firestore()
+		.collection("tasks")
+		.doc(id)
 
 	const handleCloseSnackbar = (event, reason) => {
 		if (reason === 'clickaway') {
@@ -47,6 +59,71 @@ const Tasks = () => {
 	};
 
 	// const uploadsRef = useRef();
+
+	useEffect(() => {
+
+		ref.collection("responses")
+			.onSnapshot(snapshot => {
+				let copyOfFormResponses = null
+				snapshot.docChanges().forEach(change => {
+					if (change.type === "added" || change.type === "modified") {
+						console.log("Response Added: ", change.doc.data());
+						if (formResponses.hasOwnProperty(change.doc.id)) {
+							if (!isEqual(formResponses[change.doc.id], change.doc.data.contents)) {
+								if (copyOfFormResponses === null) {
+									copyOfFormResponses = cloneDeep(formResponses)
+								}
+								copyOfFormResponses[change.doc.id] = change.doc.data().contents
+							}
+						} else {
+							if (copyOfFormResponses === null) {
+								copyOfFormResponses = cloneDeep(formResponses)
+							}
+							copyOfFormResponses[change.doc.id] = change.doc.data().contents
+						}
+
+					}
+					if (change.type === "removed") {
+						if (formResponses.hasOwnProperty(change.doc.id)) {
+							console.log("Response Removed: ", change.doc.data());
+							if (copyOfFormResponses === null) {
+								copyOfFormResponses = cloneDeep(formResponses)
+							}
+							delete copyOfFormResponses[change.doc.id]
+						}
+					}
+				});
+			});
+
+		ref.collection("questions")
+			.doc("form_questions")
+			.onSnapshot(doc => {
+				setFormQuestions(doc.data())
+				console.log("Form Questions: ", doc.data());
+			});
+	}, [id])
+
+	// useEffect(() => {
+	// 	const timer = setTimeout(() => {
+	// 		if (formResponsesChanged) {
+	// 			firebase
+	// 				.firestore()
+	// 				.collection("tasks")
+	// 				.doc(id)
+	// 				.collection("responses")
+	// 				.doc("form_responses")
+	// 				.set(formResponses)
+	// 				.then(docRef => {
+	// 					setFormResponsesChanged(false);
+	// 					console.log("Document written with ID: ", docRef.id);
+	// 				})
+	// 				.catch(error => console.error("Error setting document: ", error));
+	// 		}
+	// 	}, AUTOSAVE_INTERVAL);
+	// 	return () => clearTimeout(timer);
+	// }, [formResponsesChanged, formResponses]);
+
+
 
 	useEffect(() => {
 		const getQuestions = async (taskID) => {
@@ -355,6 +432,16 @@ const Tasks = () => {
 							<Button variant="outlined" disabled={lockButton} style={{ borderWidth: 2, borderColor: "red", color: 'red', margin: 5 }} onClick={() => handleDialogOpen('release')}>Освободить</Button>
 						</div>}
 				</Grid>
+
+				<JSchemaForm schema={formQuestions}
+				formData={formResponses}
+				onChange={e => {
+					setFormResponses(formResponses)
+					setFormResponsesChanged(true)
+					console.log("That is what changed", e)
+				}}
+				onFocus={e => {console.log("That is what was focused", e)}}
+				onBlur={e => {console.log("That is what was blured", e)}}/>
 
 			</Grid>
 			:
