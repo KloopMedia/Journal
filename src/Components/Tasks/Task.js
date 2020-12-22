@@ -27,6 +27,7 @@ const Tasks = () => {
 	const [formResponsesChanged, setFormResponsesChanged] = useState(false)
 	const [currentFocus, setCurrentFocus] = useState("")
 	const [lastBlur, setLastBlur] = useState("")
+	const [uiSchema, setUiSchema] = useState({})
 
 	const [questions, setQuestions] = useState([])
 	const [responses, setResponses] = useState([])
@@ -105,6 +106,14 @@ const Tasks = () => {
 				setFormQuestions(doc.data())
 				console.log("Form Questions: ", doc.data());
 			});
+
+		ref.collection("questions")
+			.doc("ui_schema")
+			.onSnapshot(doc => {
+				setUiSchema(doc.data())
+				console.log("UI Schema: ", doc.data());
+			});
+
 	}, [id])
 
 	// useEffect(() => {
@@ -450,14 +459,20 @@ const Tasks = () => {
 						</div>}
 				</Grid>
 
-				<JSchemaForm schema={formQuestions}
-				formData={formResponses}
-				onChange={e => {handleFormChange(e)}}
-				onFocus={e => {
-					console.log("That is what was focused", e)
-					setCurrentFocus(e.split("_")[1])
-				}}
-				onBlur={e => {handleBlur(e)}}/>
+				<JSchemaForm
+					schema={formQuestions}
+					uiSchema={uiSchema}
+					formData={formResponses}
+					onChange={e => {
+						handleFormChange(e)
+					}}
+					onFocus={e => {
+						console.log("That is what was focused", e)
+						setCurrentFocus(e.split("_")[1])
+					}}
+					onBlur={e => {
+						handleBlur(e)
+					}}/>
 
 			</Grid>
 			:
