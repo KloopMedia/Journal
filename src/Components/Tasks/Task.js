@@ -2,12 +2,12 @@ import React, { useState, useEffect, useContext, useRef } from 'react'
 import firebase, { signInWithGoogle } from '../../util/Firebase'
 import { AuthContext } from "../../util/Auth";
 
-import Form from "../form/form"
+//import Form from "../form/form"
 import Dialog from "../Dialog/Dialog"
 import DialogFeedback from "../Dialog/FeedbackDialog"
 import Feedback from "../form/feedback"
 
-import FileUploader from "../form/FileUploader"
+import Loader from "../form/Loader"
 
 import { Button, Divider, Grid, Typography } from '@material-ui/core';
 import Snackbar from '@material-ui/core/Snackbar';
@@ -166,23 +166,30 @@ const Tasks = () => {
 	const customFileUpload = props => {
 		return (
 			<div>
-				<button onClick={() => {
-					const newValue = ["It is ALIVE!!!", "And working!"]
-					props.onChange([{name: "check"}])
+				{props.idSchema.$id.split("_")[1] ?
+				<Loader storageRef={firebase.storage()
+					.ref(id)
+					.child(props.idSchema.$id.split("_")[1])
+					.child(currentUser.uid)}/> : <p></p>}
 
-					console.log("ID schema: ", props.idSchema)
-					console.log("Context: ", props.formContext)
-					console.log("Form Data: ", props.formData)
-					console.log("ID: ", props.idSchema.$id)
 
-					const docID = props.idSchema.$id.split("_")[1]
-					ref.collection("responses")
-					.doc(docID)
-					.set({contents: newValue ? newValue : firebase.firestore.FieldValue.delete()},
-						{merge: true})
-				}}>
-					"Check"
-				</button>
+				{/*<button onClick={() => {*/}
+				{/*	const newValue = ["It is ALIVE!!!", "And working!"]*/}
+				{/*	props.onChange([{name: "check"}])*/}
+
+				{/*	console.log("ID schema: ", props.idSchema)*/}
+				{/*	console.log("Context: ", props.formContext)*/}
+				{/*	console.log("Form Data: ", props.formData)*/}
+				{/*	console.log("ID: ", props.idSchema.$id)*/}
+
+				{/*	const docID = props.idSchema.$id.split("_")[1]*/}
+				{/*	ref.collection("responses")*/}
+				{/*	.doc(docID)*/}
+				{/*	.set({contents: newValue ? newValue : firebase.firestore.FieldValue.delete()},*/}
+				{/*		{merge: true})*/}
+				{/*}}>*/}
+				{/*	"Check"*/}
+				{/*</button>*/}
 			</div>
 		);
 	};
@@ -498,21 +505,22 @@ const Tasks = () => {
 				{/*		</div>}*/}
 				{/*</Grid>*/}
 
-				<JSchemaForm
-					schema={formQuestions}
-					uiSchema={uiSchema}
-					formData={formResponses}
-					fields={fields}
-					onChange={e => {
-						handleFormChange(e)
-					}}
-					onFocus={e => {
-						console.log("That is what was focused", e)
-						setCurrentFocus(e.split("_")[1])
-					}}
-					onBlur={e => {
-						handleBlur(e)
-					}}/>
+				{formQuestions ?
+					<JSchemaForm
+						schema={formQuestions}
+						uiSchema={uiSchema}
+						formData={formResponses}
+						fields={fields}
+						onChange={e => {
+							handleFormChange(e)
+						}}
+						onFocus={e => {
+							console.log("That is what was focused", e)
+							setCurrentFocus(e.split("_")[1])
+						}}
+						onBlur={e => {
+							handleBlur(e)
+						}}/> : <p></p>}
 
 			</Grid>
 			:
