@@ -7,6 +7,8 @@ import Dialog from "../Dialog/Dialog"
 import DialogFeedback from "../Dialog/FeedbackDialog"
 import Feedback from "../form/feedback"
 
+import FileUploader from "../form/FileUploader"
+
 import { Button, Divider, Grid, Typography } from '@material-ui/core';
 import Snackbar from '@material-ui/core/Snackbar';
 import IconButton from '@material-ui/core/IconButton';
@@ -15,6 +17,7 @@ import CircularProgress from '@material-ui/core/CircularProgress';
 
 import JSchemaForm from "@rjsf/core";
 import { cloneDeep, isEqual } from 'lodash'
+
 
 import { Redirect, useParams } from 'react-router';
 import { Link } from "react-router-dom";
@@ -142,6 +145,7 @@ const Tasks = () => {
 	};
 
 	const handleBlur = e => {
+		console.log("Responses: ", formResponses)
 		console.log("That is what was blured", e)
 		if (e === "root") {
 			Object.keys(formResponses).map(k => {
@@ -159,24 +163,31 @@ const Tasks = () => {
 		}
 	}
 
-	const CustomCheckbox = props => {
+	const customFileUpload = props => {
 		return (
-			<button onClick={() => {
-				const newValue = "It is ALIVE!!!"
-				props.onChange(newValue)
-				console.log("Widget ID: ", props.id)
-				const docID = props.id.split("_")[1]
-				ref.collection("responses")
-				.doc(docID)
-				.set({contents: newValue ? newValue : firebase.firestore.FieldValue.delete()},
-					{merge: true})
-			}}>
-				{props.value}
-			</button>
+			<div>
+				<button onClick={() => {
+					const newValue = ["It is ALIVE!!!", "And working!"]
+					props.onChange([{name: "check"}])
+
+					console.log("ID schema: ", props.idSchema)
+					console.log("Context: ", props.formContext)
+					console.log("Form Data: ", props.formData)
+					console.log("ID: ", props.idSchema.$id)
+
+					const docID = props.idSchema.$id.split("_")[1]
+					ref.collection("responses")
+					.doc(docID)
+					.set({contents: newValue ? newValue : firebase.firestore.FieldValue.delete()},
+						{merge: true})
+				}}>
+					"Check"
+				</button>
+			</div>
 		);
 	};
 
-	const widgets = {custField: CustomCheckbox};
+	const fields = {customFileUpload: customFileUpload};
 
 
 	// useEffect(() => {
@@ -491,7 +502,7 @@ const Tasks = () => {
 					schema={formQuestions}
 					uiSchema={uiSchema}
 					formData={formResponses}
-					widgets={widgets}
+					fields={fields}
 					onChange={e => {
 						handleFormChange(e)
 					}}
