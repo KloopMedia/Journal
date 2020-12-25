@@ -9,12 +9,15 @@ const Loader = props => {
     // const [isUploading, setIsUploading] = useState(false)
     // const [uploadProgress, setUploadProgress] = useState(0)
 
-    const [fileBeingUploaded, setFileBeingUploaded] = useState([])
+    const [fileBeingUploaded, setFileBeingUploaded] = useState({})
 
 
     const upload = async files => {
         await Promise.all(files.map(async file => {
             const snap = props.storageRef.child(file.name).put(file)
+            setFileBeingUploaded(prevState => {
+              return {...prevState, {[file.name: {status: "loading", progress: 0}]}}
+            })
 
             // Listen for state changes, errors, and completion of the upload.
             snap.on(firebase.storage.TaskEvent.STATE_CHANGED, // or 'state_changed'
