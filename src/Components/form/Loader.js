@@ -1,5 +1,6 @@
 import React, {useState} from "react";
 import firebase from "firebase";
+import LinearProgressWithLabel from "./LinearProgressWithLabel";
 
 
 const Loader = props => {
@@ -16,7 +17,8 @@ const Loader = props => {
         await Promise.all(files.map(async file => {
             const snap = props.storageRef.child(file.name).put(file)
             setFileBeingUploaded(prevState => {
-              return {...prevState, {[file.name: {status: "loading", progress: 0}]}}
+                const update = {[file.name]: {status: "loading", progress: 0}}
+                return prevState ? {...prevState, ...update} : update
             })
 
             // Listen for state changes, errors, and completion of the upload.
@@ -25,9 +27,11 @@ const Loader = props => {
                     // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
                     const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
                     setFileBeingUploaded(prevState => {
-              return {...prevState, {[file.name: {status: "loading", progress: progress}]}}
-            })
+                        const update = {[file.name]: {status: "loading", progress: progress}}
+                        return prevState ? {...prevState, ...update} : update
+                    })
                     console.log('Upload is ' + progress + '% done');
+
                     switch (snapshot.state) {
                         case firebase.storage.TaskState.PAUSED: // or 'paused'
                             console.log('Upload is paused');
@@ -85,34 +89,6 @@ const Loader = props => {
     };
 
 
-    // const handleUploadStart = () => {
-    //     setIsUploading(true)
-    //     setUploadProgress(0)}
-    //
-    // const handleProgress = progress => {
-    //     setUploadProgress(progress)}
-    //
-    // const handleUploadError = error => {
-    //     setIsUploading(false)
-    //     // Todo: handle error
-    //     console.error(error);
-    // };
-    //
-    // const handleUploadSuccess = async filename => {
-    //     const downloadURL = await firebase
-    //         .storage()
-    //         .ref("images")
-    //         .child(filename)
-    //         .getDownloadURL();
-    //
-    //     setFilenames(prevState => [...prevState, filename])
-    //     setDownloadURLs(prevState => [...prevState, downloadURL])
-    //     setUploadProgress(100)
-    //     setIsUploading(false)
-    //
-    // };
-
-
     return (
         <div>
             <input
@@ -120,9 +96,10 @@ const Loader = props => {
                 onChange={handleChange}
                 multiple
             />
-            {Object(fileBeingUploaded).map(filename => {
-              <LinearProgressWithLabel value={fileBeingUploaded[filename][progress], label=filename, key=filename} />
-            })}
+            {Object.keys(fileBeingUploaded).map(filename =>
+                <LinearProgressWithLabel value={fileBeingUploaded[filename].progress}
+                                         key={filename}/>
+            )}
 
             {/*<p>Progress: {uploadProgress}</p>*/}
 

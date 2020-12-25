@@ -27,6 +27,7 @@ const AUTOSAVE_INTERVAL = 1;
 const Tasks = () => {
 	const [formResponses, setFormResponses] = useState({})
 	const [formQuestions, setFormQuestions] = useState({})
+	const [fields, setFields] = useState({})
 	const [formResponsesChanged, setFormResponsesChanged] = useState(false)
 	const [currentFocus, setCurrentFocus] = useState("")
 	const [lastBlur, setLastBlur] = useState("")
@@ -117,7 +118,11 @@ const Tasks = () => {
 				console.log("UI Schema: ", doc.data());
 			});
 
-	}, [id])
+		if (currentUser) {
+			setFields({customFileUpload: customFileUpload});
+		}
+
+	}, [id, currentUser])
 
 	// useEffect(() => {
 	// 	const timer = setTimeout(() => {
@@ -166,11 +171,10 @@ const Tasks = () => {
 	const customFileUpload = props => {
 		return (
 			<div>
-				{props.idSchema.$id.split("_")[1] ?
-				<Loader storageRef={firebase.storage()
+				 <Loader storageRef={firebase.storage()
 					.ref(id)
 					.child(props.idSchema.$id.split("_")[1])
-					.child(currentUser.uid)}/> : <p></p>}
+					.child(currentUser.uid)}/>
 
 
 				{/*<button onClick={() => {*/}
@@ -193,9 +197,6 @@ const Tasks = () => {
 			</div>
 		);
 	};
-
-	const fields = {customFileUpload: customFileUpload};
-
 
 	// useEffect(() => {
 	// 	const getQuestions = async (taskID) => {
