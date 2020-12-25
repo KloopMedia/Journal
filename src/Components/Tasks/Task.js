@@ -116,25 +116,25 @@ const Tasks = () => {
 
 	}, [id])
 
-	// useEffect(() => {
-	// 	const timer = setTimeout(() => {
-	// 		if (formResponsesChanged) {
-	// 			firebase
-	// 				.firestore()
-	// 				.collection("tasks")
-	// 				.doc(id)
-	// 				.collection("responses")
-	// 				.doc("form_responses")
-	// 				.set(formResponses)
-	// 				.then(docRef => {
-	// 					setFormResponsesChanged(false);
-	// 					console.log("Document written with ID: ", docRef.id);
-	// 				})
-	// 				.catch(error => console.error("Error setting document: ", error));
-	// 		}
-	// 	}, AUTOSAVE_INTERVAL);
-	// 	return () => clearTimeout(timer);
-	// }, [formResponsesChanged, formResponses]);
+	/*useEffect(() => {
+		const timer = setTimeout(() => {
+			if (formResponsesChanged) {
+				firebase
+					.firestore()
+					.collection("tasks")
+					.doc(id)
+					.collection("responses")
+					.doc("form_responses")
+					.set(formResponses)
+					.then(docRef => {
+						setFormResponsesChanged(false);
+						console.log("Document written with ID: ", docRef.id);
+					})
+					.catch(error => console.error("Error setting document: ", error));
+			}
+		}, AUTOSAVE_INTERVAL);
+		return () => clearTimeout(timer);
+	}, [formResponsesChanged, formResponses]);*/
 
 
 	const handleFormChange = e => {
@@ -441,51 +441,51 @@ const Tasks = () => {
 	return (
 		currentUser ?
 			<Grid style={{ padding: 30 }}>
-				{/*{dialogType === 'send' && <Dialog*/}
-				{/*	state={dialogState}*/}
-				{/*	handleClose={handleDialogClose}*/}
-				{/*	hideActions={uploading || uploaded}*/}
-				{/*	title={uploading ? "Загрузка файлов" : uploaded ? "Файлы загружены" : "Отправить задание?"}*/}
-				{/*	content={uploading ? <CircularProgress /> : uploaded ? "Спасибо" : "Вы собираетесь отправить задание. Это значит, что вы больше не сможете изменять ответы."}*/}
-				{/*	dialogFunction={() => saveToFirebase(true)} />}*/}
-				{/*{dialogType === 'release' && <DialogFeedback*/}
-				{/*	state={dialogState}*/}
-				{/*	feedbackValue={feedbackValue}*/}
-				{/*	handleClose={handleDialogClose}*/}
-				{/*	title={releaseFeedbackData.title}*/}
-				{/*	dialogFunction={releaseTask}*/}
-				{/*	answers={releaseFeedbackData.answers}*/}
-				{/*	description={releaseFeedbackData.description}*/}
-				{/*	returnFeedback={handleFeedbackSave} />}*/}
+				{/*{dialogType === 'send' && <Dialog
+				state={dialogState}
+				handleClose={handleDialogClose}
+				hideActions={uploading || uploaded}
+				title={uploading ? "Загрузка файлов" : uploaded ? "Файлы загружены" : "Отправить задание?"}
+				content={uploading ? <CircularProgress /> : uploaded ? "Спасибо" : "Вы собираетесь отправить задание. Это значит, что вы больше не сможете изменять ответы."}
+				dialogFunction={() => saveToFirebase(true)} />}
+				dialogType === 'release' && <DialogFeedback
+				state={dialogState}
+				feedbackValue={feedbackValue}
+				handleClose={handleDialogClose}
+				title={releaseFeedbackData.title}
+				dialogFunction={releaseTask}
+				answers={releaseFeedbackData.answers}
+				description={releaseFeedbackData.description}
+				returnFeedback={handleFeedbackSave} />}*/}
 				{redirect && <Redirect to="/tasks" />}
-				{/*<Snackbar*/}
-				{/*	anchorOrigin={{*/}
-				{/*		vertical: 'bottom',*/}
-				{/*		horizontal: 'left',*/}
-				{/*	}}*/}
-				{/*	open={openSnackbar}*/}
-				{/*	autoHideDuration={6000}*/}
-				{/*	onClose={handleCloseSnackbar}*/}
-				{/*	message="Фидбек отправлен"*/}
-				{/*	action={*/}
-				{/*		<React.Fragment>*/}
-				{/*			<IconButton size="small" aria-label="close" color="inherit" onClick={handleCloseSnackbar}>*/}
-				{/*				<CloseIcon fontSize="small" />*/}
-				{/*			</IconButton>*/}
-				{/*		</React.Fragment>*/}
-				{/*	}*/}
-				{/*/>*/}
-				{/*/!* Предыдущие задания{caseTasks.map((t, i) => <Button key={"case_button_"+i} component={ Link } to={"/tasks/" + t.id}>{t.title}</Button>)} *!/*/}
-				{/*{forms}*/}
-				{/*<Grid container style={{ padding: 20 }} justify="center">*/}
-				{/*	<Button variant="outlined" style={{ borderWidth: 2, borderColor: "grey", color: 'grey', margin: 5 }} onClick={() => setRedirect(true)}>Назад</Button>*/}
-				{/*	{!lockButton &&*/}
-				{/*		<div>*/}
-				{/*			<Button variant="outlined" disabled={lockButton} style={{ borderWidth: 2, borderColor: "#003366", color: '#003366', margin: 5 }} onClick={() => saveToFirebase(false)}>Сохранить</Button>*/}
-				{/*			<Button variant="outlined" disabled={lockButton} style={{ borderWidth: 2, borderColor: "red", color: 'red', margin: 5 }} onClick={() => handleDialogOpen('send')}>Отправить</Button>*/}
-				{/*			<Button variant="outlined" disabled={lockButton} style={{ borderWidth: 2, borderColor: "red", color: 'red', margin: 5 }} onClick={() => handleDialogOpen('release')}>Освободить</Button>*/}
-				{/*		</div>}*/}
-				{/*</Grid>*/}
+				{/*<Snackbar
+					anchorOrigin={{
+						vertical: 'bottom',
+						horizontal: 'left',
+					}}
+					open={openSnackbar}
+					autoHideDuration={6000}
+					onClose={handleCloseSnackbar}
+					message="Фидбек отправлен"
+					action={
+						<React.Fragment>
+							<IconButton size="small" aria-label="close" color="inherit" onClick={handleCloseSnackbar}>
+								<CloseIcon fontSize="small" />
+							</IconButton>
+						</React.Fragment>
+					}
+				/>
+				/!* Предыдущие задания{caseTasks.map((t, i) => <Button key={"case_button_"+i} component={ Link } to={"/tasks/" + t.id}>{t.title}</Button>)} *!/
+				{forms}
+				<Grid container style={{ padding: 20 }} justify="center">
+					<Button variant="outlined" style={{ borderWidth: 2, borderColor: "grey", color: 'grey', margin: 5 }} onClick={() => setRedirect(true)}>Назад</Button>
+					{!lockButton &&
+						<div>
+							<Button variant="outlined" disabled={lockButton} style={{ borderWidth: 2, borderColor: "#003366", color: '#003366', margin: 5 }} onClick={() => saveToFirebase(false)}>Сохранить</Button>
+							<Button variant="outlined" disabled={lockButton} style={{ borderWidth: 2, borderColor: "red", color: 'red', margin: 5 }} onClick={() => handleDialogOpen('send')}>Отправить</Button>
+							<Button variant="outlined" disabled={lockButton} style={{ borderWidth: 2, borderColor: "red", color: 'red', margin: 5 }} onClick={() => handleDialogOpen('release')}>Освободить</Button>
+						</div>}
+				</Grid>*/}
 
 				<JSchemaForm
 					schema={formQuestions}
