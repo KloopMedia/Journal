@@ -24,6 +24,9 @@ const Loader = props => {
                 snapshot => {
                     // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
                     const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                    setFileBeingUploaded(prevState => {
+              return {...prevState, {[file.name: {status: "loading", progress: progress}]}}
+            })
                     console.log('Upload is ' + progress + '% done');
                     switch (snapshot.state) {
                         case firebase.storage.TaskState.PAUSED: // or 'paused'
@@ -117,6 +120,9 @@ const Loader = props => {
                 onChange={handleChange}
                 multiple
             />
+            {Object(fileBeingUploaded).map(filename => {
+              <LinearProgressWithLabel value={fileBeingUploaded[filename][progress], label=filename, key=filename} />
+            })}
 
             {/*<p>Progress: {uploadProgress}</p>*/}
 
