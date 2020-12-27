@@ -52,10 +52,6 @@ const Tasks = () => {
 
 	const { currentUser } = useContext(AuthContext);
 	const { id } = useParams();
-	const ref = firebase
-		.firestore()
-		.collection("tasks")
-		.doc(id)
 
 	const handleCloseSnackbar = (event, reason) => {
 		if (reason === 'clickaway') {
@@ -68,6 +64,10 @@ const Tasks = () => {
 	// const uploadsRef = useRef();
 
 	useEffect(() => {
+		const ref = firebase
+		.firestore()
+		.collection("tasks")
+		.doc(id)
 
 		ref.collection("responses")
 			.onSnapshot(snapshot => {
@@ -150,6 +150,11 @@ const Tasks = () => {
 	};
 
 	const handleBlur = e => {
+		const ref = firebase
+		.firestore()
+		.collection("tasks")
+		.doc(id)
+
 		console.log("Responses: ", formResponses)
 		console.log("That is what was blured", e)
 		if (e === "root") {
@@ -169,13 +174,24 @@ const Tasks = () => {
 	}
 
 	const customFileUpload = props => {
+		const ref = firebase
+		.firestore()
+		.collection("tasks")
+		.doc(id)
+
+		const pathToFolder = firebase
+			.storage()
+			.ref(id)
+			.child(props.idSchema.$id.split("_")[1])
+			.child(currentUser.uid)
+		const linksToFiles = ref
+			.collection("responses")
+			.doc(props.idSchema.$id.split("_")[1])
+
 		return (
 			<div>
-				 <Loader storageRef={firebase.storage()
-					.ref(id)
-					.child(props.idSchema.$id.split("_")[1])
-					.child(currentUser.uid)}/>
-
+				<Loader storageRef={pathToFolder}
+						filesLinks={linksToFiles}/>
 
 				{/*<button onClick={() => {*/}
 				{/*	const newValue = ["It is ALIVE!!!", "And working!"]*/}

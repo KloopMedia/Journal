@@ -1,16 +1,18 @@
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import firebase from "firebase";
 import LinearProgressWithLabel from "./LinearProgressWithLabel";
+import {cloneDeep} from "lodash";
 
 
 const Loader = props => {
-
-    // const [filenames, setFilenames] = useState([])
-    // const [downloadURLs, setDownloadURLs] = useState([])
-    // const [isUploading, setIsUploading] = useState(false)
-    // const [uploadProgress, setUploadProgress] = useState(0)
-
     const [fileBeingUploaded, setFileBeingUploaded] = useState({})
+    const [storedFiles, setStoredFiles] = useState({})
+
+    useEffect(() => {
+        props.filesLinks.onSnapshot(doc => {
+            setStoredFiles(doc.data().contents)
+        });
+    }, [props.filesLinks])
 
 
     const upload = async files => {
@@ -59,7 +61,14 @@ const Loader = props => {
                     }
                 }, () => {
                     // Upload completed successfully, now we can get the download URL
-                    snap.snapshot.ref.getDownloadURL().then(downloadURL => {
+                    snap.snapshot.ref.getDownloadURL().then(async downloadURL => {
+                        await props.filesLinks.set({contents: {[downloadURL]: {name: file.name}}},
+					{merge: true})
+                        setFileBeingUploaded(prevState => {
+                            const newState = Object.assign({}, prevState)
+                            delete newState[file.name]
+                            return newState
+                        })
                         console.log('File available at', downloadURL);
                     });
                 });
@@ -70,18 +79,6 @@ const Loader = props => {
             // //await uploadFilesData(file.name, url_wo_token, key)
         }));
     }
-
-    // const uploadFilesData = async (filename, url, questionId) => {
-	// 	let rootRef = firebase.firestore().collection("tasks").doc(id).collection("responses").doc(questionId)
-	// 	console.log("Файл отправлен")
-	// 	if (filename && url) {
-	// 		rootRef.set(
-	// 			{
-	// 				files: firebase.firestore.FieldValue.arrayUnion({ public_url: url, filename: filename })
-	// 			}, { merge: true }
-	// 		).then(() => console.log('super'))
-	// 	}
-	// };
 
     const handleChange = (event) => {
         console.log("Files selected: ", [...event.target.files,])
@@ -97,19 +94,18 @@ const Loader = props => {
                 multiple
             />
             {Object.keys(fileBeingUploaded).map(filename =>
-                <LinearProgressWithLabel value={fileBeingUploaded[filename].progress}
-                                         key={filename}/>
+                <div key={filename}>
+                    <p>{filename}</p>
+                    <LinearProgressWithLabel value={fileBeingUploaded[filename].progress}/>
+                </div>
+
             )}
-
-            {/*<p>Progress: {uploadProgress}</p>*/}
-
-            {/*<p>Filenames: {filenames.join(", ")}</p>*/}
-
-            {/*<div>*/}
-            {/*    {downloadURLs.map((downloadURL, i) => {*/}
-            {/*        return <img key={i} src={downloadURL}/>;*/}
-            {/*    })}*/}
-            {/*</div>*/}
+            {storedFiles ? <p>Сохраненные файлы</p> : <p></p>}
+            {Object.keys(storedFiles).map(fileUrl =>
+                <div key={fileUrl}>
+                    <a href={fileUrl}>{storedFiles[fileUrl].name}</a>
+                </div>
+            )}
         </div>
     );
 }
