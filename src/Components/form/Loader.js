@@ -6,13 +6,13 @@ import {cloneDeep} from "lodash";
 
 const Loader = props => {
     const [fileBeingUploaded, setFileBeingUploaded] = useState({})
-    const [storedFiles, setStoredFiles] = useState({})
+    //const [storedFiles, setStoredFiles] = useState({})
 
-    useEffect(() => {
-        props.filesLinks.onSnapshot(doc => {
-            setStoredFiles(doc.data().contents)
-        });
-    }, [props.filesLinks])
+    // useEffect(() => {
+    //     props.filesLinks.onSnapshot(doc => {
+    //         setStoredFiles(doc.data().contents)
+    //     });
+    // }, [props.filesLinks])
 
 
     const upload = async files => {
@@ -100,12 +100,12 @@ const Loader = props => {
                 </div>
 
             )}
-            {storedFiles ? <p>Сохраненные файлы</p> : <p></p>}
-            {Object.keys(storedFiles).map(fileUrl =>
-                <div key={fileUrl}>
-                    <a href={fileUrl}>{storedFiles[fileUrl].name}</a>
-                </div>
-            )}
+            {/*{storedFiles ? <p>Сохраненные файлы</p> : <p></p>}*/}
+            {/*{Object.keys(storedFiles).map(fileUrl =>*/}
+            {/*    <div key={fileUrl}>*/}
+            {/*        <a href={fileUrl}>{storedFiles[fileUrl].name}</a>*/}
+            {/*    </div>*/}
+            {/*)}*/}
         </div>
     );
 }

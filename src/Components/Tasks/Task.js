@@ -32,6 +32,7 @@ const Tasks = () => {
 	const [currentFocus, setCurrentFocus] = useState("")
 	const [lastBlur, setLastBlur] = useState("")
 	const [uiSchema, setUiSchema] = useState({})
+	const [gRef, setGRef] = useState(null)
 
 	const [questions, setQuestions] = useState([])
 	const [responses, setResponses] = useState([])
@@ -64,61 +65,97 @@ const Tasks = () => {
 	// const uploadsRef = useRef();
 
 	useEffect(() => {
-		const ref = firebase
-		.firestore()
-		.collection("tasks")
-		.doc(id)
+		if (currentUser && id) {
 
-		ref.collection("responses")
-			.onSnapshot(snapshot => {
-				const changes = {}
-				const deletes = []
-				let modifyResponses = false
-				snapshot.docChanges().forEach(change => {
-					if (change.type === "added" || change.type === "modified") {
-						const contents = change.doc.data().contents
-						console.log("Response Added: ", contents);
-							//if (!isEqual(formResponses[change.doc.id], change.doc.data().contents)) {
-								console.log("Properties in database and frontend do not match. Property id: ", change.doc.id)
-								console.log("Database data (note contents): ", contents)
-								console.log("Frontend data: ", formResponses[change.doc.id])
-								changes[change.doc.id] = contents
-								modifyResponses = true
+			const ref = firebase
+				.firestore()
+				.collection("tasks")
+				.doc(id)
+
+			setGRef(ref)
+
+			ref.collection("responses")
+				.onSnapshot(snapshot => {
+					const changes = {}
+					const deletes = []
+					let modifyResponses = false
+					snapshot.docChanges().forEach(change => {
+						if (change.type === "added" || change.type === "modified") {
+							const contents = change.doc.data().contents
+							changes[change.doc.id] = contents
+							modifyResponses = true
 							//}
-					}
-					if (change.type === "removed") {
-						//if (formResponses.hasOwnProperty(change.doc.id)) {
+						}
+						if (change.type === "removed") {
+							//if (formResponses.hasOwnProperty(change.doc.id)) {
 							console.log("Response Removed: ", change.doc.data());
 							deletes.push(change.doc.id)
 							modifyResponses = true
-						//}
+							//}
+						}
+					});
+					if (modifyResponses) {
+						setFormResponses(prevState => {
+							const newState = cloneDeep(prevState)
+							deletes.forEach(d => delete newState[d])
+							Object.keys(changes).forEach(key => newState[key] = changes[key])
+							return newState
+						})
 					}
 				});
-				if (modifyResponses) {
-					setFormResponses(prevState => {
-						const newState = cloneDeep(prevState)
-						deletes.forEach(d => delete newState[d])
-						Object.keys(changes).forEach(key => newState[key] = changes[key])
-						return newState
-					})
-				}
-			});
 
-		ref.collection("questions")
-			.doc("form_questions")
-			.onSnapshot(doc => {
-				setFormQuestions(doc.data())
-				console.log("Form Questions: ", doc.data());
-			});
+			ref.collection("questions")
+				.doc("form_questions")
+				.onSnapshot(doc => {
+					setFormQuestions(doc.data())
+					console.log("Form Questions: ", doc.data());
+				});
 
-		ref.collection("questions")
-			.doc("ui_schema")
-			.onSnapshot(doc => {
-				setUiSchema(doc.data())
-				console.log("UI Schema: ", doc.data());
-			});
+			ref.collection("questions")
+				.doc("ui_schema")
+				.onSnapshot(doc => {
+					setUiSchema(doc.data())
+					console.log("UI Schema: ", doc.data());
+				});
 
-		if (currentUser) {
+			const customFileUpload = props => {
+
+				console.log("ID schema: ", props.idSchema)
+				console.log("Context: ", props.formContext)
+				console.log("Form Data: ", props.formData)
+				console.log("ID: ", props.idSchema.$id)
+
+				// console.log("generated id: ", props.id)
+				console.log("subschema: ", props.schema)
+				//console.log("options: ", props.options)
+				console.log("registry: ", props.registry)
+
+				const pathToFolder = firebase
+					.storage()
+					.ref(id)
+					.child(props.idSchema.$id.split("_")[1])
+					.child(currentUser.uid)
+
+				const linksToFiles = ref
+					.collection("responses")
+					.doc(props.idSchema.$id.split("_")[1])
+
+				return (
+					<div>
+						<Loader storageRef={pathToFolder}
+								filesLinks={linksToFiles}/>
+
+						{props.formData ? <p>Сохраненные файлы</p> : <p></p>}
+						{Object.keys(props.formData).map(fileUrl =>
+							<div key={fileUrl}>
+								<a href={fileUrl}>{props.formData[fileUrl].name}</a>
+							</div>
+						)}
+
+					</div>
+				);
+			}
+
 			setFields({customFileUpload: customFileUpload});
 		}
 
@@ -150,69 +187,25 @@ const Tasks = () => {
 	};
 
 	const handleBlur = e => {
-		const ref = firebase
-		.firestore()
-		.collection("tasks")
-		.doc(id)
-
-		console.log("Responses: ", formResponses)
-		console.log("That is what was blured", e)
-		if (e === "root") {
-			Object.keys(formResponses).map(k => {
-				ref.collection("responses")
-					.doc(k)
-					.set({contents: formResponses[k] ? formResponses[k] : firebase.firestore.FieldValue.delete()},
+		if (gRef) {
+			console.log("Responses: ", formResponses)
+			console.log("That is what was blured", e)
+			if (e === "root") {
+				Object.keys(formResponses).map(k => {
+					gRef.collection("responses")
+						.doc(k)
+						.set({contents: formResponses[k] ? formResponses[k] : firebase.firestore.FieldValue.delete()},
+							{merge: true})
+				})
+			} else {
+				const docID = e.split("_")[1]
+				gRef.collection("responses")
+					.doc(docID)
+					.set({contents: formResponses[docID] ? formResponses[docID] : firebase.firestore.FieldValue.delete()},
 						{merge: true})
-			})
-		} else {
-			const docID = e.split("_")[1]
-			ref.collection("responses")
-				.doc(docID)
-				.set({contents: formResponses[docID] ? formResponses[docID] : firebase.firestore.FieldValue.delete()},
-					{merge: true})
+			}
 		}
 	}
-
-	const customFileUpload = props => {
-		const ref = firebase
-		.firestore()
-		.collection("tasks")
-		.doc(id)
-
-		const pathToFolder = firebase
-			.storage()
-			.ref(id)
-			.child(props.idSchema.$id.split("_")[1])
-			.child(currentUser.uid)
-		const linksToFiles = ref
-			.collection("responses")
-			.doc(props.idSchema.$id.split("_")[1])
-
-		return (
-			<div>
-				<Loader storageRef={pathToFolder}
-						filesLinks={linksToFiles}/>
-
-				{/*<button onClick={() => {*/}
-				{/*	const newValue = ["It is ALIVE!!!", "And working!"]*/}
-				{/*	props.onChange([{name: "check"}])*/}
-
-				{/*	console.log("ID schema: ", props.idSchema)*/}
-				{/*	console.log("Context: ", props.formContext)*/}
-				{/*	console.log("Form Data: ", props.formData)*/}
-				{/*	console.log("ID: ", props.idSchema.$id)*/}
-
-				{/*	const docID = props.idSchema.$id.split("_")[1]*/}
-				{/*	ref.collection("responses")*/}
-				{/*	.doc(docID)*/}
-				{/*	.set({contents: newValue ? newValue : firebase.firestore.FieldValue.delete()},*/}
-				{/*		{merge: true})*/}
-				{/*}}>*/}
-				{/*	"Check"*/}
-				{/*</button>*/}
-			</div>
-		);
-	};
 
 	// useEffect(() => {
 	// 	const getQuestions = async (taskID) => {
@@ -522,7 +515,7 @@ const Tasks = () => {
 				{/*		</div>}*/}
 				{/*</Grid>*/}
 
-				{formQuestions ?
+				{formQuestions && gRef ?
 					<JSchemaForm
 						schema={formQuestions}
 						uiSchema={uiSchema}
