@@ -26,10 +26,12 @@ const AUTOSAVE_INTERVAL = 1;
 
 const Tasks = () => {
 	const [formResponses, setFormResponses] = useState({})
-	const [formQuestions, setFormQuestions] = useState({})
+	const [taskQuestions, setTaskQuestions] = useState({})
+	const [mergedQuestions, setMergedQuestions] = useState({})
 	const [fields, setFields] = useState({})
 	const [taskMetadata, setTaskMetadata] = useState({})
 	const [caseStages, setCaseStages] = useState({})
+	const [backgroundTasks, setBackgroundTasks] = useState({})
 	const [currentFocus, setCurrentFocus] = useState("")
 	const [uiSchema, setUiSchema] = useState({})
 	const [gRef, setGRef] = useState(null)
@@ -112,7 +114,7 @@ const Tasks = () => {
 			ref.collection("questions")
 				.doc("form_questions")
 				.onSnapshot(doc => {
-					setFormQuestions(doc.data())
+					setTaskQuestions(doc.data())
 					console.log("Form Questions: ", doc.data());
 				});
 
@@ -175,13 +177,49 @@ const Tasks = () => {
 							})
 						}
 						if (change.type === "removed") {
-							//if (formResponses.hasOwnProperty(change.doc.id)) {
+							setCaseStages(prevState => {
+								const newState = Object.assign({}, prevState)
+								delete newState[change.doc.id]
+								return newState
+							})
 						}
 					});
 				});
 
 		}
 	}, [taskMetadata])
+
+	useEffect(() => {
+		const backgroundTasksList = caseStages[taskMetadata.case_stage_id].backgroundTasks
+		if (backgroundTasksList.length > 0) {
+			firebase.firestore()
+				.collection("tasks")
+				.where("case_id", "==", taskMetadata.case_id)
+				.where("case_stage_id", "in", backgroundTasksList)
+				.onSnapshot(snapshot => {
+				snapshot.docChanges().forEach(change => {
+					if (change.type === "added" || change.type === "modified") {
+						console.log("Background task: ", change.doc.data())
+						setBackgroundTasks(prevState => {
+							return {...prevState, [change.doc.id]: change.doc.data()}
+						})
+					}
+					if (change.type === "removed") {
+						setBackgroundTasks(prevState => {
+							const newState = Object.assign({}, prevState)
+							delete newState[change.doc.id]
+							return newState
+						})
+					}
+				});
+			});
+
+		}
+	}, [caseStages])
+
+	// useEffect( () => {
+	// 	setMergedQuestions(mergeQuestions([caseStages[taskMetadata.case_stage_id]]))
+	// }, [caseStages, taskQuestions])
 
 	// useEffect(() => {
 	// 	const timer = setTimeout(() => {
@@ -537,9 +575,9 @@ const Tasks = () => {
 				{/*		</div>}*/}
 				{/*</Grid>*/}
 
-				{formQuestions && gRef ?
+				{taskQuestions && gRef ?
 					<JSchemaForm
-						schema={formQuestions}
+						schema={taskQuestions}
 						uiSchema={uiSchema}
 						formData={formResponses}
 						fields={fields}
