@@ -28,9 +28,9 @@ const Tasks = () => {
 	const [formResponses, setFormResponses] = useState({})
 	const [formQuestions, setFormQuestions] = useState({})
 	const [fields, setFields] = useState({})
-	const [formResponsesChanged, setFormResponsesChanged] = useState(false)
+	const [taskMetadata, setTaskMetadata] = useState({})
+	const [caseStages, setCaseStages] = useState({})
 	const [currentFocus, setCurrentFocus] = useState("")
-	const [lastBlur, setLastBlur] = useState("")
 	const [uiSchema, setUiSchema] = useState({})
 	const [gRef, setGRef] = useState(null)
 
@@ -73,6 +73,11 @@ const Tasks = () => {
 				.doc(id)
 
 			setGRef(ref)
+
+			ref.onSnapshot(doc => {
+					setTaskMetadata(doc.data())
+					console.log("Task Metadata: ", doc.data());
+				});
 
 			ref.collection("responses")
 				.onSnapshot(snapshot => {
@@ -119,29 +124,19 @@ const Tasks = () => {
 				});
 
 			const customFileUpload = props => {
-
-				console.log("ID schema: ", props.idSchema)
-				console.log("Context: ", props.formContext)
-				console.log("Form Data: ", props.formData)
-				console.log("ID: ", props.idSchema.$id)
-
-				// console.log("generated id: ", props.id)
-				console.log("subschema: ", props.schema)
-				//console.log("options: ", props.options)
-				console.log("registry: ", props.registry)
-
+				console.log("All props: ", props)
 				const pathToFolder = firebase
 					.storage()
 					.ref(id)
 					.child(props.idSchema.$id.split("_")[1])
 					.child(currentUser.uid)
-
 				const linksToFiles = ref
 					.collection("responses")
 					.doc(props.idSchema.$id.split("_")[1])
-
 				return (
 					<div>
+						{props.schema.title ? <div>{props.schema.title}</div> :  <div></div>}
+						{props.schema.description ? <div>{props.schema.description}</div> :  <div></div>}
 						<Loader storageRef={pathToFolder}
 								filesLinks={linksToFiles}/>
 
@@ -160,6 +155,33 @@ const Tasks = () => {
 		}
 
 	}, [id, currentUser])
+
+	useEffect( () => {
+
+		if (Object.entries(taskMetadata).length > 0) {
+			console.log("Task metadata: ", taskMetadata)
+			firebase.firestore()
+				.collection("schema")
+				.doc("structure")
+				.collection("cases")
+				.doc(taskMetadata.case_type)
+				.collection("stages")
+				.onSnapshot(snapshot => {
+					snapshot.docChanges().forEach(change => {
+						if (change.type === "added" || change.type === "modified") {
+							console.log("Case stage: ", change.doc.data())
+							setCaseStages(prevState => {
+								return {...prevState, [change.doc.id]: change.doc.data()}
+							})
+						}
+						if (change.type === "removed") {
+							//if (formResponses.hasOwnProperty(change.doc.id)) {
+						}
+					});
+				});
+
+		}
+	}, [taskMetadata])
 
 	// useEffect(() => {
 	// 	const timer = setTimeout(() => {
