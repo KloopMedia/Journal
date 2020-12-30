@@ -32,6 +32,8 @@ const Tasks = () => {
 	const [taskMetadata, setTaskMetadata] = useState({})
 	const [caseStages, setCaseStages] = useState({})
 	const [backgroundTasks, setBackgroundTasks] = useState({})
+	const [backgroundTaskForms, setBackgroundTaskForms] = useState({})
+	const [backgroundResponses, setBackgroundResponses] = useState({})
 	const [currentFocus, setCurrentFocus] = useState("")
 	const [uiSchema, setUiSchema] = useState({})
 	const [gRef, setGRef] = useState(null)
@@ -158,8 +160,8 @@ const Tasks = () => {
 
 	}, [id, currentUser])
 
-	useEffect( () => {
 
+	useEffect( () => {
 		if (Object.entries(taskMetadata).length > 0) {
 			console.log("Task metadata: ", taskMetadata)
 			firebase.firestore()
@@ -187,7 +189,15 @@ const Tasks = () => {
 				});
 
 		}
-	}, [taskMetadata])
+	}, [taskMetadata.case_type])
+
+	useEffect(() => {
+		const mergedBackgroundForms = {}
+		Object.keys(backgroundTasks).map(taskId => {}
+			//mergedBackgroundForms[case_stage_id]
+		)
+	}, [backgroundTasks])
+
 
 	useEffect(() => {
 		const backgroundTasksList = caseStages[taskMetadata.case_stage_id].backgroundTasks
@@ -197,25 +207,66 @@ const Tasks = () => {
 				.where("case_id", "==", taskMetadata.case_id)
 				.where("case_stage_id", "in", backgroundTasksList)
 				.onSnapshot(snapshot => {
-				snapshot.docChanges().forEach(change => {
-					if (change.type === "added" || change.type === "modified") {
-						console.log("Background task: ", change.doc.data())
-						setBackgroundTasks(prevState => {
-							return {...prevState, [change.doc.id]: change.doc.data()}
-						})
-					}
-					if (change.type === "removed") {
-						setBackgroundTasks(prevState => {
-							const newState = Object.assign({}, prevState)
-							delete newState[change.doc.id]
-							return newState
-						})
-					}
+					snapshot.docChanges().forEach(change => {
+						if (change.type === "added" || change.type === "modified") {
+							console.log("Background task: ", change.doc.data())
+							setBackgroundTasks(prevState => {
+								return {...prevState, [change.doc.id]: change.doc.data()}
+							})
+						}
+						if (change.type === "removed") {
+							setBackgroundTasks(prevState => {
+								const newState = Object.assign({}, prevState)
+								delete newState[change.doc.id]
+								return newState
+							})
+						}
+					});
 				});
-			});
-
 		}
-	}, [caseStages])
+	}, [caseStages, taskMetadata.case_id, taskMetadata.case_stage_id])
+
+	useEffect(() => {
+		if (Object.entries(backgroundTasks).length > 0) {
+			Object.keys(backgroundTasks).map(key => {
+				firebase.firestore()
+					.collection("tasks")
+					.doc(key)
+					.collection("questions")
+					.onSnapshot(snapshot => {
+						snapshot.docChanges().forEach(change => {
+							if (change.type === "added" || change.type === "modified") {
+								setBackgroundTaskForms(prevState => {
+									const newState = Object.assign({}, prevState)
+									newState[key][change.doc.id] = change.doc.data()
+									return newState
+								})
+							}
+						})
+					})
+				firebase.firestore()
+					.collection("tasks")
+					.doc(key)
+					.collection("responses")
+					.onSnapshot(snapshot => {
+						snapshot.docChanges().forEach(change => {
+							if (change.type === "added" || change.type === "modified") {
+								setBackgroundResponses(prevState => {
+									const newState = Object.assign({}, prevState)
+									newState[key][change.doc.id] = change.doc.data()
+									return newState
+								})
+							}
+							if (change.type === "removed") {
+								const newState = Object.assign({}, prevState)
+								delete newState[key][change.doc.id]
+								return newState
+							}
+						})
+					})
+			})
+		}
+	}, [backgroundTasks])
 
 	// useEffect( () => {
 	// 	setMergedQuestions(mergeQuestions([caseStages[taskMetadata.case_stage_id]]))
