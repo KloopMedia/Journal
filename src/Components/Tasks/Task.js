@@ -26,16 +26,16 @@ const AUTOSAVE_INTERVAL = 1;
 
 const Tasks = () => {
 	const [formResponses, setFormResponses] = useState({})
-	const [taskQuestions, setTaskQuestions] = useState({})
-	const [mergedQuestions, setMergedQuestions] = useState({})
+	const [taskForm, setTaskForm] = useState({})
+	const [mergedForm, setMergedForm] = useState({})
 	const [fields, setFields] = useState({})
 	const [taskMetadata, setTaskMetadata] = useState({})
 	const [caseStages, setCaseStages] = useState({})
 	const [backgroundTasks, setBackgroundTasks] = useState({})
 	const [backgroundTaskForms, setBackgroundTaskForms] = useState({})
+	const [mergedBackgroundForms, setMergedBackgroundForms] = useState({})
 	const [backgroundResponses, setBackgroundResponses] = useState({})
 	const [currentFocus, setCurrentFocus] = useState("")
-	const [uiSchema, setUiSchema] = useState({})
 	const [gRef, setGRef] = useState(null)
 
 	const [questions, setQuestions] = useState([])
@@ -114,18 +114,15 @@ const Tasks = () => {
 				});
 
 			ref.collection("questions")
-				.doc("form_questions")
-				.onSnapshot(doc => {
-					setTaskQuestions(doc.data())
-					console.log("Form Questions: ", doc.data());
-				});
-
-			ref.collection("questions")
-				.doc("ui_schema")
-				.onSnapshot(doc => {
-					setUiSchema(doc.data())
-					console.log("UI Schema: ", doc.data());
-				});
+				.onSnapshot(snapshot => {
+					snapshot.docChanges().forEach(change => {
+						if (change.type === "added" || change.type === "modified") {
+							setTaskForm(prevState => {
+								return {...prevState, [change.doc.id]: change.doc.data()}
+							})
+						}
+					})
+				})
 
 			const customFileUpload = props => {
 				console.log("All props: ", props)
@@ -192,15 +189,21 @@ const Tasks = () => {
 	}, [taskMetadata.case_type])
 
 	useEffect(() => {
-		const mergedBackgroundForms = {}
-		Object.keys(backgroundTasks).map(taskId => {}
-			//mergedBackgroundForms[case_stage_id]
-		)
-	}, [backgroundTasks])
-
+		const mergedBgForms = {}
+		Object.keys(backgroundTasks).map(taskId => {
+			const stage = backgroundTasks[taskId].case_stage_id
+			mergedBgForms[stage][taskId] = mergeForm(backgroundTaskForms[taskId],
+				caseStages[stage])
+		})
+		setMergedBackgroundForms(mergedBgForms)
+	}, [backgroundTasks, backgroundTaskForms, caseStages])
 
 	useEffect(() => {
-		const backgroundTasksList = caseStages[taskMetadata.case_stage_id].backgroundTasks
+		setMergedForm(mergeForm(taskForm, caseStages[taskMetadata.case_stage_id]))
+	}, [taskForm, taskMetadata, caseStages])
+
+	useEffect(() => {
+		const backgroundTasksList = caseStages[taskMetadata.case_stage_id].backgroundStages
 		if (backgroundTasksList.length > 0) {
 			firebase.firestore()
 				.collection("tasks")
