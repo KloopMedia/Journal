@@ -321,6 +321,31 @@ const Tasks = () => {
 		}
 	}
 
+	const mergeForm = (taskForm, caseForms) => {
+		const tForm = Object.assign({}, taskForm)
+		const cForms = Object.assign({}, caseForms)
+		const properties = {...cForms.start.properties,
+			...cForms.end.properties, ...tForm.form_questions.properties}
+		const definitions = {...cForms.start.definitions,
+			...cForms.end.definitions, ...tForm.form_questions.definitions}
+		let title = ""
+		if (tForm.form_questions.title) {
+			title = tForm.form_questions.title
+		} else if (cForms.end.title) {
+			title = cForms.end.title
+		} else if (cForms.start.title) {
+			title = cForms.start.title}
+
+		if (tForm.form_questions.description) {
+			title = tForm.form_questions.description
+		} else if (cForms.end.description) {
+			title = cForms.end.description
+		} else if (cForms.start.description) {
+			title = cForms.start.description}
+
+
+	}
+
 	// useEffect(() => {
 	// 	const getQuestions = async (taskID) => {
 	// 		let q = []
