@@ -261,9 +261,11 @@ const Tasks = () => {
 								})
 							}
 							if (change.type === "removed") {
-								const newState = Object.assign({}, prevState)
-								delete newState[key][change.doc.id]
-								return newState
+								setBackgroundResponses(prevState => {
+									const newState = Object.assign({}, prevState)
+									delete newState[key][change.doc.id]
+									return newState
+								})
 							}
 						})
 					})
@@ -325,10 +327,17 @@ const Tasks = () => {
 		const tForm = Object.assign({}, taskForm)
 		const cForms = Object.assign({}, caseForms)
 
-		const properties = {...cForms.start.properties,
-			...cForms.end.properties, ...tForm.form_questions.properties}
-		const definitions = {...cForms.start.definitions,
-			...cForms.end.definitions, ...tForm.form_questions.definitions}
+		const properties = {
+			...(cForms.start.properties ? cForms.start.properties : {}),
+			...(cForms.end.properties ? cForms.end.properties : {}),
+			...(tForm.form_questions.properties ? tForm.form_questions.properties : {})
+		}
+
+		const definitions = {
+			...(cForms.start.definitions ? cForms.start.definitions : {}),
+			...(cForms.end.definitions ? cForms.end.definitions : {}),
+			...(tForm.form_questions.definitions ? tForm.form_questions.definitions : {})
+		}
 
 		let title = ""
 		if (tForm.form_questions.title) {
@@ -338,17 +347,45 @@ const Tasks = () => {
 		} else if (cForms.start.title) {
 			title = cForms.start.title}
 
+		let description = ""
 		if (tForm.form_questions.description) {
-			title = tForm.form_questions.description
+			description = tForm.form_questions.description
 		} else if (cForms.end.description) {
-			title = cForms.end.description
+			description = cForms.end.description
 		} else if (cForms.start.description) {
-			title = cForms.start.description}
+			description = cForms.start.description}
 
-		const required = [...new Set([...(cForms.start.required ? cForms.start.required : []),
+		const required = [...new Set([
+			...(cForms.start.required ? cForms.start.required : []),
 			...(tForm.form_questions.required ? tForm.form_questions.required : []),
-			...(cForms.start.required ? cForms.start.required : [])])]
+			...(cForms.start.required ? cForms.start.required : [])
+		])]
+
+		const uiOrder = [...new Set([
+			...(cForms.start_ui_schema["ui:order"] ? cForms.start_ui_schema["ui:order"] : []),
+			...(tForm.ui_schema["ui:order"]	 ? tForm.ui_schema["ui:order"] : []),
+			...(cForms.end_ui_schema["ui:order"] ? cForms.end_ui_schema["ui:order"] : [])
+		])]
+
+		let uiSchema = {
+			...(cForms.start_ui_schema ? cForms.start_ui_schema : {}),
+			...(cForms.end_ui_schema ? cForms.end_ui_schema : {}),
+			...(tForm.ui_schema ? tForm.ui_schema : {})
+		}
+
+		uiSchema = {...uiSchema, ...{"ui:order": uiOrder}}
+
+		const form = {
+			properties: properties,
+			definitions: definitions,
+			title: title,
+			description: description,
+			required: required
+		}
+		return {form: form, uiSchema: uiSchema}
+
 	}
+
 
 	// useEffect(() => {
 	// 	const getQuestions = async (taskID) => {
@@ -658,10 +695,10 @@ const Tasks = () => {
 				{/*		</div>}*/}
 				{/*</Grid>*/}
 
-				{taskQuestions && gRef ?
+				{mergedForm && gRef ?
 					<JSchemaForm
-						schema={taskQuestions}
-						uiSchema={uiSchema}
+						schema={mergedForm.form}
+						uiSchema={mergedForm.uiSchema}
 						formData={formResponses}
 						fields={fields}
 						onChange={e => {
