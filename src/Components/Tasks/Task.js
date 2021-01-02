@@ -22,7 +22,6 @@ import { cloneDeep, isEqual } from 'lodash'
 import { Redirect, useParams } from 'react-router';
 import { Link } from "react-router-dom";
 
-const AUTOSAVE_INTERVAL = 1;
 
 const Tasks = () => {
 	const [formResponses, setFormResponses] = useState({})
@@ -126,6 +125,10 @@ const Tasks = () => {
 
 			const customFileUpload = props => {
 				console.log("All props: ", props)
+				console.log("ID: ", id)
+				console.log("Question ID: ", props.idSchema.$id.split("_")[1])
+				console.log("User UID: ", currentUser.uid)
+				if (id & props.idSchema.$id.split("_")[1]) {
 				const pathToFolder = firebase
 					.storage()
 					.ref(id)
@@ -149,7 +152,9 @@ const Tasks = () => {
 						)}
 
 					</div>
-				);
+				);} else {
+					return null;
+				}
 			}
 
 			setFields({customFileUpload: customFileUpload});
@@ -203,29 +208,31 @@ const Tasks = () => {
 	}, [taskForm, taskMetadata, caseStages])
 
 	useEffect(() => {
-		const backgroundTasksList = caseStages[taskMetadata.case_stage_id].backgroundStages
-		if (backgroundTasksList.length > 0) {
-			firebase.firestore()
-				.collection("tasks")
-				.where("case_id", "==", taskMetadata.case_id)
-				.where("case_stage_id", "in", backgroundTasksList)
-				.onSnapshot(snapshot => {
-					snapshot.docChanges().forEach(change => {
-						if (change.type === "added" || change.type === "modified") {
-							console.log("Background task: ", change.doc.data())
-							setBackgroundTasks(prevState => {
-								return {...prevState, [change.doc.id]: change.doc.data()}
-							})
-						}
-						if (change.type === "removed") {
-							setBackgroundTasks(prevState => {
-								const newState = Object.assign({}, prevState)
-								delete newState[change.doc.id]
-								return newState
-							})
-						}
+		if (caseStages & taskMetadata.case_id & taskMetadata.case_stage_id) {
+			const backgroundTasksList = caseStages[taskMetadata.case_stage_id].backgroundStages
+			if (backgroundTasksList.length > 0) {
+				firebase.firestore()
+					.collection("tasks")
+					.where("case_id", "==", taskMetadata.case_id)
+					.where("case_stage_id", "in", backgroundTasksList)
+					.onSnapshot(snapshot => {
+						snapshot.docChanges().forEach(change => {
+							if (change.type === "added" || change.type === "modified") {
+								console.log("Background task: ", change.doc.data())
+								setBackgroundTasks(prevState => {
+									return {...prevState, [change.doc.id]: change.doc.data()}
+								})
+							}
+							if (change.type === "removed") {
+								setBackgroundTasks(prevState => {
+									const newState = Object.assign({}, prevState)
+									delete newState[change.doc.id]
+									return newState
+								})
+							}
+						});
 					});
-				});
+			}
 		}
 	}, [caseStages, taskMetadata.case_id, taskMetadata.case_stage_id])
 
@@ -327,6 +334,15 @@ const Tasks = () => {
 		const tForm = Object.assign({}, taskForm)
 		const cForms = Object.assign({}, caseForms)
 
+		cForms.start = cForms.start ? cForms.start : {}
+		cForms.end = cForms.end ? cForms.end : {}
+		cForms.start_ui_schema = cForms.start_ui_schema ? cForms.start_ui_schema : {}
+		cForms.end_ui_schema = cForms.end_ui_schema ? cForms.end_ui_schema : {}
+
+		tForm.form_questions = tForm.form_questions ? tForm.form_questions : {}
+		tForm.ui_schema = tForm.ui_schema ? tForm.ui_schema : {}
+
+
 		const properties = {
 			...(cForms.start.properties ? cForms.start.properties : {}),
 			...(cForms.end.properties ? cForms.end.properties : {}),
@@ -382,7 +398,7 @@ const Tasks = () => {
 			description: description,
 			required: required
 		}
-		return {form: form, uiSchema: uiSchema}
+		return {form_questions: form, ui_schema: uiSchema}
 
 	}
 
@@ -697,8 +713,8 @@ const Tasks = () => {
 
 				{mergedForm && gRef ?
 					<JSchemaForm
-						schema={mergedForm.form}
-						uiSchema={mergedForm.uiSchema}
+						schema={mergedForm.form_questions}
+						uiSchema={mergedForm.ui_schema}
 						formData={formResponses}
 						fields={fields}
 						onChange={e => {
