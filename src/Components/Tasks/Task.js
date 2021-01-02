@@ -126,17 +126,17 @@ const Tasks = () => {
 			const customFileUpload = props => {
 				console.log("All props: ", props)
 				console.log("ID: ", id)
-				console.log("Question ID: ", props.idSchema.$id.split("_")[1])
+				console.log("Question ID: ", props.name)
 				console.log("User UID: ", currentUser.uid)
-				if (id & props.idSchema.$id.split("_")[1]) {
+
 				const pathToFolder = firebase
 					.storage()
 					.ref(id)
-					.child(props.idSchema.$id.split("_")[1])
+					.child(props.name)
 					.child(currentUser.uid)
 				const linksToFiles = ref
 					.collection("responses")
-					.doc(props.idSchema.$id.split("_")[1])
+					.doc(props.name)
 				return (
 					<div>
 						{props.schema.title ? <div>{props.schema.title}</div> :  <div></div>}
@@ -152,9 +152,7 @@ const Tasks = () => {
 						)}
 
 					</div>
-				);} else {
-					return null;
-				}
+				);
 			}
 
 			setFields({customFileUpload: customFileUpload});
