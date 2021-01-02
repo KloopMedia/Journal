@@ -95,6 +95,16 @@ SCHEDULE = {
     'callback_data': 'schedule'
 }
 STUDY = {'ru': 'Обучение', 'kg': 'Окутуу', 'callback_data': 'study'}
+FILE_UPLOADED = {
+    'ru': 'Файл загружен',
+    'kg': '',
+    'callback_data': 'file_uploaded'
+}
+YOU_CANT_UPLOAD_FILES = {
+    'ru': 'Вы не можете загружать файлы',
+    'kg': '',
+    'callback_data': 'you_cant_upload_files'
+}
 MY_SITE = {
     'ru': 'Мой участок',
     'kg': 'Менин участогум',

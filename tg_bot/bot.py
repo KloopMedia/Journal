@@ -303,69 +303,75 @@ def get_id_handler(message):
     bot.send_message(message.chat.id, message.from_user.id)
 
 
-@bot.message_handler(commands=['attach_files'])
-def attach_file_handler(message):
-    if len(message.text.split(' ')) != 3:  # no task_id or question_id
-        print('no token')
+@bot.message_handler(commands=['me'])
+def get_me_handler(message):
+    if is_registered(message.chat.id):
+        user = get_user(message.chat.id).to_dict()
+        tg_me_text = user.get("tg_me_text")
+        show_info = f'{user.get("username")}\
+                \n{user.get("email")}'
+        if tg_me_text:
+            show_info += f'\n{tg_me_text}'
+        bot.send_message(message.chat.id, show_info)
     else:
-        if is_registered(message.chat.id):
-            bot.reply_to(message, 'registered')
-            user = get_user(message.chat.id)
-            task_id = message.text.split(' ')[1]
-            question_id = message.text.split(' ')[2]
-            user_tg_id = message.chat.id
-            if can_attach_files(user, user_tg_id, task_id):
-                bot.reply_to(message, 'can attach')
-                bot.send_message(message.chat.id, 'attach files')
-                bot.register_next_step_handler(message, process_attach_files,
-                                               user.id, task_id, question_id)
-            else:
-                bot.send_message(message.chat.id, 'you can\'t attach files')
+        bot.send_message(message.chat.id,
+                         get_string('ru', strings.YOU_NEED_TO_REGISTER))
+
+
+@bot.message_handler(content_types=['photo', 'video'])
+def attach_file_handler(message):
+    if is_registered(message.chat.id):
+        user = get_user(message.chat.id)
+        task_id, question_id = user.to_dict().get('fileUpload').split('/')
+        user_tg_id = message.chat.id
+        if can_attach_files(user, user_tg_id, task_id):
+            process_attach_files(message, user.id, task_id, question_id)
         else:
-            bot.reply_to(message, 'not registered')
+            bot.send_message(message.chat.id,
+                             get_string(strings.YOU_CANT_UPLOAD_FILES, 'ru'))
+    else:
+        bot.reply_to(message, get_string(strings.YOU_NEED_TO_REGISTER, 'ru'))
 
 
 def process_attach_files(message, user_id, task_id, question_id):
     path = f'{task_id}/{question_id}/{user_id}'
-    files, paths = get_files(message, path)
-    urls = upload_files(list(zip(files, paths)))
-    create_response(list(zip(urls, paths)), task_id, question_id)
-    bot.reply_to(message, 'files uploaded')
+    file_bytes, path = get_files(message, path)
+    url = upload_file(file_bytes, path)
+    create_response(url, path, task_id, question_id)
+    time.sleep(0.1)
+    bot.reply_to(message, get_text(strings.FILE_UPLOADED, 'ru'))
 
 
 def get_files(message, path):
-    files = []
-    paths = []
     if message.photo:
-        for photo in message.photo:
-            file_info = bot.get_file(photo.file_id)
-            files.append(bot.download_file(file_info.file_path))
-            paths.append(f'{path}/{file_info.file_unique_id}')
+        file_id = message.photo[-1].file_id
     if message.video:
-        file_info = bot.get_file(message.video.file_id)
-        files.append(bot.download_file(file_info.file_path))
-        paths.append(f'{path}/{file_info.file_unique_id}')
-    return files, paths
+        file_id = message.video.file_id
+    downloaded_file, file_path = _get_file(file_id, path)
+    return downloaded_file, file_path
 
 
-def upload_files(files):
-    urls = []
-    for user_file, file_path in files:
-        blob = bucket.blob(file_path)
-        blob.upload_from_string(user_file)
-        urls.append(blob.public_url)
-    return urls
+def _get_file(file_id, path):
+    file_info = bot.get_file(file_id)
+    file_path = '/'.join(file_info.file_path.split('/')[-2:])
+    downloaded_file = bot.download_file(file_path)
+    file_path = f'{path}/{file_info.file_unique_id}'
+    return downloaded_file, file_path
 
 
-def create_response(urls_with_paths, task_id, question_id):
-    response = {
-        'files': [{
-            'public_url': url,
-            'filename': path.split('/')[-1]
-        } for url, path in urls_with_paths]
-    }
+def upload_file(file_bytes, path, public=True):
+    blob = bucket.blob(path)
+    blob.upload_from_string(file_bytes)
+    if public:
+        blob.make_public()
+    return blob.public_url
+
+
+def create_response(url, path, task_id, question_id):
+    key = path.split('/')[-1]
+    response = {key: {'name': key, 'url': url}}
     db.document(f'tasks/{task_id}/responses/{question_id}')\
-        .set(response)
+        .set(response, merge=True)
 
 
 def can_attach_files(user, tg_id, task_id):
