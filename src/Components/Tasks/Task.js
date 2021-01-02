@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useContext, useRef } from 'react'
-import firebase, { signInWithGoogle } from '../../util/Firebase'
-import { AuthContext } from "../../util/Auth";
+import React, {useState, useEffect, useContext, useRef} from 'react'
+import firebase, {signInWithGoogle} from '../../util/Firebase'
+import {AuthContext} from "../../util/Auth";
+import CardMedia from "@material-ui/core/CardMedia";
 
 //import Form from "../form/form"
 import Dialog from "../Dialog/Dialog"
@@ -9,20 +10,34 @@ import Feedback from "../form/feedback"
 
 import Loader from "../form/Loader"
 
-import { Button, Divider, Grid, Typography } from '@material-ui/core';
+import {Button, Divider, Grid, Typography} from '@material-ui/core';
 import Snackbar from '@material-ui/core/Snackbar';
 import IconButton from '@material-ui/core/IconButton';
 import CloseIcon from '@material-ui/icons/Close';
 import CircularProgress from '@material-ui/core/CircularProgress';
 
 import JSchemaForm from "@rjsf/core";
-import { cloneDeep, isEqual } from 'lodash'
+import {cloneDeep, isEqual} from 'lodash'
 
 
-import { Redirect, useParams } from 'react-router';
-import { Link } from "react-router-dom";
+import {Redirect, useParams} from 'react-router';
+import {Link} from "react-router-dom";
+import makeStyles from "@material-ui/core/styles/makeStyles";
 
 const AUTOSAVE_INTERVAL = 1;
+
+
+const useStyles = makeStyles((theme) => ({
+	media: {
+		marginTop: "25px",
+		height: '50%',
+		width: '50%'
+	},
+	text: {
+		paddingTop: "20px"
+	}
+}));
+
 
 const Tasks = () => {
 	const [formResponses, setFormResponses] = useState({})
@@ -51,8 +66,10 @@ const Tasks = () => {
 	const [files, setFiles] = useState({})
 	const [uploading, setUploading] = useState(false)
 
-	const { currentUser } = useContext(AuthContext);
-	const { id } = useParams();
+	const {currentUser} = useContext(AuthContext);
+	const {id} = useParams();
+
+	const classes = useStyles();
 
 	const handleCloseSnackbar = (event, reason) => {
 		if (reason === 'clickaway') {
@@ -63,6 +80,7 @@ const Tasks = () => {
 	};
 
 	// const uploadsRef = useRef();
+
 
 	useEffect(() => {
 		if (currentUser && id) {
@@ -140,6 +158,22 @@ const Tasks = () => {
 					.collection("responses")
 					.doc(props.idSchema.$id.split("_")[1])
 
+				let formatMedia = (fileUrl) => {
+					console.log("fileUrl =>", fileUrl)
+					const videoExpensions = ['mp4', 'm4a', 'm4v', 'f4v', 'f4a', 'm4b', 'm4r', 'f4b', 'mov', '3gp', '3gp2', '3g2', '3gpp', '3gpp2', 'ogg', 'oga', 'ogv', 'ogx', 'wmv', 'wma', 'webm', 'flv', 'avi', 'mkv', 'ts']
+					const imageExpensions = ['jpg', 'jpeg', 'png']
+					const adioExpensions = ['mp3']
+
+					let clearUrl = fileUrl.split("?")[0].split(".")
+					let expension = clearUrl[clearUrl.length - 1].toLowerCase()
+
+
+					return videoExpensions.includes(expension) ? "iframe" :
+						imageExpensions.includes(expension) ? "img" :
+							adioExpensions.includes("audio") ? "audio" :
+								"xz"
+				}
+
 				return (
 					<div>
 						<Loader storageRef={pathToFolder}
@@ -147,11 +181,29 @@ const Tasks = () => {
 
 						{props.formData ? <p>Сохраненные файлы</p> : <p></p>}
 						{Object.keys(props.formData).map(fileUrl =>
+
 							<div key={fileUrl}>
-								<a href={fileUrl}>{props.formData[fileUrl].name}</a>
+								{(formatMedia(fileUrl) == "iframe" || formatMedia(fileUrl) == "img") ?
+									<a target="_blank" className={classes.text} href={fileUrl}>
+										<CardMedia
+											className={classes.media}
+											component={formatMedia(fileUrl)}
+											src={fileUrl}
+											title={props.formData[fileUrl].name}
+											autoplay={false}
+										/>
+										<Typography>
+											{props.formData[fileUrl].name}
+										</Typography>
+									</a> :
+									<a target="_blank" href={fileUrl}>
+										<Typography className={classes.text}>
+											{props.formData[fileUrl].name}
+										</Typography>
+									</a>
+								}
 							</div>
 						)}
-
 					</div>
 				);
 			}
@@ -468,7 +520,7 @@ const Tasks = () => {
 
 	return (
 		currentUser ?
-			<Grid style={{ padding: 30 }}>
+			<Grid style={{padding: 30}}>
 				{/*{dialogType === 'send' && <Dialog*/}
 				{/*	state={dialogState}*/}
 				{/*	handleClose={handleDialogClose}*/}
@@ -485,7 +537,7 @@ const Tasks = () => {
 				{/*	answers={releaseFeedbackData.answers}*/}
 				{/*	description={releaseFeedbackData.description}*/}
 				{/*	returnFeedback={handleFeedbackSave} />}*/}
-				{redirect && <Redirect to="/tasks" />}
+				{redirect && <Redirect to="/tasks"/>}
 				{/*<Snackbar*/}
 				{/*	anchorOrigin={{*/}
 				{/*		vertical: 'bottom',*/}
@@ -531,12 +583,11 @@ const Tasks = () => {
 						onBlur={e => {
 							handleBlur(e)
 						}}/> : <p></p>}
-
 			</Grid>
 			:
-			<Grid container direction="column" style={{ padding: 20 }} justify="center">
+			<Grid container direction="column" style={{padding: 20}} justify="center">
 				<Typography align="center" variant="h3">авторизируйтесь</Typography>
-				<br />
+				<br/>
 				<Button variant="contained" onClick={signInWithGoogle}>Войти с помощью аккаунта Google</Button>
 			</Grid>
 	)
