@@ -196,7 +196,7 @@ const Tasks = () => {
 											{props.formData[fileUrl].name}
 										</Typography>
 									</a> :
-									<a target="_blank" href={fileUrl}>
+									<a target="_blank"  href={fileUrl}>
 										<Typography className={classes.text}>
 											{props.formData[fileUrl].name}
 										</Typography>
