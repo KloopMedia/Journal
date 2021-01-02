@@ -144,7 +144,7 @@ const Tasks = () => {
 						{props.formData ? <p>Сохраненные файлы</p> : <p></p>}
 						{Object.keys(props.formData).map(fileUrl =>
 							<div key={fileUrl}>
-								<a href={fileUrl}>{props.formData[fileUrl].name}</a>
+						 		<a href={fileUrl}>{props.formData[fileUrl].name}</a>
 							</div>
 						)}
 
@@ -324,10 +324,12 @@ const Tasks = () => {
 	const mergeForm = (taskForm, caseForms) => {
 		const tForm = Object.assign({}, taskForm)
 		const cForms = Object.assign({}, caseForms)
+
 		const properties = {...cForms.start.properties,
 			...cForms.end.properties, ...tForm.form_questions.properties}
 		const definitions = {...cForms.start.definitions,
 			...cForms.end.definitions, ...tForm.form_questions.definitions}
+
 		let title = ""
 		if (tForm.form_questions.title) {
 			title = tForm.form_questions.title
@@ -343,7 +345,9 @@ const Tasks = () => {
 		} else if (cForms.start.description) {
 			title = cForms.start.description}
 
-
+		const required = [...new Set([...(cForms.start.required ? cForms.start.required : []),
+			...(tForm.form_questions.required ? tForm.form_questions.required : []),
+			...(cForms.start.required ? cForms.start.required : [])])]
 	}
 
 	// useEffect(() => {
