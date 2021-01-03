@@ -37,6 +37,7 @@ const Tasks = () => {
 	const [backgroundResponses, setBackgroundResponses] = useState({})
 	const [currentFocus, setCurrentFocus] = useState("")
 	const [gRef, setGRef] = useState(null)
+	const [formLocked, setFormLocked] = useState(true)
 
 	const [questions, setQuestions] = useState([])
 	const [responses, setResponses] = useState([])
@@ -80,6 +81,7 @@ const Tasks = () => {
 
 			ref.onSnapshot(doc => {
 					setTaskMetadata(doc.data())
+					setFormLocked(doc.data().is_complete)
 					console.log("Task Metadata: ", doc.data());
 				});
 
@@ -589,23 +591,23 @@ const Tasks = () => {
 	// 	}
 	// };
 	//
-	// const handleDialogClose = () => {
-	// 	setDialog(false);
-	// 	setFeedback({})
-	// };
-	//
-	// const handleDialogOpen = (type) => {
-	// 	if (type === 'send') {
-	// 		setDialogType('send')
-	// 		setDialog(true)
-	// 	}
-	// 	if (type === 'release') {
-	// 		setDialogType('release')
-	// 		setDialog(true)
-	// 	}
-	//
-	// }
-	//
+	const handleDialogClose = () => {
+		setDialog(false);
+		//setFeedback({})
+	};
+
+	const handleDialogOpen = (type) => {
+		console.log("Dialog open")
+		if (type === 'send') {
+			setDialogType('send')
+			setDialog(true)
+		}
+		// if (type === 'release') {
+		// 	setDialogType('release')
+		// 	setDialog(true)
+		// }
+	}
+
 	// useEffect(() => {
 	// 	firebase.firestore().collection("schema").doc("structure").collection("feedbacks").doc("release").get().then(doc => {
 	// 		setReleaseFeedbackData(doc.data())
@@ -626,16 +628,26 @@ const Tasks = () => {
 	// 	setFeedback(value)
 	// }
 
+	const lockForm = () => {
+		firebase.firestore()
+			.collection("tasks")
+			.doc(id)
+			.collection("user_editable")
+			.doc("user_editable")
+			.update({ status: 'complete' })
+		setDialog(false)
+	}
+
 	return (
 		currentUser ?
 			<Grid style={{ padding: 30 }}>
-				{/*{dialogType === 'send' && <Dialog*/}
-				{/*	state={dialogState}*/}
-				{/*	handleClose={handleDialogClose}*/}
-				{/*	hideActions={uploading || uploaded}*/}
-				{/*	title={uploading ? "Загрузка файлов" : uploaded ? "Файлы загружены" : "Отправить задание?"}*/}
-				{/*	content={uploading ? <CircularProgress /> : uploaded ? "Спасибо" : "Вы собираетесь отправить задание. Это значит, что вы больше не сможете изменять ответы."}*/}
-				{/*	dialogFunction={() => saveToFirebase(true)} />}*/}
+				{dialogType === 'send' && <Dialog
+					state={dialogState}
+					handleClose={handleDialogClose}
+					//hideActions={uploading || uploaded}
+					title={uploading ? "Загрузка файлов" : uploaded ? "Файлы загружены" : "Отправить задание?"}
+					content={uploading ? <CircularProgress /> : uploaded ? "Спасибо" : "Вы собираетесь отправить форму. Это значит, что вы больше не сможете изменять ответы."}
+					dialogFunction={lockForm} />}
 				{/*{dialogType === 'release' && <DialogFeedback*/}
 				{/*	state={dialogState}*/}
 				{/*	feedbackValue={feedbackValue}*/}
@@ -645,7 +657,7 @@ const Tasks = () => {
 				{/*	answers={releaseFeedbackData.answers}*/}
 				{/*	description={releaseFeedbackData.description}*/}
 				{/*	returnFeedback={handleFeedbackSave} />}*/}
-				{redirect && <Redirect to="/tasks" />}
+				{/*{redirect && <Redirect to="/tasks" />}*/}
 				{/*<Snackbar*/}
 				{/*	anchorOrigin={{*/}
 				{/*		vertical: 'bottom',*/}
@@ -675,29 +687,29 @@ const Tasks = () => {
 				{/*		</div>}*/}
 				{/*</Grid>*/}
 
-				{caseStages[taskMetadata.case_stage_id].backgroundStages.length > 0 ?
-					<Grid style={{ padding: 30 }}>
-						{caseStages[taskMetadata.case_stage_id].backgroundStages.map(stage => {
-							return <div key={stage}>
-								{Object.keys(mergedBackgroundForms[stage]).map(taskId => {
+				{/*{caseStages[taskMetadata.case_stage_id].backgroundStages.length > 0 ?*/}
+				{/*	<Grid style={{ padding: 30 }}>*/}
+				{/*		{caseStages[taskMetadata.case_stage_id].backgroundStages.map(stage => {*/}
+				{/*			return <div key={stage}>*/}
+				{/*				{Object.keys(mergedBackgroundForms[stage]).map(taskId => {*/}
 
-									return <Grid style={{padding: 30}} key={taskId}>
-										<JSchemaForm
-											schema={mergedBackgroundForms[stage][taskId].form_questions}
-											uiSchema={mergedBackgroundForms[stage][taskId].ui_schema}
-											formData={backgroundResponses[taskId]}
-											fields={{customFileUpload: a => CustomFileUpload({...a, ...{taskID: taskId}, ...{"currentUserUid": currentUser.uid}})}}
-											disabled={true}
-										/>
-									</Grid>
+				{/*					return <Grid style={{padding: 30}} key={taskId}>*/}
+				{/*						<JSchemaForm*/}
+				{/*							schema={mergedBackgroundForms[stage][taskId].form_questions}*/}
+				{/*							uiSchema={mergedBackgroundForms[stage][taskId].ui_schema}*/}
+				{/*							formData={backgroundResponses[taskId]}*/}
+				{/*							fields={{customFileUpload: a => CustomFileUpload({...a, ...{taskID: taskId}, ...{"currentUserUid": currentUser.uid}})}}*/}
+				{/*							disabled={true}*/}
+				{/*						/>*/}
+				{/*					</Grid>*/}
 
-								})}
-							</div>
-						})}
-					</Grid>
-					:
-					null
-				}
+				{/*				})}*/}
+				{/*			</div>*/}
+				{/*		})}*/}
+				{/*	</Grid>*/}
+				{/*	:*/}
+				{/*	null*/}
+				{/*}*/}
 
 				{mergedForm && gRef ?
 					<JSchemaForm
@@ -705,6 +717,7 @@ const Tasks = () => {
 						uiSchema={mergedForm.ui_schema}
 						formData={formResponses}
 						fields={{customFileUpload: a => CustomFileUpload({...a, ...{taskID: id}, ...{"currentUserUid": currentUser.uid}})}}
+						disabled={formLocked}
 						onChange={e => {
 							handleFormChange(e)
 						}}
@@ -714,7 +727,11 @@ const Tasks = () => {
 						}}
 						onBlur={e => {
 							handleBlur(e)
-						}}/> : <p></p>}
+						}}>
+						<Button variant="outlined" disabled={formLocked} style={{ borderWidth: 2, borderColor: "red", color: 'red', margin: 5 }} onClick={() => handleDialogOpen('send')}>Отправить</Button>
+					</JSchemaForm>
+						:
+					<p></p>}
 
 			</Grid>
 			:
