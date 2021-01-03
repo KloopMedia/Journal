@@ -65,7 +65,6 @@ const CustomFileUpload = props => {
 			}
 			{props.formData ?
 				<div>
-					<p>Сохраненные файлы</p>
 					{Object.keys(props.formData).map(path =>
 						<div key={path}>
 							<a href={props.formData[path].url}>{props.formData[path].name}</a>
