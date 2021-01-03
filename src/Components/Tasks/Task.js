@@ -175,18 +175,17 @@ const Tasks = () => {
 
 				let formatMedia = (fileUrl) => {
 					console.log("fileUrl =>", fileUrl)
-					const videoExpensions = ['mp4', 'm4a', 'm4v', 'f4v', 'f4a', 'm4b', 'm4r', 'f4b', 'mov', '3gp', '3gp2', '3g2', '3gpp', '3gpp2', 'ogg', 'oga', 'ogv', 'ogx', 'wmv', 'wma', 'webm', 'flv', 'avi', 'mkv', 'ts']
-					const imageExpensions = ['jpg', 'jpeg', 'png']
-					const adioExpensions = ['mp3']
+					const videoExtensions = ['mp4', 'm4a', 'm4v', 'f4v', 'f4a', 'm4b', 'm4r', 'f4b', 'mov', '3gp', '3gp2', '3g2', '3gpp', '3gpp2', 'ogg', 'oga', 'ogv', 'ogx', 'wmv', 'wma', 'webm', 'flv', 'avi', 'mkv', 'ts']
+					const imageExtensions = ['jpg', 'jpeg', 'png']
+					const audioExtensions = ['mp3']
 
 					let clearUrl = fileUrl.split("?")[0].split(".")
-					let expension = clearUrl[clearUrl.length - 1].toLowerCase()
+					let fileExtension = clearUrl[clearUrl.length - 1].toLowerCase()
 
 
-					return videoExpensions.includes(expension) ? "iframe" :
-						imageExpensions.includes(expension) ? "img" :
-							adioExpensions.includes("audio") ? "audio" :
-								"xz"
+					return videoExtensions.includes(fileExtension) ? "iframe" :
+						imageExtensions.includes(fileExtension) ? "img" :
+							audioExtensions.includes("audio") ? "audio" : "xz"
 				}
 
 				/*const handleLoad = () => { TODO: uncomment
