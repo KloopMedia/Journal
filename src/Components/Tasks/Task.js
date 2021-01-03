@@ -8,6 +8,7 @@ import DialogFeedback from "../Dialog/FeedbackDialog"
 import Feedback from "../form/feedback"
 
 import Loader from "../form/Loader"
+import CustomFileUpload from "../form/CustomFileUpload";
 
 import { Button, Divider, Grid, Typography } from '@material-ui/core';
 import Snackbar from '@material-ui/core/Snackbar';
@@ -122,44 +123,9 @@ const Tasks = () => {
 						}
 					})
 				})
-
-			const customFileUpload = props => {
-				console.log("All props: ", props)
-				console.log("ID: ", id)
-				console.log("Question ID: ", props.name)
-				console.log("User UID: ", currentUser.uid)
-
-				const pathToFolder = firebase
-					.storage()
-					.ref(id)
-					.child(props.name)
-					.child(currentUser.uid)
-				const linksToFiles = ref
-					.collection("responses")
-					.doc(props.name)
-				return (
-					<div>
-						{props.schema.title ? <div>{props.schema.title}</div> :  <div></div>}
-						{props.schema.description ? <div>{props.schema.description}</div> :  <div></div>}
-						<Loader storageRef={pathToFolder}
-								filesLinks={linksToFiles}/>
-
-						{props.formData ? <p>Сохраненные файлы</p> : <p></p>}
-						{Object.keys(props.formData).map(fileUrl =>
-							<div key={fileUrl}>
-						 		<a href={fileUrl}>{props.formData[fileUrl].name}</a>
-							</div>
-						)}
-
-					</div>
-				);
-			}
-
-			setFields({customFileUpload: customFileUpload});
 		}
 
 	}, [id, currentUser])
-
 
 	useEffect( () => {
 		if (Object.entries(taskMetadata).length > 0) {
@@ -709,12 +675,36 @@ const Tasks = () => {
 				{/*		</div>}*/}
 				{/*</Grid>*/}
 
+				{caseStages[taskMetadata.case_stage_id].backgroundStages.length > 0 ?
+					<Grid style={{ padding: 30 }}>
+						{caseStages[taskMetadata.case_stage_id].backgroundStages.map(stage => {
+							return <div key={stage}>
+								{Object.keys(mergedBackgroundForms[stage]).map(taskId => {
+
+									return <Grid style={{padding: 30}} key={taskId}>
+										<JSchemaForm
+											schema={mergedBackgroundForms[stage][taskId].form_questions}
+											uiSchema={mergedBackgroundForms[stage][taskId].ui_schema}
+											formData={backgroundResponses[taskId]}
+											fields={{customFileUpload: a => CustomFileUpload({...a, ...{taskID: taskId}, ...{"currentUserUid": currentUser.uid}})}}
+											disabled={true}
+										/>
+									</Grid>
+
+								})}
+							</div>
+						})}
+					</Grid>
+					:
+					null
+				}
+
 				{mergedForm && gRef ?
 					<JSchemaForm
 						schema={mergedForm.form_questions}
 						uiSchema={mergedForm.ui_schema}
 						formData={formResponses}
-						fields={fields}
+						fields={{customFileUpload: a => CustomFileUpload({...a, ...{taskID: id}, ...{"currentUserUid": currentUser.uid}})}}
 						onChange={e => {
 							handleFormChange(e)
 						}}
