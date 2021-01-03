@@ -9,14 +9,13 @@ import Feedback from "../form/feedback"
 
 import Loader from "../form/Loader"
 import CustomFileUpload from "../form/CustomFileUpload";
-
 import { Button, Divider, Grid, Typography } from '@material-ui/core';
 import Snackbar from '@material-ui/core/Snackbar';
 import IconButton from '@material-ui/core/IconButton';
 import CloseIcon from '@material-ui/icons/Close';
 import CircularProgress from '@material-ui/core/CircularProgress';
 
-import JSchemaForm from "@rjsf/core";
+import JSchemaForm from "@rjsf/material-ui";
 import { cloneDeep, isEqual } from 'lodash'
 
 
