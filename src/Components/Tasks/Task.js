@@ -274,24 +274,40 @@ const Tasks = () => {
 		setFormResponses(e.formData)
 	};
 
+	// const handleBlur = e => {
+	// 	if (gRef) {
+	// 		console.log("Responses: ", formResponses)
+	// 		console.log("That is what was blured", e)
+	// 		if (e === "root") {
+	// 			console.log("e from first option when trigger is root", e)
+	// 			Object.keys(formResponses).map(k => {
+	// 				gRef.collection("responses")
+	// 					.doc(k)
+	// 					.set({contents: formResponses[k] ? formResponses[k] : firebase.firestore.FieldValue.delete()},
+	// 						{merge: true})
+	// 			})
+	// 		} else {
+	// 			console.log("e from second option when trigger is not root", e)
+	// 			const docID = e.split("_")[1]
+	// 			gRef.collection("responses")
+	// 				.doc(docID)
+	// 				.set({contents: formResponses[docID] ? formResponses[docID] : firebase.firestore.FieldValue.delete()},
+	// 					{merge: true})
+	// 		}
+	// 	}
+	// }
+
 	const handleBlur = e => {
 		if (gRef) {
 			console.log("Responses: ", formResponses)
 			console.log("That is what was blured", e)
-			if (e === "root") {
-				Object.keys(formResponses).map(k => {
-					gRef.collection("responses")
-						.doc(k)
-						.set({contents: formResponses[k] ? formResponses[k] : firebase.firestore.FieldValue.delete()},
-							{merge: true})
-				})
-			} else {
-				const docID = e.split("_")[1]
+
+			Object.keys(formResponses).map(k => {
 				gRef.collection("responses")
-					.doc(docID)
-					.set({contents: formResponses[docID] ? formResponses[docID] : firebase.firestore.FieldValue.delete()},
+					.doc(k)
+					.set({contents: formResponses[k] ? formResponses[k] : firebase.firestore.FieldValue.delete()},
 						{merge: true})
-			}
+			})
 		}
 	}
 
