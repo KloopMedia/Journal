@@ -328,9 +328,9 @@ def attach_file_handler(message):
             process_attach_files(message, user.id, task_id, question_id)
         else:
             bot.send_message(message.chat.id,
-                             get_string(strings.YOU_CANT_UPLOAD_FILES, 'ru'))
+                             get_string('ru', strings.YOU_CANT_UPLOAD_FILES))
     else:
-        bot.reply_to(message, get_string(strings.YOU_NEED_TO_REGISTER, 'ru'))
+        bot.reply_to(message, get_string('ru', strings.YOU_NEED_TO_REGISTER))
 
 
 def process_attach_files(message, user_id, task_id, question_id):
@@ -339,7 +339,7 @@ def process_attach_files(message, user_id, task_id, question_id):
     url = upload_file(file_bytes, path)
     create_response(url, path, task_id, question_id)
     time.sleep(0.1)
-    bot.reply_to(message, get_text(strings.FILE_UPLOADED, 'ru'))
+    bot.reply_to(message, get_string('ru', strings.FILE_UPLOADED))
 
 
 def get_files(message, path):
@@ -355,21 +355,23 @@ def _get_file(file_id, path):
     file_info = bot.get_file(file_id)
     file_path = '/'.join(file_info.file_path.split('/')[-2:])
     downloaded_file = bot.download_file(file_path)
-    file_path = f'{path}/{file_info.file_unique_id}'
+    extension = file_path.split(".")[-1]
+    file_path = f'{path}/{file_info.file_unique_id}.{extension}'
     return downloaded_file, file_path
 
 
 def upload_file(file_bytes, path, public=True):
     blob = bucket.blob(path)
-    blob.upload_from_string(file_bytes)
+    blob.upload_from_string(file_bytes, content_type=path.split('.')[-1])
     if public:
         blob.make_public()
     return blob.public_url
 
 
 def create_response(url, path, task_id, question_id):
-    key = path.split('/')[-1]
-    response = {key: {'name': key, 'url': url}}
+    filename = path.split('/')[-1]
+    key = filename.split('.')[0]
+    response = {'contents': {key: {'name': filename, 'url': url}}}
     db.document(f'tasks/{task_id}/responses/{question_id}')\
         .set(response, merge=True)
 
@@ -378,11 +380,12 @@ def can_attach_files(user, tg_id, task_id):
     result = False
     task = db.document(f'tasks/{task_id}').get()
     task = task.to_dict()
-    user_private = db.document(user.reference.path + '/user_private/private').get()
-    if user.id in task.get('assigned_users') or any([
-            rank in task.get('ranks_write')
-            for rank in user_private.to_dict().get('ranks')
-    ]):
+    # user_private = db.document(user.reference.path + '/user_private/private').get()
+    # if user.id in task.get('assigned_users') or any([
+            # rank in task.get('ranks_write')
+            # for rank in user_private.to_dict().get('ranks')
+    # ]):
+    if user.id in task.get('assigned_users'):
         result = True
     return result
 
