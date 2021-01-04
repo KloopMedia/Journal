@@ -9,6 +9,8 @@ from firebase_admin import firestore
 from firebase_admin import storage
 from firebase_admin import credentials
 from pprint import pprint
+import json
+import redis
 import strings
 
 
@@ -25,6 +27,7 @@ WEBHOOK_URL_PATH = "/%s/" % (API_TOKEN)
 logger = telebot.logger
 telebot.logger.setLevel(logging.INFO)
 
+redis_db = redis.Redis(host='localhost', port=6379)
 bot = telebot.TeleBot(API_TOKEN, threaded=False)
 app = flask.Flask(__name__)
 
@@ -119,12 +122,12 @@ def start_handler(message):
         if not lang:
             choose_lang_hadler(message)
         else:
-            bot.send_message(message.chat.id,
-                             get_text(strings.YOU_ARE_ALREADY_REGISTERED, lang),
-                             parse_mode='markdown')
+            send_message(message,
+                         get_text(strings.YOU_ARE_ALREADY_REGISTERED, lang),
+                         parse_mode='markdown')
     else:
         print(f'user {message.chat.id} is not registered')
-        bot.send_message(message.chat.id, register_user(message))
+        send_message(message, register_user(message))
     # except Exception as e:
     # print(e)
 
@@ -139,7 +142,7 @@ def choose_lang_hadler(message):
                                        get_string('kg', lang),
                                        callback_data=get_callback_data(lang)))
     markup.add(*buttons)
-    bot.send_message(message.chat.id,
+    send_message(message,
                      text=get_string('ru', strings.CHOOSE_LANG) + ' / ' +
                      get_string('kg', strings.CHOOSE_LANG),
                      reply_markup=markup)
@@ -153,8 +156,8 @@ def language_handler(call):
     if is_registered(call.message.chat.id):
         result = update_language(call.message.chat.id, call.data)
         if result:
-            bot.send_message(call.message.chat.id,
-                             get_string(call.data, strings.LANGUAGE_CHANGED))
+            send_message(call.message,
+                         get_string(call.data, strings.LANGUAGE_CHANGED))
 
 
 def register_user(message):
@@ -206,11 +209,14 @@ def ask_question(message):
             markup = types.InlineKeyboardMarkup(row_width=2)
             buttons = get_buttons(categories, lang)
             markup.add(*buttons)
-            bot.send_message(message.chat.id,
-                             get_string(lang, strings.CHOOSE_CATEGORY),
-                             reply_markup=markup)
+            send_message(message,
+                         get_string(lang, strings.CHOOSE_CATEGORY),
+                         reply_markup=markup)
     else:
-        bot.reply_to(message, get_string('ru', strings.YOU_NEED_TO_REGISTER))
+        # bot.reply_to(message, get_string('ru', strings.YOU_NEED_TO_REGISTER))
+        send_message(message,
+                     get_string('ru', strings.YOU_NEED_TO_REGISTER),
+                     reply=True)
 
 
 @bot.callback_query_handler(
@@ -233,10 +239,10 @@ def categories_handler(call):
                             strings.ASK_YOUR_OWN_QUESTION))
                     buttons.append(ask_question_btn)
                     markup.add(*buttons)
-                    bot.send_message(call.message.chat.id,
-                                     get_text(cat, lang),
-                                     reply_markup=markup,
-                                     parse_mode='markdown')
+                    send_message(call.message,
+                                 get_text(cat, lang),
+                                 reply_markup=markup,
+                                 parse_mode='markdown')
                 else:
                     print(f'no user {call.message.chat.id}')
                 break
@@ -253,13 +259,16 @@ def question_handler(call):
         user = get_user(call.message.chat.id)
         lang = user.get('interface_lang')
         markup = types.ForceReply(selective=False)
-        msg = bot.reply_to(call.message,
+        msg = send_message(call.message,
                            get_string(lang, strings.YOUR_QUESTION),
-                           reply_markup=markup)
+                           reply_markup=markup,
+                           reply=True)
         bot.register_next_step_handler(msg, process_question_step)
     except Exception as e:
         print(e)
-        bot.reply_to(call.message, get_string('ru', strings.SOMETHING_WENT_WRONG))
+        send_message(call.message,
+                     get_string('ru', strings.SOMETHING_WENT_WRONG),
+                     reply=True)
 
 
 def process_question_step(message):
@@ -275,12 +284,15 @@ def process_question_step(message):
                                   callback_data='Cancel')
         markup.add(accept_btn, cancel_btn)
         question_dict['question'] = message.text
-        bot.reply_to(message,
+        send_message(message,
                      get_string(lang, strings.SEND_THIS_QUESTION),
-                     reply_markup=markup)
+                     reply_markup=markup,
+                     reply=True)
     except Exception as e:
         print(e)
-        bot.reply_to(message, get_string('ru', strings.SOMETHING_WENT_WRONG))
+        send_message(message,
+                     get_string('ru', strings.SOMETHING_WENT_WRONG),
+                     reply=True)
 
 
 @bot.callback_query_handler(func=lambda call: True
@@ -289,10 +301,9 @@ def query_handler(call):
     user = get_user(call.message.chat.id)
     lang = user.get('interface_lang')
     if call.data == 'Ok':
-        bot.send_message(call.message.chat.id, commit_task(call.message, lang))
+        send_message(call.message, commit_task(call.message, lang))
     else:
-        bot.send_message(call.message.chat.id,
-                         get_string(lang, strings.CANCELLED))
+        send_message(call.message, get_string(lang, strings.CANCELLED))
     # hide inline buttons
     bot.edit_message_reply_markup(call.message.chat.id,
                                   call.message.message_id)
@@ -300,7 +311,7 @@ def query_handler(call):
 
 @bot.message_handler(commands=['get_id'])
 def get_id_handler(message):
-    bot.send_message(message.chat.id, message.from_user.id)
+    send_message(message, message.from_user.id)
 
 
 @bot.message_handler(commands=['me'])
@@ -312,10 +323,10 @@ def get_me_handler(message):
                 \n{user.get("email")}'
         if tg_me_text:
             show_info += f'\n{tg_me_text}'
-        bot.send_message(message.chat.id, show_info)
+        send_message(message, show_info)
     else:
-        bot.send_message(message.chat.id,
-                         get_string('ru', strings.YOU_NEED_TO_REGISTER))
+        send_message(message,
+                     get_string('ru', strings.YOU_NEED_TO_REGISTER))
 
 
 @bot.message_handler(content_types=['photo', 'video'])
@@ -327,10 +338,12 @@ def attach_file_handler(message):
         if can_attach_files(user, user_tg_id, task_id):
             process_attach_files(message, user.id, task_id, question_id)
         else:
-            bot.send_message(message.chat.id,
-                             get_string('ru', strings.YOU_CANT_UPLOAD_FILES))
+            send_message(message,
+                         get_string('ru', strings.YOU_CANT_UPLOAD_FILES))
     else:
-        bot.reply_to(message, get_string('ru', strings.YOU_NEED_TO_REGISTER))
+        send_message(message,
+                     get_string('ru', strings.YOU_NEED_TO_REGISTER),
+                     reply=True)
 
 
 def process_attach_files(message, user_id, task_id, question_id):
@@ -338,8 +351,7 @@ def process_attach_files(message, user_id, task_id, question_id):
     file_bytes, path = get_files(message, path)
     url = upload_file(file_bytes, path)
     create_response(url, path, task_id, question_id)
-    time.sleep(0.1)
-    bot.reply_to(message, get_string('ru', strings.FILE_UPLOADED))
+    send_message(message, get_string('ru', strings.FILE_UPLOADED))
 
 
 def get_files(message, path):
@@ -380,11 +392,6 @@ def can_attach_files(user, tg_id, task_id):
     result = False
     task = db.document(f'tasks/{task_id}').get()
     task = task.to_dict()
-    # user_private = db.document(user.reference.path + '/user_private/private').get()
-    # if user.id in task.get('assigned_users') or any([
-            # rank in task.get('ranks_write')
-            # for rank in user_private.to_dict().get('ranks')
-    # ]):
     if user.id in task.get('assigned_users'):
         result = True
     return result
@@ -467,6 +474,24 @@ def get_buttons(categories, lang='ru'):
                 text=get_string(lang, cat),
                 callback_data=get_callback_data(cat)))
     return buttons
+
+
+def send_message(message,
+                 text,
+                 reply_markup=None,
+                 parse_mode=None,
+                 reply=False):
+    m = json.dumps({
+        'chat_id': message.chat.id,
+        'text': text,
+        'reply_markup': reply_markup.to_json() if reply_markup else None,
+        'parse_mode': parse_mode,
+        'reply_to_message_id': message.message_id if reply else None
+    })
+    redis_db.lpush(message.chat.id, m)
+    redis_db.sadd('chats', message.chat.id)
+    # TODO: probably needs to return sended message
+    return message
 
 
 bot.remove_webhook()
