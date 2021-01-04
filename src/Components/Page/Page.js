@@ -181,8 +181,6 @@ const Page = () => {
             {/* <Grid>
 				<Button onClick={requestTask}>Получить задание</Button>
 			</Grid> */}
-        {console.log("userCompleteTasks: ", userCompleteTasks)}
-        {console.log("userIncompleteTasks: ", userIncompleteTasks)}
             {/*<Typography variant="h4">Задания</Typography>*/}
             <div className={classes.root}>
                 <Paper position="static" color="default">
@@ -194,11 +192,27 @@ const Page = () => {
                     </Tabs>
                 </Paper>
             </div>
-            <TabPanel value={tabValue} index={0}>
-                {Object.keys(userIncompleteTasks).map(taskId => (
-                     <Grid key={taskId} style={{padding: 10}}>
-                        <div>{userIncompleteTasks[taskId].title}</div>
-                        <TaskCard title={userIncompleteTasks[taskId].title} complete={userIncompleteTasks[taskId].is_complete} description={userIncompleteTasks[taskId].description}
+        <TabPanel value={tabValue} index={0}>
+            {Object.keys(userStages).map(pCase => (
+                Object.keys(userStages[pCase]).map(stage => (
+                    <Grid key={pCase+stage} style={{padding: 10}}>
+                        <TaskCard title={userStages[pCase][stage].title}
+                                  complete={false}
+                                  description={userStages[pCase][stage].description}
+                                  type={""}
+                                  pCase={pCase}
+                                  stage={stage}
+                                  user={currentUser}
+                                  id={""}
+                                  creatable={true}/>
+                    </Grid>
+                ))
+            ))}
+            {Object.keys(userIncompleteTasks).map(taskId => (
+                <Grid key={taskId} style={{padding: 10}}>
+                    <TaskCard title={userIncompleteTasks[taskId].title}
+                              complete={userIncompleteTasks[taskId].is_complete}
+                              description={userIncompleteTasks[taskId].description}
                                   type={userIncompleteTasks[taskId].type} id={taskId}/>
                     </Grid>
                 ))}

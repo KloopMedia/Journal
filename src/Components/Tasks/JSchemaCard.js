@@ -8,6 +8,9 @@ import Typography from '@material-ui/core/Typography';
 
 import { Redirect } from 'react-router';
 import { Box, Grid } from '@material-ui/core';
+import firebase from "../../util/Firebase";
+import { v4 as uuidv4 } from 'uuid';
+import {CircularProgress} from "@material-ui/core";
 
 const useStyles = makeStyles({
 	root: {
@@ -27,13 +30,56 @@ const useStyles = makeStyles({
 
 const JSchemaTaskCard = (props) => {
 	const classes = useStyles();
-	const { title, complete, type, language, description, id, cardColor, sendRequest, disabled } = props
+	const { title, complete, type, language, description, id, cardColor, sendRequest, disabled, creatable, pCase, stage, user } = props
 
 	const [redirect, setRedirect] = useState(false)
+	const [waiting, setWaiting] = useState(false)
+	const [newTaskId, setNewTaskId] = useState(null)
+
+	const handleOpen = () => {
+		if (creatable) {
+			sendCallbackRequest(pCase, stage)
+		} else {
+			setRedirect(true)
+		}
+	}
+
+	const sendCallbackRequest = (pCase, stage) => {
+		setWaiting(true)
+		const callbackID = uuidv4()
+		firebase.firestore()
+			.collection("task_requests")
+			.doc(user.uid)
+			.collection("requests")
+			.add({
+				status: "pending",
+				user: user.uid,
+				case_type: pCase,
+				case_stage_id: stage,
+				callbackId: callbackID
+			}).then((doc) => {
+			const unsubscribe = firebase.firestore()
+				.collection("tasks")
+				.where("assigned_users", "array-contains", user.uid)
+				.where("callbackId", "==", callbackID)
+				.onSnapshot(snapshot => {
+					snapshot.docChanges().forEach(change => {
+						if (change.type === "added") {
+							if (change.doc.id) {
+								setNewTaskId(change.doc.id)
+								setRedirect(true)
+								unsubscribe()
+							}
+						}
+					})
+				})
+
+		})
+	}
 
 	return (
 		<div>
-			{redirect && <Redirect to={"/t/" + id} />}
+			{redirect && <Redirect to={"/t/" + (id || newTaskId)} />}
 			<Card className={classes.root} style={{ background: cardColor }}>
 				<CardContent>
 					<Box display="flex" justifyContent="space-between" alignItems="center">
@@ -52,10 +98,10 @@ const JSchemaTaskCard = (props) => {
 					</Typography>
 				</CardContent>
 				<CardActions>
-					{sendRequest ?
-						<Button variant="contained" disabled={disabled} color="primary" size="small" onClick={() => sendRequest(type, id)}>{"Получить задание"}</Button>
+					{waiting ?
+						<CircularProgress />
 						:
-						<Button size="small" onClick={() => setRedirect(true)}>{"Открыть"}</Button>
+						<Button size="small" onClick={handleOpen}>{"Открыть"}</Button>
 					}
 				</CardActions>
 			</Card>

@@ -184,6 +184,7 @@ const JSchemaTask = () => {
 			console.log("taskMetadata: ", taskMetadata)
 			const backgroundTasksList = caseStages[taskMetadata.case_stage_id].backgroundStages
 			if (backgroundTasksList && backgroundTasksList.length > 0) {
+				console.log("backgroundTasksList: ", backgroundTasksList.length)
 				firebase.firestore()
 					.collection("tasks")
 					.where("case_id", "==", taskMetadata.case_id)
