@@ -24,6 +24,8 @@ import TasksObserver from './Components/Moderator/TasksObserver'
 import Signin from './Components/Auth/Signin';
 import PrivateRoute from './util/PrivateRoute';
 import FAQ from './Components/FAQ/FAQ';
+import Page from "./Components/Page/Page";
+import JSchemaTask from "./Components/Tasks/JSchemaTask";
 
 
 const App = () => {
@@ -45,6 +47,9 @@ const App = () => {
             <Route path="/tasks/:id">
               <Task />
             </Route>
+            <Route path="/t/:id">
+              <JSchemaTask />
+            </Route>
             <Route exact path="/tasksObserver">
               <TasksObserver />
             </Route>
@@ -56,6 +61,9 @@ const App = () => {
             </Route>
             <Route exact path="/faq">
               <FAQ />
+            </Route>
+            <Route path="/p/:id">
+              <Page />
             </Route>
             <PrivateRoute path="/" component={Home} />
           </Switch>

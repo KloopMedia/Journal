@@ -23,7 +23,7 @@ import { Redirect, useParams } from 'react-router';
 import { Link } from "react-router-dom";
 
 
-const Tasks = () => {
+const JSchemaTask = () => {
 	const [formResponses, setFormResponses] = useState({})
 	const [taskForm, setTaskForm] = useState({})
 	const [mergedForm, setMergedForm] = useState({})
@@ -777,4 +777,4 @@ const Tasks = () => {
 
 }
 
-export default Tasks
+export default JSchemaTask

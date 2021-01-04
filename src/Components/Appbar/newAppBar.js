@@ -84,6 +84,8 @@ function ResponsiveDrawer(props) {
 	const [moderator, setModerator] = useState(false)
 	const [numOfMessages, setNumOfMessages] = useState(0)
 	const [messages, setMessages] = useState([])
+	const [userRanks, setUserRanks] = useState([])
+	const [userPages, setUserPages] = useState({})
 
 	useEffect(() => {
 		if (currentUser) {
@@ -97,6 +99,41 @@ function ResponsiveDrawer(props) {
 			}).catch(() => setModerator(false))
 		}
 	}, [currentUser])
+
+	useEffect(() => {
+		if (currentUser) {
+			firebase
+				.firestore()
+				.collection('users')
+				.doc(currentUser.uid)
+				.collection("user_private")
+				.doc("private")
+				.onSnapshot( doc => {
+					setUserRanks(doc.data().ranks)
+					console.log("User ranks: ", doc.data().ranks)
+				})
+		}
+	}, [currentUser])
+
+	useEffect(() => {
+		if (userRanks.length > 0) {
+			firebase
+				.firestore()
+				.collection('pages')
+				.where("ranks", "array-contains-any", userRanks)
+				.onSnapshot(snapshot => {
+					snapshot.docChanges().forEach(change => {
+						if (change.type === "added" || change.type === "modified") {
+							setUserPages(prevState => {
+								return {...prevState, [change.doc.id]: change.doc.data()}
+							})
+							console.log("User pages: ", change.doc.id)
+						}
+					})
+				})
+		}
+	}, [userRanks])
+
 
 	useEffect(() => {
 		if (currentUser) {
@@ -157,6 +194,15 @@ function ResponsiveDrawer(props) {
 					{moderator ? <li>
 						<Link to="/faq">FAQ для модераторов</Link>
 					</li> : null}
+					<li>
+						{
+							Object.keys(userPages).map(page => {
+								return <Link key={page} to={"/p/" + page}>
+									{userPages[page].name}
+								</Link>
+							})
+						}
+					</li>
 				</ul>
 			</nav>
 		</div>
