@@ -160,11 +160,16 @@ const Tasks = () => {
 
 	useEffect(() => {
 		const mergedBgForms = {}
+		console.log("Bg tasks: ", backgroundTasks)
 		Object.keys(backgroundTasks).map(taskId => {
 			const stage = backgroundTasks[taskId].case_stage_id
+			if (! mergedBgForms[stage]) {
+				mergedBgForms[stage] = {}
+			}
 			mergedBgForms[stage][taskId] = mergeForm(backgroundTaskForms[taskId],
 				caseStages[stage])
 		})
+		console.log("Merged bg forms: ", mergedBgForms)
 		setMergedBackgroundForms(mergedBgForms)
 	}, [backgroundTasks, backgroundTaskForms, caseStages])
 
@@ -173,7 +178,10 @@ const Tasks = () => {
 	}, [taskForm, taskMetadata, caseStages])
 
 	useEffect(() => {
-		if (caseStages & taskMetadata.case_id & taskMetadata.case_stage_id) {
+
+		if (Object.keys(caseStages).length > 0 && Object.keys(taskMetadata).length > 0 && caseStages[taskMetadata.case_stage_id]) {
+			console.log("caseStages: ", caseStages)
+			console.log("taskMetadata: ", taskMetadata)
 			const backgroundTasksList = caseStages[taskMetadata.case_stage_id].backgroundStages
 			if (backgroundTasksList.length > 0) {
 				firebase.firestore()
@@ -199,7 +207,7 @@ const Tasks = () => {
 					});
 			}
 		}
-	}, [caseStages, taskMetadata.case_id, taskMetadata.case_stage_id])
+	}, [caseStages, taskMetadata])
 
 	useEffect(() => {
 		if (Object.entries(backgroundTasks).length > 0) {
@@ -228,7 +236,10 @@ const Tasks = () => {
 							if (change.type === "added" || change.type === "modified") {
 								setBackgroundResponses(prevState => {
 									const newState = Object.assign({}, prevState)
-									newState[key][change.doc.id] = change.doc.data()
+									if (! newState[key]) {
+										newState[key] = {}
+									}
+									newState[key][change.doc.id] = change.doc.data().contents
 									return newState
 								})
 							}
@@ -702,29 +713,37 @@ const Tasks = () => {
 				{/*		</div>}*/}
 				{/*</Grid>*/}
 
-				{/*{caseStages[taskMetadata.case_stage_id].backgroundStages.length > 0 ?*/}
-				{/*	<Grid style={{ padding: 30 }}>*/}
-				{/*		{caseStages[taskMetadata.case_stage_id].backgroundStages.map(stage => {*/}
-				{/*			return <div key={stage}>*/}
-				{/*				{Object.keys(mergedBackgroundForms[stage]).map(taskId => {*/}
+				{/*{console.log("Case stages::: ", caseStages)}*/}
+				{/*{console.log("Task metadata::: ", taskMetadata)}*/}
+				{/*{console.log("Merged background forms::: ", mergedBackgroundForms)}*/}
 
-				{/*					return <Grid style={{padding: 30}} key={taskId}>*/}
-				{/*						<JSchemaForm*/}
-				{/*							schema={mergedBackgroundForms[stage][taskId].form_questions}*/}
-				{/*							uiSchema={mergedBackgroundForms[stage][taskId].ui_schema}*/}
-				{/*							formData={backgroundResponses[taskId]}*/}
-				{/*							fields={{customFileUpload: a => CustomFileUpload({...a, ...{taskID: taskId}, ...{"currentUserUid": currentUser.uid}})}}*/}
-				{/*							disabled={true}*/}
-				{/*						/>*/}
-				{/*					</Grid>*/}
+				{(Object.keys(caseStages).length > 0 &&
+				  Object.keys(taskMetadata).length > 0 &&
+				  caseStages[taskMetadata.case_stage_id] &&
+				  caseStages[taskMetadata.case_stage_id].backgroundStages.length > 0 &&
+				  Object.keys(mergedBackgroundForms).length > 0) ?
+					<Grid style={{ padding: 30 }}>
+						{caseStages[taskMetadata.case_stage_id].backgroundStages.map(stage => {
+							return <div key={stage}>
+								{Object.keys(mergedBackgroundForms[stage]).map(taskId => {
+									console.log("Background responses: ", backgroundResponses)
+									return <Grid style={{padding: 30}} key={taskId}>
+										<JSchemaForm
+											schema={mergedBackgroundForms[stage][taskId].form_questions}
+											uiSchema={mergedBackgroundForms[stage][taskId].ui_schema}
+											formData={backgroundResponses[taskId]}
+											fields={{customFileUpload: a => CustomFileUpload({...a, ...{taskID: taskId}, ...{"currentUserUid": currentUser.uid}})}}
+											disabled={true}
+										> </JSchemaForm>
+									</Grid>
 
-				{/*				})}*/}
-				{/*			</div>*/}
-				{/*		})}*/}
-				{/*	</Grid>*/}
-				{/*	:*/}
-				{/*	null*/}
-				{/*}*/}
+								})}
+							</div>
+						})}
+					</Grid>
+					:
+					null
+				}
 
 				{mergedForm && gRef ?
 					<JSchemaForm
