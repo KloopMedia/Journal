@@ -81,13 +81,13 @@ def get_text(category, lang='ru'):
                 .get()\
                 .get(lang).replace('\\n', '\n')
     except Exception as e:
-        print(e)
+        print('method: get_text()', e)
 
 
 def get_user(tg_id):
     user = None
     tg_id = str(tg_id)
-    print('tg_id: ', tg_id)
+    print('get_user() tg_id: ', tg_id)
     try:
         user_private = db.collection_group(u'user_private')\
                          .where(u'tg_id', u'==', str(tg_id))\
@@ -97,7 +97,7 @@ def get_user(tg_id):
         user_id = user_private.reference.path.split('/')[1]
         user = db.document(f'users/{user_id}').get()
     except Exception as e:
-        print(e)
+        print('method: get_user()', e)
     finally:
         return user
 
@@ -179,7 +179,7 @@ def register_user(message):
                      + get_string('kg', strings.YOU_NEED_TO_REGISTER)
         return response
     except Exception as e:
-        print(e)
+        print('method: register_user()', e)
 
 
 @firestore.transactional
@@ -247,7 +247,7 @@ def categories_handler(call):
                     print(f'no user {call.message.chat.id}')
                 break
     except Exception as e:
-        print(e)
+        print('method: categories_handler()', e)
 
 
 @bot.callback_query_handler(
@@ -331,19 +331,26 @@ def get_me_handler(message):
 
 @bot.message_handler(content_types=['photo', 'video'])
 def attach_file_handler(message):
-    if is_registered(message.chat.id):
-        user = get_user(message.chat.id)
-        task_id, question_id = user.to_dict().get('fileUpload').split('/')
-        user_tg_id = message.chat.id
-        if can_attach_files(user, user_tg_id, task_id):
-            process_attach_files(message, user.id, task_id, question_id)
+    try:
+        if is_registered(message.chat.id):
+            user = get_user(message.chat.id)
+            upload_path = user.to_dict().get('fileUpload')
+            if upload_path:
+                task_id, question_id = upload_path.split('/')
+                user_tg_id = message.chat.id
+                if can_attach_files(user, user_tg_id, task_id):
+                    process_attach_files(message, user.id, task_id,
+                                         question_id)
+                else:
+                    send_message(
+                        message, get_string('ru',
+                                            strings.YOU_CANT_UPLOAD_FILES))
         else:
             send_message(message,
-                         get_string('ru', strings.YOU_CANT_UPLOAD_FILES))
-    else:
-        send_message(message,
-                     get_string('ru', strings.YOU_NEED_TO_REGISTER),
-                     reply=True)
+                         get_string('ru', strings.YOU_NEED_TO_REGISTER),
+                         reply=True)
+    except Exception as e:
+        print('method attach_file_handler(): ', e)
 
 
 def process_attach_files(message, user_id, task_id, question_id):
