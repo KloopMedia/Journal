@@ -184,7 +184,12 @@ export default function PersistentDrawerLeft(props) {
                     {currentUser
                         ?
                         <div>
-                            <Button style={{ borderColor: "black", color: 'black', marginLeft: 10, fontSize: 12 }} variant="outlined" size="small" onClick={() => firebase.auth().signOut()}>Выход</Button>
+                            <Button style={{ borderColor: "black", color: 'black', marginLeft: 10, fontSize: 12 }}
+                                    variant="outlined"
+                                    size="small"
+                                    onClick={() => firebase.auth().signOut()}>
+                                Выход
+                            </Button>
                             {/* <IconButton
                                 aria-label="account of current user"
                                 aria-controls="menu-appbar"

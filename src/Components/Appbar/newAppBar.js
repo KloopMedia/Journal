@@ -270,7 +270,16 @@ function ResponsiveDrawer(props) {
 						</div>}
 					{currentUser
 						?
-						<Button style={{ borderColor: "black", color: 'black', marginLeft: 10, fontSize: 12 }} variant="outlined" size="small" onClick={() => firebase.auth().signOut()}>Выход</Button>
+						<div>
+							<span style={{color: 'black', fontSize: 12, marginLeft: 7}}>
+								{currentUser.email}
+							</span>
+							<Button style={{borderColor: "black", color: 'black', marginLeft: 10, fontSize: 12}}
+									variant="outlined" size="small"
+									onClick={() => firebase.auth().signOut()}>
+								Выход
+							</Button>
+						</div>
 						: <Button style={{ borderColor: "black", color: 'black', marginLeft: 10, fontSize: 12 }} size="small" variant="outlined" onClick={signInWithGoogle}>вход</Button>
 					}
 				</Toolbar>
