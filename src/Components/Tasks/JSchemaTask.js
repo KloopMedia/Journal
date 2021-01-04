@@ -183,7 +183,7 @@ const JSchemaTask = () => {
 			console.log("caseStages: ", caseStages)
 			console.log("taskMetadata: ", taskMetadata)
 			const backgroundTasksList = caseStages[taskMetadata.case_stage_id].backgroundStages
-			if (backgroundTasksList.length > 0) {
+			if (backgroundTasksList && backgroundTasksList.length > 0) {
 				firebase.firestore()
 					.collection("tasks")
 					.where("case_id", "==", taskMetadata.case_id)
@@ -718,27 +718,28 @@ const JSchemaTask = () => {
 				{/*{console.log("Merged background forms::: ", mergedBackgroundForms)}*/}
 
 				{(Object.keys(caseStages).length > 0 &&
-				  Object.keys(taskMetadata).length > 0 &&
-				  caseStages[taskMetadata.case_stage_id] &&
-				  caseStages[taskMetadata.case_stage_id].backgroundStages.length > 0 &&
-				  Object.keys(mergedBackgroundForms).length > 0) ?
-					<Grid style={{ padding: 30 }}>
-						{caseStages[taskMetadata.case_stage_id].backgroundStages.map(stage => {
-							return <div key={stage}>
-								{Object.keys(mergedBackgroundForms[stage]).map(taskId => {
-									return <Grid style={{padding: 30}} key={taskId}>
-										<JSchemaForm
-											schema={mergedBackgroundForms[stage][taskId].form_questions}
-											uiSchema={mergedBackgroundForms[stage][taskId].ui_schema}
-											formData={backgroundResponses[taskId]}
-											fields={{customFileUpload: a => CustomFileUpload({...a, ...{taskID: taskId}, ...{"currentUserUid": currentUser.uid}})}}
-											disabled={true}
-										> </JSchemaForm>
-									</Grid>
+					Object.keys(taskMetadata).length > 0 &&
+					caseStages[taskMetadata.case_stage_id] &&
+					caseStages[taskMetadata.case_stage_id].backgroundStages &&
+					caseStages[taskMetadata.case_stage_id].backgroundStages.length > 0 &&
+					Object.keys(mergedBackgroundForms).length > 0) ?
+					<Grid style={{padding: 30}}>
+					{caseStages[taskMetadata.case_stage_id].backgroundStages.map(stage => {
+						return <div key={stage}>
+							{Object.keys(mergedBackgroundForms[stage]).map(taskId => {
+								return <Grid style={{padding: 30}} key={taskId}>
+									<JSchemaForm
+										schema={mergedBackgroundForms[stage][taskId].form_questions}
+										uiSchema={mergedBackgroundForms[stage][taskId].ui_schema}
+										formData={backgroundResponses[taskId]}
+										fields={{customFileUpload: a => CustomFileUpload({...a, ...{taskID: taskId}, ...{"currentUserUid": currentUser.uid}})}}
+										disabled={true}
+									> </JSchemaForm>
+								</Grid>
 
-								})}
-							</div>
-						})}
+							})}
+						</div>
+					})}
 					</Grid>
 					:
 					null
