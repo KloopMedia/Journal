@@ -94,7 +94,7 @@ const Page = () => {
     }, [currentUser, id])
 
     useEffect(() => {
-		if (Object.entries(pageData).length > 0 && userRanks.length > 0) {
+		if (pageData && Object.entries(pageData).length > 0 && userRanks.length > 0) {
 			pageData.cases.map(pCase => {
 				firebase.firestore()
 					.collection("schema")
