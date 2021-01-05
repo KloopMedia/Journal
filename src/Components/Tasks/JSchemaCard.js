@@ -6,7 +6,7 @@ import CardContent from '@material-ui/core/CardContent';
 import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
 
-import { Redirect } from 'react-router';
+import { Redirect, useHistory } from 'react-router';
 import { Box, Grid } from '@material-ui/core';
 import firebase from "../../util/Firebase";
 import { v4 as uuidv4 } from 'uuid';
@@ -30,6 +30,7 @@ const useStyles = makeStyles({
 
 const JSchemaTaskCard = (props) => {
 	const classes = useStyles();
+	const history = useHistory();
 	const { title, complete, type, language, description, id, cardColor, sendRequest, disabled, creatable, pCase, stage, user } = props
 
 	const [redirect, setRedirect] = useState(false)
@@ -40,7 +41,8 @@ const JSchemaTaskCard = (props) => {
 		if (creatable) {
 			sendCallbackRequest(pCase, stage)
 		} else {
-			setRedirect(true)
+			history.push("/t/" + id)
+			//setRedirect(true)
 		}
 	}
 
@@ -66,9 +68,10 @@ const JSchemaTaskCard = (props) => {
 					snapshot.docChanges().forEach(change => {
 						if (change.type === "added") {
 							if (change.doc.id) {
-								setNewTaskId(change.doc.id)
-								setRedirect(true)
+								//setNewTaskId(change.doc.id)
+								//setRedirect(true)
 								unsubscribe()
+								history.push("/t/" + change.doc.id)
 							}
 						}
 					})
