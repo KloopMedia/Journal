@@ -65,6 +65,7 @@ const Page = () => {
     const [userIncompleteTasks, setUserIncompleteTasks] = useState({})
     const [filteredStages, setFilteredStages] = useState({})
     const [tabValue, setTabValue] = useState(0)
+    const [userRanksDescriptions, setUserRanksDescriptions] = useState({})
 
 
 	useEffect(() => {
@@ -248,6 +249,32 @@ const Page = () => {
         return _intersection
     }
 
+    useEffect(() => {
+        if (userRanks.length > 0) {
+            firebase.firestore()
+                .collection("schema")
+                .doc("structure")
+                .collection("ranks")
+                .where(firebase.firestore.FieldPath.documentId(), "in", userRanks)
+                .onSnapshot(snapshot => {
+                    snapshot.docChanges().forEach(change => {
+                        if (change.type === "added" || change.type === "modified") {
+                            setUserRanksDescriptions(prevState => {
+                                return {...prevState, [change.doc.id]: change.doc.data()}
+                            })
+                        }
+                        if (change.type === "removed") {
+                            setUserRanksDescriptions(prevState => {
+                                const newState = Object.assign({}, prevState)
+                                delete newState[change.doc.id]
+                                return newState
+                            })
+                        }
+                    })
+                })
+        }
+    }, [userRanks])
+
     const handleTabChange = (event, newValue) => {
         setTabValue(newValue);
     };
@@ -257,7 +284,9 @@ const Page = () => {
             {/* <Grid>
 				<Button onClick={requestTask}>Получить задание</Button>
 			</Grid> */}
-            {/*<Typography variant="h4">Задания</Typography>*/}
+        {Object.keys(userRanksDescriptions).map(rank => (
+            <Typography variant="h5">{userRanksDescriptions[rank].description}</Typography>
+        ))}
             <div className={classes.root}>
                 <Paper position="static" color="default">
                     <Tabs value={tabValue} onChange={handleTabChange} variant="fullWidth" centered
