@@ -19,7 +19,7 @@ import JSchemaForm from "@rjsf/material-ui";
 import { cloneDeep, isEqual } from 'lodash'
 
 
-import { Redirect, useParams } from 'react-router';
+import { Redirect, useParams, useHistory } from 'react-router';
 import { Link } from "react-router-dom";
 
 
@@ -57,6 +57,7 @@ const JSchemaTask = () => {
 
 	const { currentUser } = useContext(AuthContext);
 	const { id } = useParams();
+	const history = useHistory();
 
 	const handleCloseSnackbar = (event, reason) => {
 		if (reason === 'clickaway') {
@@ -623,6 +624,11 @@ const JSchemaTask = () => {
 		//setFeedback({})
 	};
 
+	const handleOk = () => {
+		setDialog(false)
+		history.goBack()
+	};
+
 	const handleDialogOpen = (type) => {
 		console.log("Dialog open")
 		if (type === 'send') {
@@ -662,7 +668,6 @@ const JSchemaTask = () => {
 			.collection("user_editable")
 			.doc("user_editable")
 			.update({ status: 'complete' })
-		setDialog(false)
 	}
 
 	return (
@@ -671,9 +676,10 @@ const JSchemaTask = () => {
 				{dialogType === 'send' && <Dialog
 					state={dialogState}
 					handleClose={handleDialogClose}
-					//hideActions={uploading || uploaded}
-					title={uploading ? "Загрузка файлов" : uploaded ? "Файлы загружены" : "Отправить задание?"}
-					content={uploading ? <CircularProgress /> : uploaded ? "Спасибо" : "Вы собираетесь отправить форму. Это значит, что вы больше не сможете изменять ответы."}
+					handleOk={handleOk}
+					showOk={formLocked}
+					title={formLocked ? "Форма успешно отправлена." : "Отправить форму?"}
+					content={formLocked ? "Спасибо" : "Вы собираетесь отправить форму. Это значит, что вы больше не сможете изменять ответы."}
 					dialogFunction={lockForm} />}
 				{/*{dialogType === 'release' && <DialogFeedback*/}
 				{/*	state={dialogState}*/}
