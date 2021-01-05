@@ -179,12 +179,12 @@ function ResponsiveDrawer(props) {
 					<li>
 						<Link to="/profile">Профиль</Link>
 					</li>
-					<li>
-						<Link to="/tasks">Задания</Link>
-					</li>
-					<li>
-						<Link to="/request">Получить задание</Link>
-					</li>
+					{/*<li>*/}
+					{/*	<Link to="/tasks">Задания</Link>*/}
+					{/*</li>*/}
+					{/*<li>*/}
+					{/*	<Link to="/request">Получить задание</Link>*/}
+					{/*</li>*/}
 					<li>
 						<Link to="/notifications">Уведомления</Link>
 					</li>
