@@ -175,21 +175,31 @@ const Page = () => {
     useEffect(() => {
         if (Object.keys(userStages).length > 0) {
             const newFilteredStages = {}
-            Object.keys(userStages).map(stage => {
-                if (stage.rank_limit_number && Object.keys(stage.rank_limit_number) > 0) {
-                    const rankLimitNumberSet = new Set(Object.keys(stage.rank_limit_number))
-                    const userRanksSet = new Set(Object.keys(userRanks))
+            Object.keys(userStages).map(pCase => {Object.keys(userStages[pCase]).map(stage => {
+                if (userStages[pCase][stage].rank_limit_number && Object.keys(userStages[pCase][stage].rank_limit_number).length > 0) {
+                    const rankLimitNumberSet = new Set(Object.keys(userStages[pCase][stage].rank_limit_number))
+                    const userRanksSet = new Set(userRanks)
                     const setIntersection = intersection(rankLimitNumberSet, userRanksSet)
                     if (setIntersection.size == 0) {
-                        newFilteredStages[stage] = userStages[stage]
+                        if (! newFilteredStages[pCase]) {
+                            newFilteredStages[pCase] = {}
+                        }
+                        newFilteredStages[pCase][stage] = userStages[pCase][stage]
                     } else {
-                        if (includeStage(reduceSet(setIntersection, stage.rank_limit_number), stage, userCompleteTasks, userIncompleteTasks)){
-                            newFilteredStages[stage] = userStages[stage]
+                        if (includeStage(reduceSet(setIntersection, userStages[pCase][stage].rank_limit_number), stage, userCompleteTasks, userIncompleteTasks)) {
+                            if (!newFilteredStages[pCase]) {
+                                newFilteredStages[pCase] = {}
+                            }
+                            newFilteredStages[pCase][stage] = userStages[pCase][stage]
                         }
                     }
                 } else {
-                    newFilteredStages[stage] = userStages[stage]
+                    if (!newFilteredStages[pCase]) {
+                        newFilteredStages[pCase] = {}
+                    }
+                    newFilteredStages[pCase][stage] = userStages[pCase][stage]
                 }
+            })
             })
 
             setFilteredStages(newFilteredStages)
@@ -198,7 +208,9 @@ const Page = () => {
 
     const includeStage = (number, stage, completeTask, incompleteTasks) => {
 	    const stageOccurrences = countStages(stage, completeTask) + countStages(stage, incompleteTasks)
-	    if (stageOccurrences < number) {
+	    console.log("stageOccurrences: ", stageOccurrences)
+        console.log("number: ", number)
+        if (stageOccurrences < number) {
 	        return true
         } else {
 	        return false
@@ -217,11 +229,13 @@ const Page = () => {
 
     const reduceSet = (rSet, limits) => {
         let largestLimit = 0
-        Object.values(limits).map(v => {
-            if (v > largestLimit) {
-                largestLimit = v
+        const rArray = [...rSet]
+        rArray.map(v => {
+            if (limits[v] > largestLimit) {
+                largestLimit = limits[v]
             }
         })
+        return largestLimit
     }
 
     const intersection = (setA, setB) => {
@@ -261,7 +275,7 @@ const Page = () => {
                         <TaskCard title={filteredStages[pCase][stage].title}
                                   complete={false}
                                   description={filteredStages[pCase][stage].description}
-                                  type={""}
+                                  type={"Новая"}
                                   pCase={pCase}
                                   stage={stage}
                                   user={currentUser}
