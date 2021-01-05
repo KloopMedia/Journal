@@ -63,6 +63,7 @@ const Page = () => {
     const [userStages, setUserStages] = useState({})
     const [userCompleteTasks, setUserCompleteTasks] = useState({})
     const [userIncompleteTasks, setUserIncompleteTasks] = useState({})
+    const [filteredStages, setFilteredStages] = useState({})
     const [tabValue, setTabValue] = useState(0)
 
 
@@ -171,6 +172,67 @@ const Page = () => {
         }
 	}, [currentUser, pageData, userRanks])
 
+    useEffect(() => {
+        if (Object.keys(userStages).length > 0) {
+            const newFilteredStages = {}
+            Object.keys(userStages).map(stage => {
+                if (stage.rank_limit_number && Object.keys(stage.rank_limit_number) > 0) {
+                    const rankLimitNumberSet = new Set(Object.keys(stage.rank_limit_number))
+                    const userRanksSet = new Set(Object.keys(userRanks))
+                    const setIntersection = intersection(rankLimitNumberSet, userRanksSet)
+                    if (setIntersection.size == 0) {
+                        newFilteredStages[stage] = userStages[stage]
+                    } else {
+                        if (includeStage(reduceSet(setIntersection, stage.rank_limit_number), stage, userCompleteTasks, userIncompleteTasks)){
+                            newFilteredStages[stage] = userStages[stage]
+                        }
+                    }
+                } else {
+                    newFilteredStages[stage] = userStages[stage]
+                }
+            })
+
+            setFilteredStages(newFilteredStages)
+        }
+    }, [currentUser, userStages, userIncompleteTasks, userCompleteTasks])
+
+    const includeStage = (number, stage, completeTask, incompleteTasks) => {
+	    const stageOccurrences = countStages(stage, completeTask) + countStages(stage, incompleteTasks)
+	    if (stageOccurrences < number) {
+	        return true
+        } else {
+	        return false
+        }
+    }
+
+    const countStages = (stage, tasks) => {
+	    let occurrences = 0
+        Object.values(tasks).map(task => {
+            if (task.case_stage_id === stage) {
+                occurrences++
+            }
+        })
+        return occurrences
+    }
+
+    const reduceSet = (rSet, limits) => {
+        let largestLimit = 0
+        Object.values(limits).map(v => {
+            if (v > largestLimit) {
+                largestLimit = v
+            }
+        })
+    }
+
+    const intersection = (setA, setB) => {
+        let _intersection = new Set()
+        for (let elem of setB) {
+            if (setA.has(elem)) {
+                _intersection.add(elem)
+            }
+        }
+        return _intersection
+    }
 
     const handleTabChange = (event, newValue) => {
         setTabValue(newValue);
@@ -193,12 +255,12 @@ const Page = () => {
                 </Paper>
             </div>
         <TabPanel value={tabValue} index={0}>
-            {Object.keys(userStages).map(pCase => (
-                Object.keys(userStages[pCase]).map(stage => (
+            {Object.keys(filteredStages).map(pCase => (
+                Object.keys(filteredStages[pCase]).map(stage => (
                     <Grid key={pCase+stage} style={{padding: 10}}>
-                        <TaskCard title={userStages[pCase][stage].title}
+                        <TaskCard title={filteredStages[pCase][stage].title}
                                   complete={false}
-                                  description={userStages[pCase][stage].description}
+                                  description={filteredStages[pCase][stage].description}
                                   type={""}
                                   pCase={pCase}
                                   stage={stage}
@@ -210,10 +272,11 @@ const Page = () => {
             ))}
             {Object.keys(userIncompleteTasks).map(taskId => (
                 <Grid key={taskId} style={{padding: 10}}>
-                    <TaskCard title={userIncompleteTasks[taskId].title}
+                    <TaskCard title={userStages[userIncompleteTasks[taskId].case_type][userIncompleteTasks[taskId].case_stage_id].title}
                               complete={userIncompleteTasks[taskId].is_complete}
-                              description={userIncompleteTasks[taskId].description}
-                                  type={userIncompleteTasks[taskId].type} id={taskId}/>
+                              description={userStages[userIncompleteTasks[taskId].case_type][userIncompleteTasks[taskId].case_stage_id].description}
+                              type={taskId}
+                              id={taskId}/>
                     </Grid>
                 ))}
             </TabPanel>
@@ -221,8 +284,11 @@ const Page = () => {
             <TabPanel value={tabValue} index={1}>
                 {Object.keys(userCompleteTasks).map(taskId => (
                     <Grid key={taskId} style={{padding: 10}}>
-                        <TaskCard title={userCompleteTasks[taskId].title} complete={userCompleteTasks[taskId].is_complete} description={userCompleteTasks[taskId].description}
-                                  type={userCompleteTasks[taskId].type} id={taskId}/>
+                        <TaskCard title={userStages[userCompleteTasks[taskId].case_type][userCompleteTasks[taskId].case_stage_id].title}
+                                  complete={userCompleteTasks[taskId].is_complete}
+                                  description={userStages[userCompleteTasks[taskId].case_type][userCompleteTasks[taskId].case_stage_id].description}
+                                  type={taskId}
+                                  id={taskId}/>
                     </Grid>
                 ))}
             </TabPanel>
