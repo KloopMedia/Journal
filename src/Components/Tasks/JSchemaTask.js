@@ -763,7 +763,11 @@ const JSchemaTask = () => {
 						onBlur={e => {
 							handleBlur(e)
 						}}>
-						<Button variant="outlined" disabled={formLocked} style={{ borderWidth: 2, borderColor: "red", color: 'red', margin: 5 }} onClick={() => handleDialogOpen('send')}>Отправить</Button>
+						{formLocked ?
+							<div>Форма отправлена успешно</div>
+							:
+							<Button variant="outlined" disabled={formLocked} style={{ borderWidth: 2, borderColor: "red", color: 'red', margin: 5 }} onClick={() => handleDialogOpen('send')}>Отправить</Button>
+						}
 					</JSchemaForm>
 						:
 					<p></p>}
