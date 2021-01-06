@@ -10,6 +10,7 @@ import Paper from "@material-ui/core/Paper";
 import Tabs from "@material-ui/core/Tabs";
 import Tab from "@material-ui/core/Tab";
 import TaskCard from "../Tasks/JSchemaCard";
+import { cloneDeep } from "lodash"
 
 function TabPanel(props) {
     const {children, value, index, ...other} = props;
@@ -60,9 +61,8 @@ const Page = () => {
 
 	const [pageData, setPageData] = useState({})
     const [userRanks, setUserRanks] = useState([])
-    const [userStages, setUserStages] = useState({})
-    const [userCompleteTasks, setUserCompleteTasks] = useState({})
-    const [userIncompleteTasks, setUserIncompleteTasks] = useState({})
+    const [userCases, setUserCases] = useState({})
+    const [userTasks, setUserTasks] = useState({})
     const [filteredStages, setFilteredStages] = useState({})
     const [tabValue, setTabValue] = useState(0)
     const [userRanksDescriptions, setUserRanksDescriptions] = useState({})
@@ -106,7 +106,7 @@ const Page = () => {
                     .onSnapshot(snapshot => {
 						snapshot.docChanges().forEach(change => {
 							if (change.type === "added" || change.type === "modified") {
-								setUserStages(prevState => {
+								setUserCases(prevState => {
 									const newState = Object.assign({}, prevState)
                                     if (! newState[pCase]) {
                                         newState[pCase] = {}
@@ -117,7 +117,7 @@ const Page = () => {
 								})
                             }
                             if (change.type === "removed") {
-                                setUserStages(prevState => {
+                                setUserCases(prevState => {
                                     const newState = Object.assign({}, prevState)
                                     delete newState[pCase][change.doc.id]
                                     return newState
@@ -131,38 +131,15 @@ const Page = () => {
                 .collection("tasks")
                 .where("assigned_users", "array-contains", currentUser.uid)
                 .where("case_type", "in", pageData.cases)
-                .where("is_complete", "==", true)
                 .onSnapshot(snapshot => {
                     snapshot.docChanges().forEach(change => {
                         if (change.type === "added" || change.type === "modified") {
-                            setUserCompleteTasks(prevState => {
-                                return {...prevState, [change.doc.id]: change.doc.data()}
-                            })
+                            setUserTasks(prevState => (
+                                {...prevState, [change.doc.id]: change.doc.data()}
+                            ))
                         }
                         if (change.type === "removed") {
-                            setUserCompleteTasks(prevState => {
-                                const newState = Object.assign({}, prevState)
-                                delete newState[change.doc.id]
-                                return newState
-                            })
-                        }
-                    })
-                })
-
-            firebase.firestore()
-                .collection("tasks")
-                .where("assigned_users", "array-contains", currentUser.uid)
-                .where("case_type", "in", pageData.cases)
-                .where("is_complete", "==", false)
-                .onSnapshot(snapshot => {
-                    snapshot.docChanges().forEach(change => {
-                        if (change.type === "added" || change.type === "modified") {
-                            setUserIncompleteTasks(prevState => {
-                                return {...prevState, [change.doc.id]: change.doc.data()}
-                            })
-                        }
-                        if (change.type === "removed") {
-                            setUserIncompleteTasks(prevState => {
+                            setUserTasks(prevState => {
                                 const newState = Object.assign({}, prevState)
                                 delete newState[change.doc.id]
                                 return newState
@@ -174,51 +151,35 @@ const Page = () => {
 	}, [currentUser, pageData, userRanks])
 
     useEffect(() => {
-        if (Object.keys(userStages).length > 0) {
-            const newFilteredStages = {}
-            Object.keys(userStages).map(pCase => {Object.keys(userStages[pCase]).map(stage => {
-                if (userStages[pCase][stage].rank_limit_number && Object.keys(userStages[pCase][stage].rank_limit_number).length > 0) {
-                    const rankLimitNumberSet = new Set(Object.keys(userStages[pCase][stage].rank_limit_number))
-                    const userRanksSet = new Set(userRanks)
-                    const setIntersection = intersection(rankLimitNumberSet, userRanksSet)
-                    if (setIntersection.size == 0) {
-                        if (! newFilteredStages[pCase]) {
-                            newFilteredStages[pCase] = {}
+        if (Object.keys(userCases).length > 0) {
+            const newFilteredStages = cloneDeep(userCases)
+            Object.keys(userCases).map(caseID => {
+                Object.keys(userCases[caseID]).map(stageId => {
+                    const stage = userCases[caseID][stageId]
+                    if (stage.rank_limit_number && Object.keys(stage.rank_limit_number).length > 0) {
+                        const setIntersection = intersection(new Set(Object.keys(stage.rank_limit_number)),
+                            new Set(userRanks))
+                        const maxTasksPerStage = calculatemaxTasksPerStage(setIntersection, stage.rank_limit_number)
+                        const tasksPerStage = countTasksPerStage(stageId, userTasks)
+                        console.log("caseID: ", caseID)
+                        console.log("stageId: ", stageId)
+                        console.log("maxTasksPerStage: ", maxTasksPerStage)
+                        console.log("tasksPerStage: ", tasksPerStage)
+                        if (tasksPerStage > maxTasksPerStage) {
+                            console.log("newFilteredStages: ", newFilteredStages)
+                            delete newFilteredStages[caseID][stageId]
+                            console.log("newFilteredStages after delete: ", newFilteredStages)
                         }
-                        newFilteredStages[pCase][stage] = userStages[pCase][stage]
-                    } else {
-                        if (includeStage(reduceSet(setIntersection, userStages[pCase][stage].rank_limit_number), stage, userCompleteTasks, userIncompleteTasks)) {
-                            if (!newFilteredStages[pCase]) {
-                                newFilteredStages[pCase] = {}
-                            }
-                            newFilteredStages[pCase][stage] = userStages[pCase][stage]
-                        }
+                        console.log("userCases: ", userCases)
                     }
-                } else {
-                    if (!newFilteredStages[pCase]) {
-                        newFilteredStages[pCase] = {}
-                    }
-                    newFilteredStages[pCase][stage] = userStages[pCase][stage]
-                }
+                })
             })
-            })
-
-            setFilteredStages(newFilteredStages)
+        setFilteredStages(newFilteredStages)
         }
-    }, [currentUser, userStages, userIncompleteTasks, userCompleteTasks])
+    }, [currentUser, userCases, userTasks])
 
-    const includeStage = (number, stage, completeTask, incompleteTasks) => {
-	    const stageOccurrences = countStages(stage, completeTask) + countStages(stage, incompleteTasks)
-	    console.log("stageOccurrences: ", stageOccurrences)
-        console.log("number: ", number)
-        if (stageOccurrences < number) {
-	        return true
-        } else {
-	        return false
-        }
-    }
 
-    const countStages = (stage, tasks) => {
+    const countTasksPerStage = (stage, tasks) => {
 	    let occurrences = 0
         Object.values(tasks).map(task => {
             if (task.case_stage_id === stage) {
@@ -228,7 +189,7 @@ const Page = () => {
         return occurrences
     }
 
-    const reduceSet = (rSet, limits) => {
+    const calculatemaxTasksPerStage = (rSet, limits) => {
         let largestLimit = 0
         const rArray = [...rSet]
         rArray.map(v => {
@@ -275,32 +236,57 @@ const Page = () => {
         }
     }, [userRanks])
 
+    const displayTasks = (tasks, complete) => {
+        const displayedTasks = Object.keys(tasks).map(taskId => {
+            const caseType = tasks[taskId].case_type
+            const stageId = tasks[taskId].case_stage_id
+
+            if (userCases[caseType] &&
+                userCases[caseType][stageId] &&
+                tasks[taskId].is_complete === complete) {
+                console.log("TASKS: ", tasks[taskId])
+                console.log("userStages: ", userCases)
+                return <Grid key={taskId} style={{padding: 10}}>
+                    <TaskCard
+                        title={userCases[caseType][stageId].title}
+                        complete={userTasks[taskId].is_complete}
+                        description={userCases[caseType][stageId].description}
+                        type={taskId}
+                        id={taskId}/>
+                </Grid>
+            }
+        })
+        return displayedTasks
+    }
+
+
+
     const handleTabChange = (event, newValue) => {
         setTabValue(newValue);
     };
 
 
     return (<Grid container justify="center" alignItems="center" direction="column">
-            {/* <Grid>
+        {/* <Grid>
 				<Button onClick={requestTask}>Получить задание</Button>
 			</Grid> */}
         {Object.keys(userRanksDescriptions).map(rank => (
             <Typography variant="h5">{userRanksDescriptions[rank].description}</Typography>
         ))}
-            <div className={classes.root}>
-                <Paper position="static" color="default">
-                    <Tabs value={tabValue} onChange={handleTabChange} variant="fullWidth" centered
-                          aria-label="simple tabs example">
-                        <Tab label="Невыполненные" {...a11yProps(0)}/>
-                        <Tab label="Выполненные" {...a11yProps(1)}/>
-                        {/*<Tab label="Быстрые задания" {...a11yProps(3)}/>*/}
-                    </Tabs>
-                </Paper>
-            </div>
+        <div className={classes.root}>
+            <Paper position="static" color="default">
+                <Tabs value={tabValue} onChange={handleTabChange} variant="fullWidth" centered
+                      aria-label="simple tabs example">
+                    <Tab label="Невыполненные" {...a11yProps(0)}/>
+                    <Tab label="Выполненные" {...a11yProps(1)}/>
+                    {/*<Tab label="Быстрые задания" {...a11yProps(3)}/>*/}
+                </Tabs>
+            </Paper>
+        </div>
         <TabPanel value={tabValue} index={0}>
             {Object.keys(filteredStages).map(pCase => (
                 Object.keys(filteredStages[pCase]).map(stage => (
-                    <Grid key={pCase+stage} style={{padding: 10}}>
+                    <Grid key={pCase + stage} style={{padding: 10}}>
                         <TaskCard title={filteredStages[pCase][stage].title}
                                   complete={false}
                                   description={filteredStages[pCase][stage].description}
@@ -313,32 +299,16 @@ const Page = () => {
                     </Grid>
                 ))
             ))}
-            {Object.keys(userIncompleteTasks).map(taskId => (
-                <Grid key={taskId} style={{padding: 10}}>
-                    <TaskCard title={userStages[userIncompleteTasks[taskId].case_type][userIncompleteTasks[taskId].case_stage_id].title}
-                              complete={userIncompleteTasks[taskId].is_complete}
-                              description={userStages[userIncompleteTasks[taskId].case_type][userIncompleteTasks[taskId].case_stage_id].description}
-                              type={taskId}
-                              id={taskId}/>
-                    </Grid>
-                ))}
-            </TabPanel>
+            {displayTasks(userTasks, false)}
+        </TabPanel>
 
-            <TabPanel value={tabValue} index={1}>
-                {Object.keys(userCompleteTasks).map(taskId => (
-                    <Grid key={taskId} style={{padding: 10}}>
-                        <TaskCard title={userStages[userCompleteTasks[taskId].case_type][userCompleteTasks[taskId].case_stage_id].title}
-                                  complete={userCompleteTasks[taskId].is_complete}
-                                  description={userStages[userCompleteTasks[taskId].case_type][userCompleteTasks[taskId].case_stage_id].description}
-                                  type={taskId}
-                                  id={taskId}/>
-                    </Grid>
-                ))}
-            </TabPanel>
-           {/* <TabPanel value={value} index={2}>
+        <TabPanel value={tabValue} index={1}>
+            {displayTasks(userTasks, true)}
+        </TabPanel>
+        {/* <TabPanel value={value} index={2}>
                 быстрые задания
             </TabPanel>*/}
-        </Grid>)
+    </Grid>)
 }
 
 export default Page
