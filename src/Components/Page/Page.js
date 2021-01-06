@@ -104,26 +104,7 @@ const Page = () => {
                     .collection("stages")
                     .where("ranks_write", "array-contains-any", userRanks)
                     .onSnapshot(snapshot => {
-						snapshot.docChanges().forEach(change => {
-							if (change.type === "added" || change.type === "modified") {
-								setUserCases(prevState => {
-									const newState = Object.assign({}, prevState)
-                                    if (! newState[pCase]) {
-                                        newState[pCase] = {}
-                                    }
-									newState[pCase][change.doc.id] = change.doc.data()
-									console.log("User stages: ", newState)
-                                    return newState
-								})
-                            }
-                            if (change.type === "removed") {
-                                setUserCases(prevState => {
-                                    const newState = Object.assign({}, prevState)
-                                    delete newState[pCase][change.doc.id]
-                                    return newState
-                                })
-                            }
-						})
+						complexStateFirebaseUpdate(snapshot, setUserCases, pCase)
 					})
 			})
 
@@ -149,6 +130,29 @@ const Page = () => {
                 })
         }
 	}, [currentUser, pageData, userRanks])
+
+    const complexStateFirebaseUpdate = (snapshot, setFunction, subState) => {
+        snapshot.docChanges().forEach(change => {
+            if (change.type === "added" || change.type === "modified") {
+                setFunction(prevState => {
+                    const newState = Object.assign({}, prevState)
+                    if (!newState[subState]) {
+                        newState[subState] = {}
+                    }
+                    newState[subState][change.doc.id] = change.doc.data()
+                    console.log("User stages: ", newState)
+                    return newState
+                })
+            }
+            if (change.type === "removed") {
+                setFunction(prevState => {
+                    const newState = Object.assign({}, prevState)
+                    delete newState[subState][change.doc.id]
+                    return newState
+                })
+            }
+        })
+    }
 
     useEffect(() => {
         if (Object.keys(userCases).length > 0) {
