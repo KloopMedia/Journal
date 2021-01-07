@@ -31,9 +31,8 @@ const useStyles = makeStyles({
 const JSchemaTaskCard = (props) => {
 	const classes = useStyles();
 	const history = useHistory();
-	const { title, complete, type, language, description, id, cardColor, sendRequest, disabled, creatable, pCase, stage, user } = props
+	const { complete, id, cardColor, cardType, pCase, stage, user } = props
 
-	const [redirect, setRedirect] = useState(false)
 	const [waiting, setWaiting] = useState(false)
 	const [newTaskId, setNewTaskId] = useState(null)
 
@@ -81,34 +80,31 @@ const JSchemaTaskCard = (props) => {
 	}
 
 	return (
-		<div>
-			{redirect && <Redirect to={"/t/" + (id || newTaskId)} />}
-			<Card className={classes.root} style={{ background: cardColor }}>
-				<CardContent>
-					<Box display="flex" justifyContent="space-between" alignItems="center">
-						<Typography variant="h6">
-							{title}
-						</Typography>
-						{complete && <Typography color="error">
-							Сдано
-						</Typography>}
-					</Box>
-					<Typography variant="subtitle1" className={classes.pos} color="textSecondary">
-						#{type}
+		<Card className={classes.root} style={{background: cardColor}}>
+			<CardContent>
+				<Box display="flex" justifyContent="space-between" alignItems="center">
+					<Typography variant="h6">
+						{title}
 					</Typography>
-					<Typography variant="body2" component="p">
-						Задание: {description}
-					</Typography>
-				</CardContent>
-				<CardActions>
-					{waiting ?
-						<CircularProgress />
-						:
-						<Button size="small" onClick={handleOpen}>{"Открыть"}</Button>
-					}
-				</CardActions>
-			</Card>
-		</div>
+					{complete && <Typography color="error">
+						Сдано
+					</Typography>}
+				</Box>
+				<Typography variant="subtitle1" className={classes.pos} color="textSecondary">
+					#{type}
+				</Typography>
+				<Typography variant="body2" component="p">
+					Задание: {description}
+				</Typography>
+			</CardContent>
+			<CardActions>
+				{waiting ?
+					<CircularProgress/>
+					:
+					<Button size="small" onClick={handleOpen}>{"Открыть"}</Button>
+				}
+			</CardActions>
+		</Card>
 	);
 }
 

@@ -136,8 +136,9 @@ function ResponsiveDrawer(props) {
 
 
 	useEffect(() => {
+		let unsubscribe = () => {}
 		if (currentUser) {
-			const unsubscribe = firebase.firestore().collection('notifications').where('user_id', 'array-contains', currentUser.uid).onSnapshot(async snap => {
+			unsubscribe = firebase.firestore().collection('notifications').where('user_id', 'array-contains', currentUser.uid).onSnapshot(async snap => {
 				console.log(snap.size)
 				let m = []
 				let count = 0
@@ -151,8 +152,8 @@ function ResponsiveDrawer(props) {
 				setNumOfMessages(count)
 				setMessages(m)
 			})
-			return () => unsubscribe()
 		}
+		return () => unsubscribe
 	}, [currentUser])
 
 	const updateFirestoreStatus = (id, index) => {
