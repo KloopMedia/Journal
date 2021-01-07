@@ -174,6 +174,11 @@ const Page = () => {
                             delete newFilteredStages[caseID][stageId]
                             console.log("newFilteredStages after delete: ", newFilteredStages)
                         }
+                        if (tasksPerStage > maxTasksPerStage || !("creatable" in stage) || !(stage.creatable)) {
+                            console.log("newFilteredStages: ", newFilteredStages)
+                            delete newFilteredStages[caseID][stageId]
+                            console.log("newFilteredStages after delete: ", newFilteredStages)
+                        }
                         console.log("userCases: ", userCases)
                     }
                 })

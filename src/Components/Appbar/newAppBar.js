@@ -197,9 +197,9 @@ function ResponsiveDrawer(props) {
 					<li>
 						{
 							Object.keys(userPages).map(page => {
-								return <Link key={page} to={"/p/" + page}>
+								return <li key={page}> <Link to={"/p/" + page}>
 									{userPages[page].name}
-								</Link>
+								</Link> </li>
 							})
 						}
 					</li>

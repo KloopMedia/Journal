@@ -15,7 +15,7 @@ import IconButton from '@material-ui/core/IconButton';
 import CloseIcon from '@material-ui/icons/Close';
 import CircularProgress from '@material-ui/core/CircularProgress';
 
-import JSchemaForm from "@rjsf/material-ui";
+import JSchemaForm from "@rjsf/bootstrap-4";
 import { cloneDeep, isEqual } from 'lodash'
 
 
