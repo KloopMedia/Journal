@@ -31,13 +31,13 @@ const useStyles = makeStyles({
 const JSchemaTaskCard = (props) => {
 	const classes = useStyles();
 	const history = useHistory();
-	const { complete, id, cardColor, cardType, pCase, stage, user } = props
+	const { complete, id, cardColor, cardType, stage, task, user, pCase } = props
 
 	const [waiting, setWaiting] = useState(false)
 	const [newTaskId, setNewTaskId] = useState(null)
 
 	const handleOpen = () => {
-		if (creatable) {
+		if (cardType === "creatable") {
 			sendCallbackRequest(pCase, stage)
 		} else {
 			history.push("/t/" + id)
@@ -80,21 +80,21 @@ const JSchemaTaskCard = (props) => {
 	}
 
 	return (
-		<Card className={classes.root} style={{background: cardColor}}>
+		<Card key={id} className={classes.root} style={{background: cardColor}}>
 			<CardContent>
 				<Box display="flex" justifyContent="space-between" alignItems="center">
 					<Typography variant="h6">
-						{title}
+						{stage.title}
 					</Typography>
 					{complete && <Typography color="error">
 						Сдано
 					</Typography>}
 				</Box>
 				<Typography variant="subtitle1" className={classes.pos} color="textSecondary">
-					#{type}
+					#{id}
 				</Typography>
 				<Typography variant="body2" component="p">
-					Задание: {description}
+					Задание: {stage.description}
 				</Typography>
 			</CardContent>
 			<CardActions>

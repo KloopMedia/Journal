@@ -91,7 +91,7 @@ const Page = () => {
 		console.log("Page id: ", id)
         console.log("Current user: ", currentUser)
         let unsubscribe = () => {}
-        if (currentUser && pageData.ranks) {
+        if (currentUser && pageData && pageData.ranks) {
             unsubscribe = firebase
                 .firestore()
                 .collection('users')
@@ -133,6 +133,7 @@ const Page = () => {
 
             if (pageData.caseWithSelectableTasks) {
                 casesPath.doc(pageData.caseWithSelectableTasks)
+                    .collection("stages")
                     .where("ranks_read", "array-contains-any", userRanks)
                     .onSnapshot(snapshot => {
 						simpleStateFirebaseUpdate(snapshot, setAvailableStages)
@@ -143,9 +144,10 @@ const Page = () => {
                 .where("case_type", "==", pageData.caseWithSelectableTasks)
                 .where("assigned_users", "==", [])
                 .where("available", "==", true)
-                .where("is_complete", "!=", true)
+                .where("is_complete", "==", false)
                 .where("ranks_read", "array-contains-any", userRanks)
                 .onSnapshot(snapshot => {
+                    console.log("Snapshot: ", snapshot.docChanges())
                     simpleStateFirebaseUpdate(snapshot, setAvailableTasks)
                 })
             }
@@ -292,8 +294,8 @@ const Page = () => {
             let stage = false
 
             if (stages) {
-                if (stages[taskId]) {
-                    stage = stages[taskId]
+                if (stages[stageId]) {
+                    stage = stages[stageId]
                 }
             } else if (cases && cases[caseType] && cases[caseType][stageId]) {
                 stage = cases[caseType][stageId]
@@ -334,11 +336,11 @@ const Page = () => {
              {Object.keys(filteredStages).map(pCase => (
                 Object.keys(filteredStages[pCase]).map(stage => (
                     <Grid key={pCase + stage} style={{padding: 10}}>
-                        <TaskCard title={filteredStages[pCase][stage].title}
-                                  complete={false}
-                                  stage={stage}
+                        <TaskCard complete={false}
+                                  stage={filteredStages[pCase][stage]}
                                   user={currentUser}
                                   id={""}
+                                  pCase={pCase}
                                   cardType = "creatable"/>
                     </Grid>
                 ))
@@ -349,7 +351,11 @@ const Page = () => {
                       aria-label="simple tabs example">
                     <Tab label="Невыполненные" {...a11yProps(0)}/>
                     <Tab label="Выполненные" {...a11yProps(1)}/>
-                    <Tab label="Доступные" {...a11yProps(2)}/>
+                    {(Object.keys(availableTasks).length > 0) ?
+                        <Tab label="Доступные" {...a11yProps(2)}/>
+                        :
+                        null}
+
                     {/*<Tab label="Быстрые задания" {...a11yProps(3)}/>*/}
                 </Tabs>
             </Paper>
@@ -363,8 +369,9 @@ const Page = () => {
             {displayTasks(userTasks, false, userCases, "selected", true)}
         </TabPanel>
 
-        {availableTasks ?
+        {Object.keys(availableTasks).length > 0 ?
         <TabPanel value={tabValue} index={2}>
+            {console.log("availableStages: ", availableStages)}
             {displayTasks(availableTasks, availableStages, false, "selectable", false)}
         </TabPanel>
         :
