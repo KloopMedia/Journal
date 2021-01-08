@@ -208,12 +208,12 @@ const Page = () => {
                         console.log("stageId: ", stageId)
                         console.log("maxTasksPerStage: ", maxTasksPerStage)
                         console.log("tasksPerStage: ", tasksPerStage)
-                        if (tasksPerStage > maxTasksPerStage) {
-                            console.log("newFilteredStages: ", newFilteredStages)
-                            delete newFilteredStages[caseID][stageId]
-                            console.log("newFilteredStages after delete: ", newFilteredStages)
-                        }
-                        if (tasksPerStage > maxTasksPerStage || !("creatable" in stage) || !(stage.creatable)) {
+                        // if (tasksPerStage >= maxTasksPerStage) {
+                        //     console.log("newFilteredStages: ", newFilteredStages)
+                        //     delete newFilteredStages[caseID][stageId]
+                        //     console.log("newFilteredStages after delete: ", newFilteredStages)
+                        // }
+                        if (tasksPerStage >= maxTasksPerStage || !("creatable" in stage) || !(stage.creatable)) {
                             console.log("newFilteredStages: ", newFilteredStages)
                             delete newFilteredStages[caseID][stageId]
                             console.log("newFilteredStages after delete: ", newFilteredStages)
