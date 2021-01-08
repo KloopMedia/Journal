@@ -62,6 +62,7 @@ const Page = () => {
 	const [pageData, setPageData] = useState({})
     const [userRanks, setUserRanks] = useState([])
     const [userCases, setUserCases] = useState({})
+    const [allCases, setAllCases] = useState({})
     const [userTasks, setUserTasks] = useState({})
     const [filteredStages, setFilteredStages] = useState({})
     const [unlimStages, setUnlimStages] = useState({})
@@ -109,20 +110,28 @@ const Page = () => {
 
 
     useEffect(() => {
-		if (pageData && Object.entries(pageData).length > 0 && userRanks.length > 0) {
-			const casesPath = firebase.firestore()
-					.collection("schema")
-					.doc("structure")
-					.collection("cases")
+        if (pageData && Object.entries(pageData).length > 0 && userRanks.length > 0) {
+            const casesPath = firebase.firestore()
+                .collection("schema")
+                .doc("structure")
+                .collection("cases")
 
-		    pageData.cases.map(pCase => {
-                    casesPath.doc(pCase)
+            pageData.cases.map(pCase => {
+                casesPath.doc(pCase)
                     .collection("stages")
                     .where("ranks_write", "array-contains-any", userRanks)
                     .onSnapshot(snapshot => {
-						complexStateFirebaseUpdate(snapshot, setUserCases, pCase)
-					})
-			})
+                        complexStateFirebaseUpdate(snapshot, setUserCases, pCase)
+                    })
+
+                casesPath.doc(pCase)
+                    .collection("stages")
+                    .onSnapshot(snapshot => {
+                        complexStateFirebaseUpdate(snapshot, setAllCases, pCase)
+                    })
+
+
+            })
 
             firebase.firestore()
                 .collection("tasks")
@@ -137,8 +146,8 @@ const Page = () => {
                     .collection("stages")
                     .where("ranks_read", "array-contains-any", userRanks)
                     .onSnapshot(snapshot => {
-						simpleStateFirebaseUpdate(snapshot, setAvailableStages)
-					})
+                        simpleStateFirebaseUpdate(snapshot, setAvailableStages)
+                    })
 
                 firebase.firestore()
                     .collection("tasks")
@@ -153,7 +162,7 @@ const Page = () => {
                     })
             }
         }
-	}, [currentUser, pageData, userRanks, id])
+    }, [currentUser, pageData, userRanks, id])
 
 
     const complexStateFirebaseUpdate = (snapshot, setFunction, subState) => {
@@ -396,11 +405,11 @@ const Page = () => {
                     </Grid>
                 ))
             ))}
-            {displayTasks(userTasks, false, userCases, "selected", false)}
+            {displayTasks(userTasks, false, allCases, "selected", false)}
         </TabPanel>
 
         <TabPanel value={tabValue} index={1}>
-            {displayTasks(userTasks, false, userCases, "selected", true)}
+            {displayTasks(userTasks, false, allCases, "selected", true)}
         </TabPanel>
 
         {(Object.keys(availableTasks).length > 0 && Object.keys(availableStages).length > 0) ?
