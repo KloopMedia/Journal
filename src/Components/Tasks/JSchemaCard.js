@@ -37,7 +37,7 @@ const JSchemaTaskCard = (props) => {
 	const [newTaskId, setNewTaskId] = useState(null)
 
 	const handleOpen = () => {
-		if (cardType === "creatable" || cardType === "selectable") {
+		if (cardType === "creatable" || cardType === "selectable" || cardType === "creatableUnlim") {
 			sendCallbackRequest()
 		} else {
 			history.push("/t/" + id)
@@ -50,7 +50,7 @@ const JSchemaTaskCard = (props) => {
 		let callback = ""
 		let callbackType = ""
 		let callbackName = ""
-		if (cardType === "creatable") {
+		if (cardType === "creatable" || cardType === "creatableUnlim") {
 			callback = uuidv4()
 			callbackType = "callbackId"
 			callbackName = "callbackId"
@@ -112,7 +112,7 @@ const JSchemaTaskCard = (props) => {
 				{waiting ?
 					<CircularProgress/>
 					:
-					<Button size="small" onClick={handleOpen}>{"Открыть"}</Button>
+					<Button size="small" onClick={handleOpen}>{(cardType === "creatableUnlim") ? "СОЗДАТЬ НОВУЮ ФОРМУ" : "Открыть"}</Button>
 				}
 			</CardActions>
 		</Card>

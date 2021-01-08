@@ -64,6 +64,7 @@ const Page = () => {
     const [userCases, setUserCases] = useState({})
     const [userTasks, setUserTasks] = useState({})
     const [filteredStages, setFilteredStages] = useState({})
+    const [unlimStages, setUnlimStages] = useState({})
     const [tabValue, setTabValue] = useState(0)
     const [availableStages, setAvailableStages] = useState({})
     const [availableTasks, setAvailableTasks] = useState({})
@@ -197,32 +198,44 @@ const Page = () => {
     useEffect(() => {
         if (Object.keys(userCases).length > 0) {
             const newFilteredStages = cloneDeep(userCases)
+            let newUnlimStages = {}
             Object.keys(userCases).map(caseID => {
                 Object.keys(userCases[caseID]).map(stageId => {
                     const stage = userCases[caseID][stageId]
                     if (stage.rank_limit_number && Object.keys(stage.rank_limit_number).length > 0) {
                         const setIntersection = intersection(Object.keys(stage.rank_limit_number), userRanks)
-                        const maxTasksPerStage = calculatemaxTasksPerStage(setIntersection, stage.rank_limit_number)
-                        const tasksPerStage = countTasksPerStage(stageId, userTasks)
-                        console.log("caseID: ", caseID)
-                        console.log("stageId: ", stageId)
-                        console.log("maxTasksPerStage: ", maxTasksPerStage)
-                        console.log("tasksPerStage: ", tasksPerStage)
-                        // if (tasksPerStage >= maxTasksPerStage) {
-                        //     console.log("newFilteredStages: ", newFilteredStages)
-                        //     delete newFilteredStages[caseID][stageId]
-                        //     console.log("newFilteredStages after delete: ", newFilteredStages)
-                        // }
-                        if (tasksPerStage >= maxTasksPerStage || !("creatable" in stage) || !(stage.creatable)) {
-                            console.log("newFilteredStages: ", newFilteredStages)
+                        if (setIntersection.length > 0) {
+                            const maxTasksPerStage = calculatemaxTasksPerStage(setIntersection, stage.rank_limit_number)
+                            const tasksPerStage = countTasksPerStage(stageId, userTasks)
+                            console.log("caseID: ", caseID)
+                            console.log("stageId: ", stageId)
+                            console.log("maxTasksPerStage: ", maxTasksPerStage)
+                            console.log("tasksPerStage: ", tasksPerStage)
+                            // if (tasksPerStage >= maxTasksPerStage) {
+                            //     console.log("newFilteredStages: ", newFilteredStages)
+                            //     delete newFilteredStages[caseID][stageId]
+                            //     console.log("newFilteredStages after delete: ", newFilteredStages)
+                            // }
+                            if (tasksPerStage >= maxTasksPerStage || !("creatable" in stage) || !(stage.creatable)) {
+                                console.log("newFilteredStages: ", newFilteredStages)
+                                delete newFilteredStages[caseID][stageId]
+                                console.log("newFilteredStages after delete: ", newFilteredStages)
+                            }
+                            console.log("userCases: ", userCases)
+                        } else {
+                            if (newUnlimStages[caseID]) {
+                                newUnlimStages[caseID][stageId] = newFilteredStages[caseID][stageId]
+                            } else {
+                                newUnlimStages[caseID] = {}
+                                newUnlimStages[caseID][stageId] = newFilteredStages[caseID][stageId]
+                            }
                             delete newFilteredStages[caseID][stageId]
-                            console.log("newFilteredStages after delete: ", newFilteredStages)
                         }
-                        console.log("userCases: ", userCases)
                     }
                 })
             })
-        setFilteredStages(newFilteredStages)
+            setFilteredStages(newFilteredStages)
+            setUnlimStages(newUnlimStages)
         }
     }, [currentUser, userCases, userTasks, id])
 
@@ -341,15 +354,15 @@ const Page = () => {
             <Typography variant="h5">{userRanksDescriptions[rank].description}</Typography>
         ))}
         <div className={classes.root}>
-             {Object.keys(filteredStages).map(pCase => (
-                Object.keys(filteredStages[pCase]).map(stage => (
+            {Object.keys(unlimStages).map(pCase => (
+                Object.keys(unlimStages[pCase]).map(stage => (
                     <Grid key={pCase + stage} style={{padding: 10}}>
                         <TaskCard complete={false}
-                                  stage={filteredStages[pCase][stage]}
+                                  stage={unlimStages[pCase][stage]}
                                   stageID={stage}
                                   user={currentUser}
                                   pCase={pCase}
-                                  cardType = "creatable"/>
+                                  cardType = "creatableUnlim"/>
                     </Grid>
                 ))
             ))}
@@ -370,6 +383,18 @@ const Page = () => {
         </div>
 
         <TabPanel value={tabValue} index={0}>
+            {Object.keys(filteredStages).map(pCase => (
+                Object.keys(filteredStages[pCase]).map(stage => (
+                    <Grid key={pCase + stage} style={{padding: 10}}>
+                        <TaskCard complete={false}
+                                  stage={filteredStages[pCase][stage]}
+                                  stageID={stage}
+                                  user={currentUser}
+                                  pCase={pCase}
+                                  cardType = "creatable"/>
+                    </Grid>
+                ))
+            ))}
             {displayTasks(userTasks, false, userCases, "selected", false)}
         </TabPanel>
 
