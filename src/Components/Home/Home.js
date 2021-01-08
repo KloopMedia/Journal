@@ -91,10 +91,13 @@ const Home = () => {
     return (
         currentUser ?
             <Grid container justify="center" direction="column" alignItems="center" className={classes.root} >
-                <Typography style={{ paddingBottom: 10 }} variant="h5" align="center">Вы почти зарегистрировались! Осталось нажать на ссылку ниже.</Typography>
-                {token ? <Link variant="h5" href={"https://telegram.me/journal_tg_bot?start=" + token}>Ссылка на бот</Link> 
-                : <Typography variant="body2" align="center">Если ссылка не создалась в течение 5 секунд, перезагрузите страницу</Typography>}
+                <Link variant="h5" align="center" href={"https://kloopmedia.github.io/Journal/#/p/elections_monitoring"}>ФОРМЫ ДЛЯ НАБЛЮДЕНИЯ НА ВЫБОРАХ</Link>
             </Grid>
+            // <Grid container justify="center" direction="column" alignItems="center" className={classes.root} >
+            //     <Typography style={{ paddingBottom: 10 }} variant="h5" align="center">Вы почти зарегистрировались! Осталось нажать на ссылку ниже.</Typography>
+            //     {token ? <Link variant="h5" href={"https://telegram.me/journal_tg_bot?start=" + token}>Ссылка на бот</Link>
+            //     : <Typography variant="body2" align="center">Если ссылка не создалась в течение 5 секунд, перезагрузите страницу</Typography>}
+            // </Grid>
             :
             <Grid container direction="column" style={{ padding: 20 }} justify="center">
                 <Typography align="center" variant="h3">Регистрация</Typography>

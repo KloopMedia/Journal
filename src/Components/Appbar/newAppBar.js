@@ -195,6 +195,8 @@ function ResponsiveDrawer(props) {
 					{moderator ? <li>
 						<Link to="/faq">FAQ для модераторов</Link>
 					</li> : null}
+					</ul>
+				<ul>
 					<li>
 						{
 							Object.keys(userPages).map(page => {
