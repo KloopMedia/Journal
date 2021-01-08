@@ -105,7 +105,7 @@ const JSchemaTaskCard = (props) => {
 					#{id}
 				</Typography>
 				<Typography variant="body2" component="p">
-					Задание: {stage.description}
+					{(cardType==="selectable" && task && task.cardData) ? JSON.stringify(task.cardData, null, 2): "Задание: " + stage.description}
 				</Typography>
 			</CardContent>
 			<CardActions>

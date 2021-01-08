@@ -156,6 +156,7 @@ const Page = () => {
                     .where("available", "==", true)
                     .where("is_complete", "==", false)
                     .where("ranks_read", "array-contains-any", userRanks)
+                    .orderBy('created_date', 'desc')
                     .limit(25)
                     .onSnapshot(snapshot => {
                         simpleStateFirebaseUpdate(snapshot, setAvailableTasks)
