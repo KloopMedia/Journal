@@ -31,23 +31,34 @@ const useStyles = makeStyles({
 const JSchemaTaskCard = (props) => {
 	const classes = useStyles();
 	const history = useHistory();
-	const { complete, id, cardColor, cardType, stage, task, user, pCase } = props
+	const { complete, id, cardColor, cardType, stage, stageID, task, user, pCase } = props
 
 	const [waiting, setWaiting] = useState(false)
 	const [newTaskId, setNewTaskId] = useState(null)
 
 	const handleOpen = () => {
-		if (cardType === "creatable") {
-			sendCallbackRequest(pCase, stage)
+		if (cardType === "creatable" || cardType === "selectable") {
+			sendCallbackRequest()
 		} else {
 			history.push("/t/" + id)
 			//setRedirect(true)
 		}
 	}
 
-	const sendCallbackRequest = (pCase, stage) => {
+	const sendCallbackRequest = () => {
 		setWaiting(true)
-		const callbackID = uuidv4()
+		let callback = ""
+		let callbackType = ""
+		let callbackName = ""
+		if (cardType === "creatable") {
+			callback = uuidv4()
+			callbackType = "callbackId"
+			callbackName = "callbackId"
+		} else if (cardType === "selectable") {
+			callback = id
+			callbackName = "taskId"
+			callbackType = firebase.firestore.FieldPath.documentId()
+		}
 		firebase.firestore()
 			.collection("task_requests")
 			.doc(user.uid)
@@ -56,13 +67,13 @@ const JSchemaTaskCard = (props) => {
 				status: "pending",
 				user: user.uid,
 				case_type: pCase,
-				case_stage_id: stage,
-				callbackId: callbackID
+				case_stage_id: stageID,
+				[callbackName]: callback
 			}).then((doc) => {
 			const unsubscribe = firebase.firestore()
 				.collection("tasks")
 				.where("assigned_users", "array-contains", user.uid)
-				.where("callbackId", "==", callbackID)
+				.where(callbackType, "==", callback)
 				.onSnapshot(snapshot => {
 					snapshot.docChanges().forEach(change => {
 						if (change.type === "added") {

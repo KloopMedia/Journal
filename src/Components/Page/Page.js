@@ -147,7 +147,6 @@ const Page = () => {
                 .where("is_complete", "==", false)
                 .where("ranks_read", "array-contains-any", userRanks)
                 .onSnapshot(snapshot => {
-                    console.log("Snapshot: ", snapshot.docChanges())
                     simpleStateFirebaseUpdate(snapshot, setAvailableTasks)
                 })
             }
@@ -307,10 +306,11 @@ const Page = () => {
                 return <Grid key={taskId} style={{padding: 10}}>
                     <TaskCard
                         stage={stage}
+                        stageID={stageId}
                         cardType={cardType}
                         task={tasks[taskId]}
                         user={currentUser}
-                        type={taskId}
+                        pCase={caseType}
                         id={taskId}/>
                 </Grid>
             }
@@ -326,6 +326,14 @@ const Page = () => {
 
 
     return (<Grid container justify="center" alignItems="center" direction="column">
+        {console.log("pageData: ", pageData)}
+        {console.log("userRanks: ", userRanks)}
+        {console.log("userCases: ", userCases)}
+        {console.log("userTasks: ", userTasks)}
+        {console.log("filteredStages: ", filteredStages)}
+        {console.log("availableStages: ", availableStages)}
+        {console.log("availableTasks: ", availableTasks)}
+
         {/* <Grid>
 				<Button onClick={requestTask}>Получить задание</Button>
 			</Grid> */}
@@ -338,8 +346,8 @@ const Page = () => {
                     <Grid key={pCase + stage} style={{padding: 10}}>
                         <TaskCard complete={false}
                                   stage={filteredStages[pCase][stage]}
+                                  stageID={stage}
                                   user={currentUser}
-                                  id={""}
                                   pCase={pCase}
                                   cardType = "creatable"/>
                     </Grid>
@@ -351,7 +359,7 @@ const Page = () => {
                       aria-label="simple tabs example">
                     <Tab label="Невыполненные" {...a11yProps(0)}/>
                     <Tab label="Выполненные" {...a11yProps(1)}/>
-                    {(Object.keys(availableTasks).length > 0) ?
+                    {(Object.keys(availableTasks).length > 0 && Object.keys(availableStages).length > 0) ?
                         <Tab label="Доступные" {...a11yProps(2)}/>
                         :
                         null}
@@ -369,9 +377,9 @@ const Page = () => {
             {displayTasks(userTasks, false, userCases, "selected", true)}
         </TabPanel>
 
-        {Object.keys(availableTasks).length > 0 ?
+        {(Object.keys(availableTasks).length > 0 && Object.keys(availableStages).length > 0) ?
         <TabPanel value={tabValue} index={2}>
-            {console.log("availableStages: ", availableStages)}
+            {console.log("availableTasks: ", availableTasks)}
             {displayTasks(availableTasks, availableStages, false, "selectable", false)}
         </TabPanel>
         :
