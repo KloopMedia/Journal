@@ -141,15 +141,16 @@ const Page = () => {
 					})
 
                 firebase.firestore()
-                .collection("tasks")
-                .where("case_type", "==", pageData.caseWithSelectableTasks)
-                .where("assigned_users", "==", [])
-                .where("available", "==", true)
-                .where("is_complete", "==", false)
-                .where("ranks_read", "array-contains-any", userRanks)
-                .onSnapshot(snapshot => {
-                    simpleStateFirebaseUpdate(snapshot, setAvailableTasks)
-                })
+                    .collection("tasks")
+                    .where("case_type", "==", pageData.caseWithSelectableTasks)
+                    .where("assigned_users", "==", [])
+                    .where("available", "==", true)
+                    .where("is_complete", "==", false)
+                    .where("ranks_read", "array-contains-any", userRanks)
+                    .limit(25)
+                    .onSnapshot(snapshot => {
+                        simpleStateFirebaseUpdate(snapshot, setAvailableTasks)
+                    })
             }
         }
 	}, [currentUser, pageData, userRanks, id])

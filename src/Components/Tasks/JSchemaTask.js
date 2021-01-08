@@ -731,22 +731,28 @@ const JSchemaTask = () => {
 					caseStages[taskMetadata.case_stage_id].backgroundStages.length > 0 &&
 					Object.keys(mergedBackgroundForms).length > 0) ?
 					<Grid style={{padding: 30}}>
-					{caseStages[taskMetadata.case_stage_id].backgroundStages.map(stage => {
-						return <div key={stage}>
-							{Object.keys(mergedBackgroundForms[stage]).map(taskId => {
-								return <Grid style={{padding: 30}} key={taskId}>
-									<JSchemaForm
-										schema={mergedBackgroundForms[stage][taskId].form_questions}
-										uiSchema={mergedBackgroundForms[stage][taskId].ui_schema}
-										formData={backgroundResponses[taskId]}
-										fields={{customFileUpload: a => CustomFileUpload({...a, ...{taskID: taskId}, ...{"currentUserUid": currentUser.uid}})}}
-										disabled={true}
-									> </JSchemaForm>
-								</Grid>
-
-							})}
-						</div>
-					})}
+						{caseStages[taskMetadata.case_stage_id].backgroundStages.map(stage => {
+							return <div key={stage}>
+								{console.log("STAGE: ", stage)}
+								{console.log("mergedBackgroundForms: ", mergedBackgroundForms)}
+								{
+									mergedBackgroundForms[stage] ?
+										(Object.keys(mergedBackgroundForms[stage]).map(taskId => (
+											<Grid style={{padding: 30}} key={taskId}>
+												<JSchemaForm
+													schema={mergedBackgroundForms[stage][taskId].form_questions}
+													uiSchema={mergedBackgroundForms[stage][taskId].ui_schema}
+													formData={backgroundResponses[taskId]}
+													fields={{customFileUpload: a => CustomFileUpload({...a, ...{taskID: taskId}, ...{"currentUserUid": currentUser.uid}})}}
+													disabled={true}
+												> </JSchemaForm>
+											</Grid>
+										)))
+										:
+										null
+								}
+							</div>
+						})}
 					</Grid>
 					:
 					null
