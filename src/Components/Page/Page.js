@@ -213,27 +213,35 @@ const Page = () => {
             Object.keys(userCases).map(caseID => {
                 Object.keys(userCases[caseID]).map(stageId => {
                     const stage = userCases[caseID][stageId]
-                    if (stage.rank_limit_number && Object.keys(stage.rank_limit_number).length > 0) {
-                        const setIntersection = intersection(Object.keys(stage.rank_limit_number), userRanks)
-                        if (setIntersection.length > 0) {
-                            const maxTasksPerStage = calculatemaxTasksPerStage(setIntersection, stage.rank_limit_number)
-                            const tasksPerStage = countTasksPerStage(stageId, userTasks)
-                            console.log("caseID: ", caseID)
-                            console.log("stageId: ", stageId)
-                            console.log("maxTasksPerStage: ", maxTasksPerStage)
-                            console.log("tasksPerStage: ", tasksPerStage)
-                            // if (tasksPerStage >= maxTasksPerStage) {
-                            //     console.log("newFilteredStages: ", newFilteredStages)
-                            //     delete newFilteredStages[caseID][stageId]
-                            //     console.log("newFilteredStages after delete: ", newFilteredStages)
-                            // }
-                            if (tasksPerStage >= maxTasksPerStage || !("creatable" in stage) || !(stage.creatable)) {
-                                console.log("newFilteredStages: ", newFilteredStages)
-                                delete newFilteredStages[caseID][stageId]
-                                console.log("newFilteredStages after delete: ", newFilteredStages)
+                    if (stage.ranks_write &&
+                        Object.keys(stage.ranks_write).length > 0 &&
+                        intersection(stage.ranks_write, userRanks).length > 0 &&
+                        "creatable" in stage &&
+                        stage.creatable) {
+                        if (stage.rank_limit_number && Object.keys(stage.rank_limit_number).length > 0) {
+                            const setIntersection = intersection(Object.keys(stage.rank_limit_number), userRanks)
+                            if (setIntersection.length > 0) {
+                                const maxTasksPerStage = calculatemaxTasksPerStage(setIntersection, stage.rank_limit_number)
+                                const tasksPerStage = countTasksPerStage(stageId, userTasks)
+                                console.log("caseID: ", caseID)
+                                console.log("stageId: ", stageId)
+                                console.log("maxTasksPerStage: ", maxTasksPerStage)
+                                console.log("tasksPerStage: ", tasksPerStage)
+                                // if (tasksPerStage >= maxTasksPerStage) {
+                                //     console.log("newFilteredStages: ", newFilteredStages)
+                                //     delete newFilteredStages[caseID][stageId]
+                                //     console.log("newFilteredStages after delete: ", newFilteredStages)
+                                // }
+                                if (tasksPerStage >= maxTasksPerStage) {
+                                    console.log("newFilteredStages: ", newFilteredStages)
+                                    delete newFilteredStages[caseID][stageId]
+                                    console.log("newFilteredStages after delete: ", newFilteredStages)
+                                }
+                                console.log("userCases: ", userCases)
                             }
-                            console.log("userCases: ", userCases)
-                       }
+                        }
+                    } else {
+                        delete newFilteredStages[caseID][stageId]
                     }
                 })
             })
@@ -353,9 +361,10 @@ const Page = () => {
         {/* <Grid>
 				<Button onClick={requestTask}>Получить задание</Button>
 			</Grid> */}
-        {Object.keys(userRanksDescriptions).map(rank => (
+        {Object.keys(userRanksDescriptions).length > 0 ? userRanks.map(rank => (
             <Typography variant="h5" key={rank}>{userRanksDescriptions[rank].description}</Typography>
-        ))}
+        ))
+        : null}
         <div className={classes.root}>
             {/*{Object.keys(unlimStages).map(pCase => (*/}
             {/*    Object.keys(unlimStages[pCase]).map(stage => (*/}

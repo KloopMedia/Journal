@@ -27,7 +27,6 @@ const JSchemaTask = () => {
 	const [formResponses, setFormResponses] = useState({})
 	const [taskForm, setTaskForm] = useState({})
 	const [mergedForm, setMergedForm] = useState({})
-	const [fields, setFields] = useState({})
 	const [taskMetadata, setTaskMetadata] = useState({})
 	const [caseStages, setCaseStages] = useState({})
 	const [backgroundTasks, setBackgroundTasks] = useState({})
@@ -36,7 +35,7 @@ const JSchemaTask = () => {
 	const [backgroundResponses, setBackgroundResponses] = useState({})
 	const [currentFocus, setCurrentFocus] = useState("")
 	const [gRef, setGRef] = useState(null)
-	const [formLocked, setFormLocked] = useState(true)
+	const [formStatus, setFormStatus] = useState("loading")
 
 	const [questions, setQuestions] = useState([])
 	const [responses, setResponses] = useState([])
@@ -80,10 +79,16 @@ const JSchemaTask = () => {
 			setGRef(ref)
 
 			ref.onSnapshot(doc => {
-					setTaskMetadata(doc.data())
-					setFormLocked(doc.data().is_complete)
-					console.log("Task Metadata: ", doc.data());
-				});
+				setTaskMetadata(doc.data())
+				if (doc.data().is_complete) {
+					setFormStatus("sent")
+				}
+
+				if (! doc.data().assigned_users.includes(currentUser.uid)) {
+					setFormStatus("released")
+				}
+				console.log("Task Metadata: ", doc.data());
+			});
 
 			ref.collection("responses")
 				.onSnapshot(snapshot => {
@@ -173,6 +178,12 @@ const JSchemaTask = () => {
 		console.log("Merged bg forms: ", mergedBgForms)
 		setMergedBackgroundForms(mergedBgForms)
 	}, [backgroundTasks, backgroundTaskForms, caseStages])
+
+	useEffect(() => {
+		if (Object.keys(formResponses).length > 0 && Object.keys(mergedForm).length > 0 && formStatus === "loading") {
+			setFormStatus("ready")
+		}
+	}, [formResponses, mergedForm])
 
 	useEffect(() => {
 		setMergedForm(mergeForm(taskForm, caseStages[taskMetadata.case_stage_id]))
@@ -635,10 +646,10 @@ const JSchemaTask = () => {
 			setDialogType('send')
 			setDialog(true)
 		}
-		// if (type === 'release') {
-		// 	setDialogType('release')
-		// 	setDialog(true)
-		// }
+		if (type === 'release') {
+			setDialogType('release')
+			setDialog(true)
+		}
 	}
 
 	// useEffect(() => {
@@ -661,13 +672,13 @@ const JSchemaTask = () => {
 	// 	setFeedback(value)
 	// }
 
-	const lockForm = () => {
+	const changeTaskStatus = (status) => {
 		firebase.firestore()
 			.collection("tasks")
 			.doc(id)
 			.collection("user_editable")
 			.doc("user_editable")
-			.update({ status: 'complete' })
+			.update({ status: status })
 	}
 
 	return (
@@ -677,10 +688,20 @@ const JSchemaTask = () => {
 					state={dialogState}
 					handleClose={handleDialogClose}
 					handleOk={handleOk}
-					showOk={formLocked}
-					title={formLocked ? "Форма успешно отправлена." : "Отправить форму?"}
-					content={formLocked ? "Спасибо" : "Вы собираетесь отправить форму. Это значит, что вы больше не сможете изменять ответы."}
-					dialogFunction={lockForm} />}
+					showOk={formStatus === "sent"}
+					title={formStatus === "sent" ? "Форма успешно отправлена." : "Отправить форму?"}
+					content={formStatus === "sent" ? "Спасибо" : "Вы собираетесь отправить форму. Это значит, что вы больше не сможете изменять ответы."}
+					dialogFunction={()=>{changeTaskStatus('complete')}} />}
+
+					{dialogType === 'release' && <Dialog
+					state={dialogState}
+					handleClose={handleDialogClose}
+					handleOk={handleOk}
+					showOk={formStatus === "released"}
+					title={formStatus === "released" ? "Форма успешно освобождена. Теперь ею сможет заняться кто-то еще." : "Освободить форму?"}
+					content={formStatus === "released" ? "Спасибо" : "Вы собираетесь ОСВОБОДИТЬ форму. Ваши изменения не сохранятся и форма будет передана другому пользователю."}
+					dialogFunction={()=>{changeTaskStatus('released')}} />}
+
 				{/*{dialogType === 'release' && <DialogFeedback*/}
 				{/*	state={dialogState}*/}
 				{/*	feedbackValue={feedbackValue}*/}
@@ -716,7 +737,7 @@ const JSchemaTask = () => {
 				{/*		<div>*/}
 				{/*			<Button variant="outlined" disabled={lockButton} style={{ borderWidth: 2, borderColor: "#003366", color: '#003366', margin: 5 }} onClick={() => saveToFirebase(false)}>Сохранить</Button>*/}
 				{/*			<Button variant="outlined" disabled={lockButton} style={{ borderWidth: 2, borderColor: "red", color: 'red', margin: 5 }} onClick={() => handleDialogOpen('send')}>Отправить</Button>*/}
-				{/*			<Button variant="outlined" disabled={lockButton} style={{ borderWidth: 2, borderColor: "red", color: 'red', margin: 5 }} onClick={() => handleDialogOpen('release')}>Освободить</Button>*/}
+				{/*
 				{/*		</div>}*/}
 				{/*</Grid>*/}
 
@@ -758,13 +779,13 @@ const JSchemaTask = () => {
 					null
 				}
 
-				{mergedForm && gRef ?
+				{mergedForm && gRef && caseStages && taskMetadata && taskMetadata.case_stage_id && caseStages[taskMetadata.case_stage_id] ?
 					<JSchemaForm
 						schema={mergedForm.form_questions}
 						uiSchema={mergedForm.ui_schema}
 						formData={formResponses}
 						fields={{customFileUpload: a => CustomFileUpload({...a, ...{taskID: id}, ...{"currentUserUid": currentUser.uid}})}}
-						disabled={formLocked}
+						disabled={formStatus === "loading" || formStatus === "sent" || formStatus === "released" }
 						onChange={e => {
 							handleFormChange(e)
 						}}
@@ -775,14 +796,41 @@ const JSchemaTask = () => {
 						onBlur={e => {
 							handleBlur(e)
 						}}>
-						{formLocked ?
+						{formStatus === "sent" ?
 							<div>Форма отправлена успешно</div>
 							:
-							<Button variant="outlined" disabled={formLocked} style={{ borderWidth: 2, borderColor: "red", color: 'red', margin: 5 }} onClick={() => handleDialogOpen('send')}>Отправить</Button>
+							null}
+
+						{formStatus === "ready" ? <div>
+								{caseStages[taskMetadata.case_stage_id].additionalButtons && caseStages[taskMetadata.case_stage_id].additionalButtons.includes("release") ?
+									<Button variant="outlined" disabled={formStatus === "loading" || formStatus === "sent" || formStatus === "released"} style={{
+										borderWidth: 2,
+										borderColor: "#003366",
+										color: "#003366",
+										margin: 5
+									}} onClick={() => handleDialogOpen('release')}>Освободить</Button>
+									:
+									null}
+								<Button variant="outlined" disabled={formStatus === "loading" || formStatus === "sent" || formStatus === "released"}
+										style={{
+											borderWidth: 2,
+											borderColor: "red",
+											color: "red",
+											margin: 5}}
+										onClick={() => handleDialogOpen('send')}>Отправить</Button>
+
+
+							</div>
+							:
+							null
 						}
+						{formStatus === "released" ?
+							<div>Вы освободили эту форму и больше не можете ее заполнять.</div>
+							:
+							null}
 					</JSchemaForm>
 						:
-					<p></p>}
+					null}
 
 			</Grid>
 			:
