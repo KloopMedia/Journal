@@ -24,44 +24,63 @@ const Home = () => {
     const classes = useStyles();
     const [token, setToken] = useState(null)
     const { currentUser } = useContext(AuthContext);
+    const [tgId, setTgId] = useState("")
 
     useEffect(() => {
         const makeToken = () => {
             return uuid().toString() + '_' + Date.now()
         }
+        let unsubscribeUser = () => {}
+        let unsubscribeUserPrivate = () => {}
         if (currentUser) {
-            const unsubscribe = firebase.firestore().collection('users').doc(currentUser.uid).onSnapshot(doc => {
-                let oldToken;
-                if (doc.exists && doc.data().tg_token) {
-                    oldToken = doc.data().tg_token
-                }
-                else {
-                    oldToken = false
-                }
-                
-                console.log(oldToken)
-                if (oldToken) {
+            unsubscribeUser = firebase.firestore()
+                .collection('users')
+                .doc(currentUser.uid)
+                .onSnapshot(doc => {
+
+                    let oldToken;
+                    if (doc.exists && doc.data().tg_token) {
+                        oldToken = doc.data().tg_token
+                    } else {
+                        oldToken = false
+                    }
+
                     console.log(oldToken)
-                    let oldDate = parseInt(oldToken.substring(oldToken.indexOf('_') + 1))
-                    let date = moment().diff(oldDate, 'hours')
-                    console.log(date)
-                    if (date > 0) {
+                    if (oldToken) {
+                        console.log(oldToken)
+                        let oldDate = parseInt(oldToken.substring(oldToken.indexOf('_') + 1))
+                        let date = moment().diff(oldDate, 'hours')
+                        console.log(date)
+                        if (date > 0) {
+                            let newToken = makeToken()
+                            firebase.firestore().collection('users').doc(currentUser.uid).update({tg_token: newToken})
+                            setToken(newToken)
+                        } else {
+                            setToken(oldToken)
+                        }
+                    } else {
+                        console.log('no token')
                         let newToken = makeToken()
-                        firebase.firestore().collection('users').doc(currentUser.uid).update({ tg_token: newToken })
+                        firebase.firestore().collection('users').doc(currentUser.uid).update({tg_token: newToken})
                         setToken(newToken)
                     }
-                    else {
-                        setToken(oldToken)
+                })
+            unsubscribeUserPrivate = firebase.firestore()
+                .collection('users')
+                .doc(currentUser.uid)
+                .collection("user_private")
+                .doc("private")
+                .onSnapshot(doc => {
+                    console.log("TGID: ", doc.data().tg_id)
+                    if (doc.exists && "tg_id" in doc.data()) {
+                        console.log("TGID: ", doc.data().tg_id)
+                        setTgId(doc.data().tg_id)
                     }
-                }
-                else {
-                    console.log('no token')
-                    let newToken = makeToken()
-                    firebase.firestore().collection('users').doc(currentUser.uid).update({ tg_token: newToken })
-                    setToken(newToken)
-                }
-            })
-            return () => unsubscribe()
+                })
+        }
+        return () => {
+            unsubscribeUser()
+            unsubscribeUserPrivate()
         }
     }, [currentUser])
 
@@ -90,19 +109,30 @@ const Home = () => {
 
     return (
         currentUser ?
-            <Grid container justify="center" direction="column" alignItems="center" className={classes.root} >
-                <Link variant="h5" align="center" href={"https://kloopmedia.github.io/Journal/#/p/elections_monitoring"}>ФОРМЫ ДЛЯ НАБЛЮДЕНИЯ НА ВЫБОРАХ</Link>
+            <Grid>
+                <Grid container justify="center" direction="column" alignItems="center" className={classes.root}>
+                    <Link variant="h5" align="center"
+                          href={"https://kloopmedia.github.io/Journal/#/p/elections_monitoring"}>ФОРМЫ ДЛЯ НАБЛЮДЕНИЯ НА
+                        ВЫБОРАХ</Link>
+                </Grid>
+                {tgId === "" ?
+                    <Grid container justify="center" direction="column" alignItems="center" className={classes.root}>
+                        <Typography style={{paddingBottom: 10}} variant="h5" align="center">Вы можете связать свой
+                            аккаунт с нашим Телеграм-ботом. Для этого нажмите на ссылку ниже.</Typography>
+                        {token ? <Link variant="h5" href={"https://telegram.me/journal_tg_bot?start=" + token}>Ссылка на
+                                бот</Link>
+                            : <Typography variant="body2" align="center">Если ссылка не создалась в течение 5 секунд,
+                                перезагрузите страницу</Typography>}
+                    </Grid>
+                    :
+                    null}
             </Grid>
-            // <Grid container justify="center" direction="column" alignItems="center" className={classes.root} >
-            //     <Typography style={{ paddingBottom: 10 }} variant="h5" align="center">Вы почти зарегистрировались! Осталось нажать на ссылку ниже.</Typography>
-            //     {token ? <Link variant="h5" href={"https://telegram.me/journal_tg_bot?start=" + token}>Ссылка на бот</Link>
-            //     : <Typography variant="body2" align="center">Если ссылка не создалась в течение 5 секунд, перезагрузите страницу</Typography>}
-            // </Grid>
             :
-            <Grid container direction="column" style={{ padding: 20 }} justify="center">
+            <Grid container direction="column" style={{padding: 20}} justify="center">
                 <Typography align="center" variant="h3">Регистрация</Typography>
-                <br />
-                <Button size="large" color="primary" variant="contained" onClick={signInWithGoogle}>Войти с помощью аккаунта Google</Button>
+                <br/>
+                <Button size="large" color="primary" variant="contained" onClick={signInWithGoogle}>Войти с помощью
+                    аккаунта Google</Button>
             </Grid>
     )
 }

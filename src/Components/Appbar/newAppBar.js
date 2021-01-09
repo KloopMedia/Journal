@@ -109,8 +109,9 @@ function ResponsiveDrawer(props) {
 				.collection("user_private")
 				.doc("private")
 				.onSnapshot( doc => {
-					setUserRanks(doc.data().ranks)
-					console.log("User ranks: ", doc.data().ranks)
+					if(doc.data()) {
+						setUserRanks(doc.data().ranks)
+					}
 				})
 		}
 	}, [currentUser])
@@ -263,7 +264,7 @@ function ResponsiveDrawer(props) {
 							>
 								<Grid container direction="column" alignItems="center" >
 									{messages.length > 0 ? messages.map((message, i) => (
-										<Grid container key={"notification_" + i} className={classes.message} justify="flex-start" style={{ padding: 0 }}>
+										<Grid container key={message.id} className={classes.message} justify="flex-start" style={{ padding: 0 }}>
 											<Typography style={{ flex: 1, padding: 10 }}>{message.title}</Typography>
 											<Button style={{ padding: 10 }} onClick={() => updateFirestoreStatus(message.id)} size="small">скрыть</Button>
 										</Grid>

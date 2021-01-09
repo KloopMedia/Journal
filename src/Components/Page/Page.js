@@ -65,7 +65,7 @@ const Page = () => {
     const [allCases, setAllCases] = useState({})
     const [userTasks, setUserTasks] = useState({})
     const [filteredStages, setFilteredStages] = useState({})
-    const [unlimStages, setUnlimStages] = useState({})
+    //const [unlimStages, setUnlimStages] = useState({})
     const [tabValue, setTabValue] = useState(0)
     const [availableStages, setAvailableStages] = useState({})
     const [availableTasks, setAvailableTasks] = useState({})
@@ -209,7 +209,7 @@ const Page = () => {
     useEffect(() => {
         if (Object.keys(userCases).length > 0) {
             const newFilteredStages = cloneDeep(userCases)
-            let newUnlimStages = {}
+            //let newUnlimStages = {}
             Object.keys(userCases).map(caseID => {
                 Object.keys(userCases[caseID]).map(stageId => {
                     const stage = userCases[caseID][stageId]
@@ -233,20 +233,12 @@ const Page = () => {
                                 console.log("newFilteredStages after delete: ", newFilteredStages)
                             }
                             console.log("userCases: ", userCases)
-                        } else {
-                            if (newUnlimStages[caseID]) {
-                                newUnlimStages[caseID][stageId] = newFilteredStages[caseID][stageId]
-                            } else {
-                                newUnlimStages[caseID] = {}
-                                newUnlimStages[caseID][stageId] = newFilteredStages[caseID][stageId]
-                            }
-                            delete newFilteredStages[caseID][stageId]
-                        }
+                       }
                     }
                 })
             })
             setFilteredStages(newFilteredStages)
-            setUnlimStages(newUnlimStages)
+            //setUnlimStages(newUnlimStages)
         }
     }, [currentUser, userCases, userTasks, id])
 
@@ -350,33 +342,33 @@ const Page = () => {
 
 
     return (<Grid container justify="center" alignItems="center" direction="column">
-        {console.log("pageData: ", pageData)}
-        {console.log("userRanks: ", userRanks)}
-        {console.log("userCases: ", userCases)}
-        {console.log("userTasks: ", userTasks)}
-        {console.log("filteredStages: ", filteredStages)}
-        {console.log("availableStages: ", availableStages)}
-        {console.log("availableTasks: ", availableTasks)}
+        {/*{console.log("pageData: ", pageData)}*/}
+        {/*{console.log("userRanks: ", userRanks)}*/}
+        {/*{console.log("userCases: ", userCases)}*/}
+        {/*{console.log("userTasks: ", userTasks)}*/}
+        {/*{console.log("filteredStages: ", filteredStages)}*/}
+        {/*{console.log("availableStages: ", availableStages)}*/}
+        {/*{console.log("availableTasks: ", availableTasks)}*/}
 
         {/* <Grid>
 				<Button onClick={requestTask}>Получить задание</Button>
 			</Grid> */}
         {Object.keys(userRanksDescriptions).map(rank => (
-            <Typography variant="h5">{userRanksDescriptions[rank].description}</Typography>
+            <Typography variant="h5" key={rank}>{userRanksDescriptions[rank].description}</Typography>
         ))}
         <div className={classes.root}>
-            {Object.keys(unlimStages).map(pCase => (
-                Object.keys(unlimStages[pCase]).map(stage => (
-                    <Grid key={pCase + stage} style={{padding: 10}}>
-                        <TaskCard complete={false}
-                                  stage={unlimStages[pCase][stage]}
-                                  stageID={stage}
-                                  user={currentUser}
-                                  pCase={pCase}
-                                  cardType = "creatableUnlim"/>
-                    </Grid>
-                ))
-            ))}
+            {/*{Object.keys(unlimStages).map(pCase => (*/}
+            {/*    Object.keys(unlimStages[pCase]).map(stage => (*/}
+            {/*        <Grid key={pCase + stage} style={{padding: 10}}>*/}
+            {/*            <TaskCard complete={false}*/}
+            {/*                      stage={unlimStages[pCase][stage]}*/}
+            {/*                      stageID={stage}*/}
+            {/*                      user={currentUser}*/}
+            {/*                      pCase={pCase}*/}
+            {/*                      cardType = "creatableUnlim"/>*/}
+            {/*        </Grid>*/}
+            {/*    ))*/}
+            {/*))}*/}
             <Paper position="static" color="default">
 
                 <Tabs value={tabValue} onChange={handleTabChange} variant="fullWidth" centered
