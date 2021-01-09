@@ -139,7 +139,10 @@ function ResponsiveDrawer(props) {
 	useEffect(() => {
 		let unsubscribe = () => {}
 		if (currentUser) {
-			unsubscribe = firebase.firestore().collection('notifications').where('user_id', 'array-contains', currentUser.uid).onSnapshot(async snap => {
+			unsubscribe = firebase.firestore()
+				.collection('notifications')
+				.where('user_id', 'array-contains', currentUser.uid)
+				.onSnapshot(snap => {
 				console.log(snap.size)
 				let m = []
 				let count = 0
