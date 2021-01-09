@@ -1,5 +1,5 @@
 import logging
-import time
+from time import sleep
 import flask
 import telebot
 import os
@@ -12,6 +12,9 @@ from pprint import pprint
 import json
 import redis
 import strings
+import uuid
+import threading
+from datetime import datetime, time
 
 
 API_TOKEN = os.getenv('JOURNAL_BOT_TOKEN')
@@ -45,11 +48,35 @@ categories = [
     strings.PAYMENT, strings.SCHEDULE, strings.STUDY, strings.MY_SITE,
     strings.TECH_CAT
 ]
+forms = [
+    strings.EMERGENCY_FORM_FILLING,
+    strings.ARRIVAL_TO_POLLING_STATION_FORM,
+    strings.MORNING_FORM,
+    strings.AFTERNOON_FORM,
+    strings.EVENING_FORM,
+    strings.ARRIVAL_AT_HOME
+]
+ranks = ['election_observer_stationary', 'election_observer_mobile']
 
 # Empty webserver index, return nothing, just http 200
 @app.route('/', methods=['GET', 'HEAD'])
 def index():
     return ''
+
+
+@app.route(f'/bot{API_TOKEN}/sendMessage', methods=['GET'])
+def send_message_webhook():
+    try:
+        message = json.dumps(flask.request.args)
+        # redis_db.publish('notifications', message)
+        redis_db.lpush('notifications', message)
+        # return flask.Response(200)
+        return json.dumps({'success': True}), 200, {
+            'ContentType': 'application/json'
+        }
+    except Exception as e:
+        print('send_message_webhook(): ', e)
+        flask.abort(403)
 
 
 @app.route(WEBHOOK_URL_PATH, methods=['POST'])
@@ -73,6 +100,18 @@ def get_string(lang, string):
 
 def get_callback_data(category):
     return category.get('callback_data')
+
+
+def get_case_type(form_callback_data):
+    form = [f for f in forms
+            if f.get('callback_data') == form_callback_data][0]
+    return form.get('case_type')
+
+
+def get_form_from_callback_data(form_callback_data):
+    form = [f for f in forms
+            if f.get('callback_data') == form_callback_data][0]
+    return form
 
 
 def get_text(category, lang='ru'):
@@ -143,9 +182,9 @@ def choose_lang_hadler(message):
                                        callback_data=get_callback_data(lang)))
     markup.add(*buttons)
     send_message(message,
-                     text=get_string('ru', strings.CHOOSE_LANG) + ' / ' +
-                     get_string('kg', strings.CHOOSE_LANG),
-                     reply_markup=markup)
+                 text=get_string('ru', strings.CHOOSE_LANG) + ' / ' +
+                 get_string('kg', strings.CHOOSE_LANG),
+                 reply_markup=markup)
 
 
 @bot.callback_query_handler(
@@ -224,28 +263,32 @@ def ask_question(message):
     if call.data in [get_callback_data(cat) for cat in categories] else False)
 def categories_handler(call):
     try:
-        for cat in categories:
-            if call.data == get_callback_data(cat):
-                user = get_user(call.message.chat.id)
-                if user:
-                    print(user.to_dict())
-                    lang = user.get('interface_lang')
-                    question_dict['category'] = call.data
-                    markup = types.InlineKeyboardMarkup(row_width=2)
-                    buttons = get_buttons(categories, lang)
-                    ask_question_btn = types.InlineKeyboardButton(
-                        text=get_string(lang, strings.ASK_YOUR_OWN_QUESTION),
-                        callback_data=get_callback_data(
-                            strings.ASK_YOUR_OWN_QUESTION))
-                    buttons.append(ask_question_btn)
-                    markup.add(*buttons)
-                    send_message(call.message,
-                                 get_text(cat, lang),
-                                 reply_markup=markup,
-                                 parse_mode='markdown')
-                else:
-                    print(f'no user {call.message.chat.id}')
-                break
+        if call.data == get_callback_data(strings.MY_SITE):
+            get_me_handler(call.message)
+        else:
+            for cat in categories:
+                if call.data == get_callback_data(cat):
+
+                    user = get_user(call.message.chat.id)
+                    if user:
+                        print(user.to_dict())
+                        lang = user.get('interface_lang')
+                        question_dict['category'] = call.data
+                        markup = types.InlineKeyboardMarkup(row_width=2)
+                        buttons = get_buttons(categories, lang)
+                        ask_question_btn = types.InlineKeyboardButton(
+                            text=get_string(lang, strings.ASK_YOUR_OWN_QUESTION),
+                            callback_data=get_callback_data(
+                                strings.ASK_YOUR_OWN_QUESTION))
+                        buttons.append(ask_question_btn)
+                        markup.add(*buttons)
+                        send_message(call.message,
+                                     get_text(cat, lang),
+                                     reply_markup=markup,
+                                     parse_mode='markdown')
+                    else:
+                        print(f'no user {call.message.chat.id}')
+                    break
     except Exception as e:
         print('method: categories_handler()', e)
 
@@ -319,14 +362,169 @@ def get_me_handler(message):
     if is_registered(message.chat.id):
         user = get_user(message.chat.id).to_dict()
         tg_me_text = user.get("tg_me_text")
-        show_info = f'{user.get("username")}\
-                \n{user.get("email")}'
+        show_info = f'{user.get("email")}'
         if tg_me_text:
             show_info += f'\n{tg_me_text}'
         send_message(message, show_info)
     else:
         send_message(message,
                      get_string('ru', strings.YOU_NEED_TO_REGISTER))
+
+
+@bot.message_handler(commands=['create_form'])
+def create_form_handler(message):
+    if is_registered(message.chat.id):
+        user = get_user(message.chat.id)
+        if is_election_observer(user):
+            # lang = user.to_dict().get('interface_lang')
+            lang = 'ru'
+            markup = types.InlineKeyboardMarkup(row_width=1)
+            buttons = get_buttons(forms, lang)
+            markup.add(*buttons)
+            send_message(message,
+                         get_string(lang, strings.CHOOSE_FORM),
+                         reply_markup=markup)
+        else:
+            send_message(message, 'you are not an observer')
+
+    else:
+        send_message(message,
+                     get_string('ru', strings.YOU_NEED_TO_REGISTER))
+
+
+@bot.callback_query_handler(
+    func=lambda call: True
+    if call.data in [get_callback_data(form) for form in forms] else False)
+def forms_handler(call):
+    try:
+        user = get_user(call.message.chat.id)
+        if user:
+            can_send = can_send_form(call.data, user)
+            # check for True because it can return an error mesage
+            if can_send is True:
+                callback_id = send_form(
+                    user, get_case_type(call.data),
+                    call.data)
+                create_form_url(callback_id, call.message)
+            else:
+                send_message(
+                    call.message,
+                    f'{get_string("ru", get_form_from_callback_data(call.data))}\n{can_send}'
+                )
+    except Exception as e:
+        print('method: categories_handler()', e)
+
+
+def can_send_form(form, user):
+    result = False
+    user_ranks = get_ranks(user)
+    if form == get_callback_data(strings.EMERGENCY_FORM_FILLING):
+        result = True
+    elif form == get_callback_data(strings.ARRIVAL_TO_POLLING_STATION_FORM):
+        if 'election_observer_mobile' in user_ranks:
+            result = True
+        elif 'election_observer_stationary' in user_ranks:
+            result = common_check(user,
+                                  strings.ARRIVAL_TO_POLLING_STATION_FORM,
+                                  True)
+    elif form == get_callback_data(strings.MORNING_FORM):
+        result = common_check(user, strings.MORNING_FORM,
+                              any([rank in ranks for rank in user_ranks]))
+    elif form == get_callback_data(strings.AFTERNOON_FORM):
+        result = common_check(user, strings.AFTERNOON_FORM,
+                              'election_observer_stationary' in user_ranks)
+    elif form == get_callback_data(strings.EVENING_FORM):
+        result = common_check(user, strings.EVENING_FORM,
+                              any([rank in ranks for rank in user_ranks]))
+    elif form == get_callback_data(strings.ARRIVAL_AT_HOME):
+        result = common_check(user, strings.ARRIVAL_AT_HOME,
+                              any([rank in ranks for rank in user_ranks]))
+    return result
+
+
+def common_check(user, form, ranks_check):
+    result = False
+    if ranks_check:
+        if is_in_time_range(form.get('timerange')):
+            if not is_form_submitted(user, form):
+                result = True
+            else:
+                result = get_string('ru', strings.YOU_ALREADY_SUBMITTED_THIS_FORM)
+        else:
+            result = get_string('ru', strings.NOT_IN_TIME_RANGE)
+    else:
+        result = get_string('ru', strings.YOU_DONT_HAVE_RIGHT_RANK)
+    return result
+
+
+def is_form_submitted(user, form):
+    result = db.collection(f'tasks')\
+                .where('case_stage_id', '==', get_callback_data(form))\
+                .where('assigned_users', 'array_contains', user.id)\
+                .get()
+    return result
+
+
+def is_in_time_range(timerange):
+    start = time(int(timerange.split('-')[0].split(':')[0]),
+                 int(timerange.split('-')[0].split(':')[1]))
+    end = time(int(timerange.split('-')[1].split(':')[0]),
+               int(timerange.split('-')[1].split(':')[1]))
+    now = time(datetime.now().hour, datetime.now().minute)
+    """Return true if x is in the range [start, end]"""
+    if start <= end:
+        return start <= now <= end
+    else:
+        return start <= now or now <= end
+
+
+def send_form(user, case_type, case_stage_id):
+    callback_id = str(uuid.uuid1())
+    db.collection(f'task_requests/{user.id}/requests')\
+        .add({'status': 'pending',
+              'user': user.id,
+              'case_type': case_type,
+              'case_stage_id': case_stage_id,
+              'callbackId': callback_id})
+    return callback_id
+
+
+def create_form_url(callback_id, message):
+    base_url = 'https://kloopmedia.github.io/Journal/#/t'
+    # Create an Event for notifying main thread.
+    callback_done = threading.Event()
+
+    # Create a callback on_snapshot function to capture changes
+    def on_snapshot(doc_snapshot, changes, read_time):
+        for doc in doc_snapshot:
+            print(f'Received document snapshot: {doc.id}')
+            form_title = get_string(
+                "ru",
+                get_form_from_callback_data(
+                    doc.to_dict().get("case_stage_id")))
+            send_message(
+                message,
+                f'{form_title}\n{base_url}/{doc.to_dict().get("case_id")}')
+        callback_done.set()
+
+    doc_ref = db.collection(u'tasks').where('callbackId', '==',
+                                            callback_id).limit(1)
+    # Watch the document
+    doc_watch = doc_ref.on_snapshot(on_snapshot)
+    sleep(3)
+    doc_watch.unsubscribe()
+
+
+def is_election_observer(user):
+    return any([
+        rank in ['election_observer_stationary', 'election_observer_mobile']
+        for rank in get_ranks(user)
+    ])
+
+
+def get_ranks(user):
+    return db.document(user.reference.path + '/user_private/private')\
+            .get().to_dict().get('ranks')
 
 
 @bot.message_handler(content_types=['photo', 'video'])
@@ -502,7 +700,7 @@ def send_message(message,
 
 
 bot.remove_webhook()
-time.sleep(0.1)
+sleep(0.1)
 bot.set_webhook(url=WEBHOOK_URL_BASE + WEBHOOK_URL_PATH)
 
 if __name__ == '__main__':

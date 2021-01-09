@@ -22,8 +22,7 @@ SUCCESSFULLY_REGISTERED = {
 '''
 }
 YOU_ARE_ALREADY_REGISTERED = {
-    'ru':
-    '''
+    'ru': '''
 Поздравляем, вы уже зарегистрированы в системе.
 Этот бот поможет нам держать с вами связь.
 Наш первый созвон для наблюдателей на выборах будет 14-го декабря 2020 в 10:00.
@@ -33,8 +32,7 @@ YOU_ARE_ALREADY_REGISTERED = {
 Чтобы снова вывести это сообщение, нажмите /start.
 Чтобы увидеть другие опции, наберите /
 ''',
-    'kg':
-    '''
+    'kg': '''
 Куттуктайбыз, сиз каттодон ийгиликтүү өттүңүз.
 Бул бот сиз менен байланышты болууну камсыз кылат.
 Байкоочулар менен биринчи сүйлөшүүбүз 2020-жылдын 14-декабрь күнү саат 10:00 дө Зумда төмөнкү шилтеме аркылуу өтөт https://zoom.us/j/91261010057?pwd=YVlWUXQ3dUJHTEdCUjZLUENnRENLQT09
@@ -62,6 +60,7 @@ https://kloopmedia.github.io/Journal?rank=election_observer#/
 '''
 }
 CHOOSE_CATEGORY = {'ru': 'Выберите категорию', 'kg': 'Категорияны тандаңыз'}
+CHOOSE_FORM = {'ru': 'Выберите форму', 'kg': 'Форманы тандаңыз'}
 YOUR_QUESTION = {'ru': 'Напишите ваш вопрос', 'kg': 'Сурооңузду жазыңыз'}
 SOMETHING_WENT_WRONG = {
     'ru': 'Что-то пошло не так',
@@ -114,6 +113,56 @@ ASK_YOUR_OWN_QUESTION = {
     'ru': 'Задать свой вопрос',
     'kg': 'Жеке сурооңузду бериңиз',
     'callback_data': 'ask_own_question'
+}
+AFTERNOON_FORM = {
+    'ru': 'Обеденная форма',
+    'kg': '',
+    'callback_data': 'afternoon_form',
+    'case_type': 'electionForms',
+    'timerange': '07:00-09:00'
+}
+ARRIVAL_AT_HOME = {
+    'ru': 'Форма по прибытию домой',
+    'kg': '',
+    'callback_data': 'arrival_at_home',
+    'case_type': 'electionForms',
+    'timerange': '15:00-18:00'
+}
+ARRIVAL_TO_POLLING_STATION_FORM = {
+    'ru': 'Форма по прибытию на участок',
+    'kg': '',
+    'callback_data': 'arrival_to_polling_station_form',
+    'case_type': 'electionForms',
+    'timerange': '01:00-02:00'
+}
+EVENING_FORM = {
+    'ru': 'Вечернаяя форма',
+    'kg': '',
+    'callback_data': 'evening_form',
+    'case_type': 'electionForms',
+    'timerange': '15:00-18:00'
+}
+MORNING_FORM = {
+    'ru': 'Утренняя форма',
+    'kg': '',
+    'callback_data': 'morning_form',
+    'case_type': 'electionForms',
+    'timerange': '02:00-04:00'
+}
+EMERGENCY_FORM_FILLING = {
+    'ru': 'Экстренная форма',
+    'kg': '',
+    'callback_data': 'emergency_form_filling',
+    'case_type': 'Нарушения'
+}
+YOU_ALREADY_SUBMITTED_THIS_FORM = {
+    'ru': 'Вы уже отправляли эту форму',
+    'kg': ''
+}
+NOT_IN_TIME_RANGE = {'ru': 'Время для этой формы ещё не пришло или уже истекло', 'kg': ''}
+YOU_DONT_HAVE_RIGHT_RANK = {
+    'ru': 'Ваш ранк не позволяет отправить эту форму',
+    'kg': ''
 }
 CHOOSE_LANG = {'ru': 'Выберите язык', 'kg': 'Тилди тантаңыз'}
 LANGUAGE_CHANGED = {'ru': 'Язык изменен', 'kg': 'Тил алмаштырылды'}
