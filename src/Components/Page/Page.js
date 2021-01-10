@@ -11,6 +11,8 @@ import Tabs from "@material-ui/core/Tabs";
 import Tab from "@material-ui/core/Tab";
 import TaskCard from "../Tasks/JSchemaCard";
 import { cloneDeep } from "lodash"
+import CustomFileUpload from "../form/CustomFileUpload";
+import JSchemaForm from "@rjsf/bootstrap-4";
 
 function TabPanel(props) {
     const {children, value, index, ...other} = props;
@@ -68,8 +70,11 @@ const Page = () => {
     //const [unlimStages, setUnlimStages] = useState({})
     const [tabValue, setTabValue] = useState(0)
     const [availableStages, setAvailableStages] = useState({})
+    const [bgStages, setBgStages] = useState({})
+    const [filterFormData, setFilterFormData] = useState({})
     const [availableTasks, setAvailableTasks] = useState({})
     const [userRanksDescriptions, setUserRanksDescriptions] = useState({})
+    const [filterSettings, setFilterSettings] = useState(()=>{})
 
 
 	useEffect(() => {
@@ -149,6 +154,12 @@ const Page = () => {
                         simpleStateFirebaseUpdate(snapshot, setAvailableStages)
                     })
 
+                casesPath.doc(pageData.caseWithSelectableTasks)
+                    .collection("stages")
+                    .onSnapshot(snapshot => {
+                        simpleStateFirebaseUpdate(snapshot, setBgStages)
+                    })
+
                 firebase.firestore()
                     .collection("tasks")
                     .where("case_type", "==", pageData.caseWithSelectableTasks)
@@ -165,6 +176,45 @@ const Page = () => {
         }
     }, [currentUser, pageData, userRanks, id])
 
+
+    useEffect(() => {
+        let fs = () => {}
+        if (pageData && Object.entries(pageData).length > 0 && userRanks.length > 0 && pageData.caseWithSelectableTasks) {
+
+            if (filterFormData && filterFormData.region && filterFormData.region.region){
+                setAvailableTasks({})
+                fs = firebase.firestore()
+                    .collection("tasks")
+                    .where("case_type", "==", pageData.caseWithSelectableTasks)
+                    .where("assigned_users", "==", [])
+                    .where("available", "==", true)
+                    .where("is_complete", "==", false)
+                    .where("ranks_read", "array-contains-any", userRanks)
+                    .where("cardData.emergency_form_filling.region.region", "==", filterFormData.region.region)
+                    .orderBy('created_date', 'desc')
+                    .limit(25)
+                    .onSnapshot(snapshot => {
+                        simpleStateFirebaseUpdate(snapshot, setAvailableTasks)
+                    })
+
+            } else {
+                setAvailableTasks({})
+                 fs = firebase.firestore()
+                    .collection("tasks")
+                    .where("case_type", "==", pageData.caseWithSelectableTasks)
+                    .where("assigned_users", "==", [])
+                    .where("available", "==", true)
+                    .where("is_complete", "==", false)
+                    .where("ranks_read", "array-contains-any", userRanks)
+                    .orderBy('created_date', 'desc')
+                    .limit(25)
+                    .onSnapshot(snapshot => {
+                        simpleStateFirebaseUpdate(snapshot, setAvailableTasks)
+                    })
+            }
+        }
+        return (fs)
+    }, [currentUser, pageData, userRanks, id, filterFormData])
 
     const complexStateFirebaseUpdate = (snapshot, setFunction, subState) => {
         snapshot.docChanges().forEach(change => {
@@ -342,6 +392,42 @@ const Page = () => {
         return displayedTasks
     }
 
+    const showFilters = (stages, bgStages, formData, handleFormChange) => {
+        if (Object.keys(stages).length === 1 &&
+            stages[Object.keys(stages)[0]] &&
+            stages[Object.keys(stages)[0]].filters &&
+            Object.keys(stages[Object.keys(stages)[0]].filters).length > 0 &&
+            Object.keys(bgStages).length > 0
+        ) {
+            const stageID = Object.keys(stages)[0]
+            const stage = stages[stageID]
+            const filters = stage.filters
+            const formQuestions = {properties: {}}
+            let formUI = {}
+            Object.keys(filters).forEach(stageFilter => {
+                Object.keys(filters[stageFilter]).forEach(filterQuestion => {
+                    formQuestions.properties[filterQuestion] = bgStages[stageFilter].end.properties[filterQuestion]
+                    console.log("bgStages: ", bgStages)
+                    formUI[filterQuestion] = bgStages[stageFilter].end_ui_schema[filterQuestion]
+                })
+            })
+            return (
+                <JSchemaForm
+                    schema={formQuestions}
+                    uiSchema={formUI}
+                    formData={formData}
+                    onChange={e => {
+							handleFormChange(e)
+						}}
+                > </JSchemaForm>
+            )
+        } else return null
+    }
+
+    const handleFilterFormChange = (e) => {
+	    setFilterFormData(e.formData)
+        console.log("FilterFormChange: ", e.formData)
+    }
 
 
     const handleTabChange = (event, newValue) => {
@@ -417,6 +503,7 @@ const Page = () => {
         {(Object.keys(availableTasks).length > 0 && Object.keys(availableStages).length > 0) ?
         <TabPanel value={tabValue} index={2}>
             {console.log("availableTasks: ", availableTasks)}
+            {showFilters(availableStages, bgStages, filterFormData, handleFilterFormChange)}
             {displayTasks(availableTasks, availableStages, false, "selectable", false)}
         </TabPanel>
         :
