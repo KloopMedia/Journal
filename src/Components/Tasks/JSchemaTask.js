@@ -180,7 +180,7 @@ const JSchemaTask = () => {
 	}, [backgroundTasks, backgroundTaskForms, caseStages])
 
 	useEffect(() => {
-		if (Object.keys(formResponses).length > 0 && Object.keys(mergedForm).length > 0 && formStatus === "loading") {
+		if (Object.keys(mergedForm).length > 0 && formStatus === "loading") {
 			setFormStatus("ready")
 		}
 	}, [formResponses, mergedForm])
