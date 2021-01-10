@@ -90,6 +90,23 @@ const JSchemaTaskCard = (props) => {
 		})
 	}
 
+	const displayJSON = (cardData) => {
+		return Object.keys(cardData).map(stage => {
+			console.log("STAGE: ", stage)
+			return Object.keys(cardData[stage]).map(response => {
+				console.log("RESPONSE: ", response)
+				if (response === "attachedFiles"){
+					console.log("FILES: ")
+					return <div key={stage+response}>Files</div>
+				} else return (
+					<typography variant="body2" component="p" key={stage+response}>
+						{console.log("TEXT: ", cardData[stage][response])}
+						{JSON.stringify(cardData[stage][response], null, 2)}
+					</typography>)
+			})
+		})
+	}
+
 	return (
 		<Card key={id} className={classes.root} style={{background: cardColor}}>
 			<CardContent>
@@ -106,7 +123,8 @@ const JSchemaTaskCard = (props) => {
 				</Typography>
 				<Typography variant="body2" component="p">
 					{(cardType==="selectable" && task && task.cardData) ?
-						JSON.stringify(task.cardData, null, 2)
+						displayJSON(task.cardData)
+						//JSON.stringify(task.cardData, null, 2)
 						:
 						"Задание: " + stage.description}
 				</Typography>
