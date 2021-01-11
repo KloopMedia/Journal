@@ -122,7 +122,7 @@ const JSchemaTaskCard = (props) => {
 					#{id}
 				</Typography>
 				<Typography variant="body2" component="p">
-					{(cardType==="selectable" && task && task.cardData) ?
+					{(task && task.cardData && (cardType==="selectable" || (stage && stage.showCard)) ) ?
 						displayJSON(task.cardData)
 						//JSON.stringify(task.cardData, null, 2)
 						:
