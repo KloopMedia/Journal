@@ -10,7 +10,7 @@ import { Redirect, useHistory } from 'react-router';
 import { Box, Grid } from '@material-ui/core';
 import firebase from "../../util/Firebase";
 import { v4 as uuidv4 } from 'uuid';
-import {CircularProgress} from "@material-ui/core";
+import { CircularProgress } from "@material-ui/core";
 
 const useStyles = makeStyles({
 	root: {
@@ -45,6 +45,10 @@ const JSchemaTaskCard = (props) => {
 		}
 	}
 
+	const handleOpenOld = () => {
+		history.push("/tasks/" + id)
+	}
+
 	const sendCallbackRequest = () => {
 		setWaiting(true)
 		let callback = ""
@@ -70,37 +74,37 @@ const JSchemaTaskCard = (props) => {
 				case_stage_id: stageID,
 				[callbackName]: callback
 			}).then((doc) => {
-			const unsubscribe = firebase.firestore()
-				.collection("tasks")
-				.where("assigned_users", "array-contains", user.uid)
-				.where(callbackType, "==", callback)
-				.onSnapshot(snapshot => {
-					snapshot.docChanges().forEach(change => {
-						if (change.type === "added") {
-							if (change.doc.id) {
-								//setNewTaskId(change.doc.id)
-								//setRedirect(true)
-								unsubscribe()
-								history.push("/t/" + change.doc.id)
+				const unsubscribe = firebase.firestore()
+					.collection("tasks")
+					.where("assigned_users", "array-contains", user.uid)
+					.where(callbackType, "==", callback)
+					.onSnapshot(snapshot => {
+						snapshot.docChanges().forEach(change => {
+							if (change.type === "added") {
+								if (change.doc.id) {
+									//setNewTaskId(change.doc.id)
+									//setRedirect(true)
+									unsubscribe()
+									history.push("/t/" + change.doc.id)
+								}
 							}
-						}
+						})
 					})
-				})
 
-		})
+			})
 	}
 
 	const displayJSON = (cardData) => {
 		return Object.keys(cardData).map(stage => {
-			console.log("STAGE: ", stage)
+			// console.log("STAGE: ", stage)
 			return Object.keys(cardData[stage]).map(response => {
-				console.log("RESPONSE: ", response)
-				if (response === "attachedFiles"){
-					console.log("FILES: ")
-					return <div key={stage+response}>Files</div>
+				// console.log("RESPONSE: ", response)
+				if (response === "attachedFiles") {
+					// console.log("FILES: ")
+					return <div key={stage + response}>Files</div>
 				} else return (
-					<typography variant="body2" component="p" key={stage+response}>
-						{console.log("TEXT: ", cardData[stage][response])}
+					<typography variant="body2" component="p" key={stage + response}>
+						{/* {console.log("TEXT: ", cardData[stage][response])} */}
 						{JSON.stringify(cardData[stage][response], null, 2)}
 					</typography>)
 			})
@@ -108,7 +112,7 @@ const JSchemaTaskCard = (props) => {
 	}
 
 	return (
-		<Card key={id} className={classes.root} style={{background: cardColor}}>
+		<Card key={id} className={classes.root} style={{ background: cardColor }}>
 			<CardContent>
 				<Box display="flex" justifyContent="space-between" alignItems="center">
 					<Typography variant="h6">
@@ -122,7 +126,7 @@ const JSchemaTaskCard = (props) => {
 					#{id}
 				</Typography>
 				<Typography variant="body2" component="p">
-					{(task && task.cardData && (cardType==="selectable" || (stage && stage.showCard)) ) ?
+					{(task && task.cardData && (cardType === "selectable" || (stage && stage.showCard))) ?
 						displayJSON(task.cardData)
 						//JSON.stringify(task.cardData, null, 2)
 						:
@@ -131,9 +135,12 @@ const JSchemaTaskCard = (props) => {
 			</CardContent>
 			<CardActions>
 				{waiting ?
-					<CircularProgress/>
+					<CircularProgress />
 					:
-					<Button size="small" onClick={handleOpen}>{(cardType === "creatableUnlim") ? "СОЗДАТЬ НОВУЮ ФОРМУ" : "Открыть"}</Button>
+					<Grid>
+						<Button size="small" onClick={handleOpen}>{(cardType === "creatableUnlim") ? "СОЗДАТЬ НОВУЮ ФОРМУ" : "Открыть"}</Button>
+						<Button size="small" onClick={handleOpenOld}>Открыть (Old)</Button>
+					</Grid>
 				}
 			</CardActions>
 		</Card>

@@ -3,9 +3,9 @@ import firebase, { signInWithGoogle } from '../../util/Firebase'
 import { AuthContext } from "../../util/Auth";
 import { Redirect, useParams } from 'react-router';
 import Box from "@material-ui/core/Box";
-import {Grid, Typography} from "@material-ui/core";
+import { Grid, Typography } from "@material-ui/core";
 import PropTypes from "prop-types";
-import {makeStyles} from "@material-ui/core/styles";
+import { makeStyles } from "@material-ui/core/styles";
 import Paper from "@material-ui/core/Paper";
 import Tabs from "@material-ui/core/Tabs";
 import Tab from "@material-ui/core/Tab";
@@ -13,9 +13,10 @@ import TaskCard from "../Tasks/JSchemaCard";
 import { cloneDeep } from "lodash"
 import CustomFileUpload from "../form/CustomFileUpload";
 import JSchemaForm from "@rjsf/bootstrap-4";
+import Case from '../Cases/Case'
 
 function TabPanel(props) {
-    const {children, value, index, ...other} = props;
+    const { children, value, index, ...other } = props;
 
     return (
         <div
@@ -57,11 +58,11 @@ const useStyles = makeStyles({
 
 const Page = () => {
     const { currentUser } = useContext(AuthContext);
-	const { id } = useParams();
+    const { id } = useParams();
 
-	const classes = useStyles()
+    const classes = useStyles()
 
-	const [pageData, setPageData] = useState({})
+    const [pageData, setPageData] = useState({})
     const [userRanks, setUserRanks] = useState([])
     const [userCases, setUserCases] = useState({})
     const [allCases, setAllCases] = useState({})
@@ -74,13 +75,13 @@ const Page = () => {
     const [filterFormData, setFilterFormData] = useState({})
     const [availableTasks, setAvailableTasks] = useState({})
     const [userRanksDescriptions, setUserRanksDescriptions] = useState({})
-    const [filterSettings, setFilterSettings] = useState(()=>{})
+    const [filterSettings, setFilterSettings] = useState(() => { })
 
 
-	useEffect(() => {
-		console.log("Page id: ", id)
+    useEffect(() => {
+        console.log("Page id: ", id)
         console.log("Current user: ", currentUser)
-        let unsubscribe = () => {}
+        let unsubscribe = () => { }
         if (currentUser) {
             unsubscribe = firebase
                 .firestore()
@@ -95,9 +96,9 @@ const Page = () => {
     }, [currentUser, id])
 
     useEffect(() => {
-		console.log("Page id: ", id)
-        console.log("Current user: ", currentUser)
-        let unsubscribe = () => {}
+        // console.log("Page id: ", id)
+        // console.log("Current user: ", currentUser)
+        let unsubscribe = () => { }
         if (currentUser && pageData && pageData.ranks) {
             unsubscribe = firebase
                 .firestore()
@@ -107,7 +108,7 @@ const Page = () => {
                 .doc("private")
                 .onSnapshot(doc => {
                     setUserRanks(intersection(doc.data().ranks, pageData.ranks))
-                    console.log("User ranks: ", doc.data().ranks)
+                    // console.log("User ranks: ", doc.data().ranks)
                 })
         }
         return unsubscribe
@@ -122,6 +123,7 @@ const Page = () => {
                 .collection("cases")
 
             pageData.cases.map(pCase => {
+                console.log("PCASE", pCase)
                 casesPath.doc(pCase)
                     .collection("stages")
                     .where("ranks_write", "array-contains-any", userRanks)
@@ -134,10 +136,8 @@ const Page = () => {
                     .onSnapshot(snapshot => {
                         complexStateFirebaseUpdate(snapshot, setAllCases, pCase)
                     })
-
-
             })
-
+            console.log("ALLCASES", allCases)
             firebase.firestore()
                 .collection("tasks")
                 .where("assigned_users", "array-contains", currentUser.uid)
@@ -178,28 +178,51 @@ const Page = () => {
 
 
     useEffect(() => {
-        let fs = () => {}
+        let fs = () => { }
         if (pageData && Object.entries(pageData).length > 0 && userRanks.length > 0 && pageData.caseWithSelectableTasks) {
-
-            if (filterFormData && filterFormData.region && filterFormData.region.region){
+            console.log("filtersData", filterFormData)
+            if (Object.keys(filterFormData).length !== 0) {
+                const stages = availableStages
+                const stageID = Object.keys(stages)[0]
+                const stage = stages[stageID]
+                const filters = stage.filters
+                filters.emergency_form_filling['violationType'] = { violationType: '==' }
+                filters.emergency_form_filling['violationTime'] = '=='
+                console.log("filters", filters)
+                console.log("filtersData", filterFormData)
                 setAvailableTasks({})
-                fs = firebase.firestore()
+                let collection = firebase.firestore()
                     .collection("tasks")
-                    .where("case_type", "==", pageData.caseWithSelectableTasks)
+                let query = collection.where("case_type", "==", pageData.caseWithSelectableTasks)
                     .where("assigned_users", "==", [])
                     .where("available", "==", true)
                     .where("is_complete", "==", false)
                     .where("ranks_read", "array-contains-any", userRanks)
-                    .where("cardData.emergency_form_filling.region.region", "==", filterFormData.region.region)
-                    .orderBy('created_date', 'desc')
-                    .limit(25)
-                    .onSnapshot(snapshot => {
-                        simpleStateFirebaseUpdate(snapshot, setAvailableTasks)
-                    })
 
+                Object.keys(filters).forEach(stageFilter => {
+                    Object.keys(filters[stageFilter]).forEach(filterQuestion => {
+                        console.log(stageFilter, filterQuestion)
+                        if (filterFormData[filterQuestion] && filterFormData[filterQuestion][filterQuestion]) {
+                            console.log('filters3', filterFormData[filterQuestion][filterQuestion], filters[stageFilter][filterQuestion][filterQuestion])
+                            query = query.where(`cardData.${stageFilter}.${filterQuestion}.${filterQuestion}`, filters[stageFilter][filterQuestion][filterQuestion], filterFormData[filterQuestion][filterQuestion])
+                        }
+                        else if (filterFormData[filterQuestion] && Object.keys(filterFormData[filterQuestion]).length > 0 && !filterFormData[filterQuestion][filterQuestion]) {
+                            console.log('filters4', filterFormData[filterQuestion], filters[stageFilter][filterQuestion])
+                            query = query.where(`cardData.${stageFilter}.${filterQuestion}`, filters[stageFilter][filterQuestion], filterFormData[filterQuestion])
+                        }
+                    })
+                })
+                // query = query.where('cardData.emergency_form_filling.violationType.violationType', '==', 'Нарушения в ходе голосования / Добуш берүү убагындагы мыйзам бузуулар')
+                // query = query.where('cardData.emergency_form_filling.region.region', '==', 'г. Бишкек')
+                // query = query.where('cardData.emergency_form_filling.violationTime', '==', '12:00-13:00')
+
+                query = query.orderBy('created_date', 'desc').limit(25).onSnapshot(snapshot => {
+                    simpleStateFirebaseUpdate(snapshot, setAvailableTasks)
+                })
+                fs = query
             } else {
                 setAvailableTasks({})
-                 fs = firebase.firestore()
+                fs = firebase.firestore()
                     .collection("tasks")
                     .where("case_type", "==", pageData.caseWithSelectableTasks)
                     .where("assigned_users", "==", [])
@@ -225,7 +248,7 @@ const Page = () => {
                         newState[subState] = {}
                     }
                     newState[subState][change.doc.id] = change.doc.data()
-                    console.log("User stages: ", newState)
+                    // console.log("User stages: ", newState)
                     return newState
                 })
             }
@@ -243,7 +266,7 @@ const Page = () => {
         snapshot.docChanges().forEach(change => {
             if (change.type === "added" || change.type === "modified") {
                 setFunction(prevState => (
-                    {...prevState, [change.doc.id]: change.doc.data()}
+                    { ...prevState, [change.doc.id]: change.doc.data() }
                 ))
             }
             if (change.type === "removed") {
@@ -273,21 +296,21 @@ const Page = () => {
                             if (setIntersection.length > 0) {
                                 const maxTasksPerStage = calculatemaxTasksPerStage(setIntersection, stage.rank_limit_number)
                                 const tasksPerStage = countTasksPerStage(stageId, userTasks)
-                                console.log("caseID: ", caseID)
-                                console.log("stageId: ", stageId)
-                                console.log("maxTasksPerStage: ", maxTasksPerStage)
-                                console.log("tasksPerStage: ", tasksPerStage)
+                                // console.log("caseID: ", caseID)
+                                // console.log("stageId: ", stageId)
+                                // console.log("maxTasksPerStage: ", maxTasksPerStage)
+                                // console.log("tasksPerStage: ", tasksPerStage)
                                 // if (tasksPerStage >= maxTasksPerStage) {
                                 //     console.log("newFilteredStages: ", newFilteredStages)
                                 //     delete newFilteredStages[caseID][stageId]
                                 //     console.log("newFilteredStages after delete: ", newFilteredStages)
                                 // }
                                 if (tasksPerStage >= maxTasksPerStage) {
-                                    console.log("newFilteredStages: ", newFilteredStages)
+                                    // console.log("newFilteredStages: ", newFilteredStages)
                                     delete newFilteredStages[caseID][stageId]
-                                    console.log("newFilteredStages after delete: ", newFilteredStages)
+                                    // console.log("newFilteredStages after delete: ", newFilteredStages)
                                 }
-                                console.log("userCases: ", userCases)
+                                // console.log("userCases: ", userCases)
                             }
                         }
                     } else {
@@ -302,7 +325,7 @@ const Page = () => {
 
 
     const countTasksPerStage = (stage, tasks) => {
-	    let occurrences = 0
+        let occurrences = 0
         Object.values(tasks).map(task => {
             if (task.case_stage_id === stage) {
                 occurrences++
@@ -322,7 +345,7 @@ const Page = () => {
     }
 
     const intersection = (arrA, arrB) => {
-	    const setA = new Set(arrA)
+        const setA = new Set(arrA)
         const setB = new Set(arrB)
         let _intersection = new Set()
         for (let elem of setB) {
@@ -344,7 +367,7 @@ const Page = () => {
                     snapshot.docChanges().forEach(change => {
                         if (change.type === "added" || change.type === "modified") {
                             setUserRanksDescriptions(prevState => {
-                                return {...prevState, [change.doc.id]: change.doc.data()}
+                                return { ...prevState, [change.doc.id]: change.doc.data() }
                             })
                         }
                         if (change.type === "removed") {
@@ -375,9 +398,9 @@ const Page = () => {
             }
 
             if (stage && tasks[taskId].is_complete === complete) {
-                console.log("TASKS: ", tasks[taskId])
-                console.log("userStages: ", userCases)
-                return <Grid key={taskId} style={{padding: 10}}>
+                // console.log("TASKS: ", tasks[taskId])
+                // console.log("userStages: ", userCases)
+                return <Grid key={taskId} style={{ padding: 10 }}>
                     <TaskCard
                         stage={stage}
                         stageID={stageId}
@@ -385,7 +408,7 @@ const Page = () => {
                         task={tasks[taskId]}
                         user={currentUser}
                         pCase={caseType}
-                        id={taskId}/>
+                        id={taskId} />
                 </Grid>
             }
         })
@@ -402,13 +425,18 @@ const Page = () => {
             const stageID = Object.keys(stages)[0]
             const stage = stages[stageID]
             const filters = stage.filters
-            const formQuestions = {properties: {}}
+            filters.emergency_form_filling['violationType'] = { violationType: '==' }
+            filters.emergency_form_filling['violationTime'] = '=='
+            const formQuestions = { properties: {} }
             let formUI = {}
             Object.keys(filters).forEach(stageFilter => {
                 Object.keys(filters[stageFilter]).forEach(filterQuestion => {
-                    formQuestions.properties[filterQuestion] = bgStages[stageFilter].end.properties[filterQuestion]
-                    console.log("bgStages: ", bgStages)
-                    formUI[filterQuestion] = bgStages[stageFilter].end_ui_schema[filterQuestion]
+                    let endProps = bgStages[stageFilter].end.properties[filterQuestion]
+                    delete endProps.dependencies
+                    formQuestions.properties[filterQuestion] = endProps
+                    // console.log("bgStages: ", bgStages)
+                    formUI[filterQuestion] = { "ui:widget": "select" }
+
                 })
             })
             return (
@@ -417,16 +445,16 @@ const Page = () => {
                     uiSchema={formUI}
                     formData={formData}
                     onChange={e => {
-							handleFormChange(e)
-						}}
+                        handleFormChange(e)
+                    }}
                 > </JSchemaForm>
             )
         } else return null
     }
 
     const handleFilterFormChange = (e) => {
-	    setFilterFormData(e.formData)
-        console.log("FilterFormChange: ", e.formData)
+        setFilterFormData(e.formData)
+        // console.log("FilterFormChange: ", e.formData)
     }
 
 
@@ -436,21 +464,35 @@ const Page = () => {
 
 
     return (<Grid container justify="center" alignItems="center" direction="column">
-        {/*{console.log("pageData: ", pageData)}*/}
-        {/*{console.log("userRanks: ", userRanks)}*/}
-        {/*{console.log("userCases: ", userCases)}*/}
-        {/*{console.log("userTasks: ", userTasks)}*/}
-        {/*{console.log("filteredStages: ", filteredStages)}*/}
-        {/*{console.log("availableStages: ", availableStages)}*/}
-        {/*{console.log("availableTasks: ", availableTasks)}*/}
+        {console.log("pageData: ", pageData)}
+        {console.log("userRanks: ", userRanks)}
+        {console.log("userCases: ", userCases)}
+        {console.log("userTasks: ", userTasks)}
+        {console.log("filteredStages: ", filteredStages)}
+        {console.log("availableStages: ", availableStages)}
+        {console.log("availableTasks: ", availableTasks)}
+
+        {Object.keys(userCases).map((k, i) => {
+            let c = userCases[k]
+            console.log("ID", k, id, pageData)
+            if (pageData.cases.includes(k)) {
+                return (
+                    <Case key={i} title={c.title} description={c.description} caseId={k} userRanks={userRanks} />
+                )
+            }
+        })}
 
         {/* <Grid>
 				<Button onClick={requestTask}>Получить задание</Button>
 			</Grid> */}
-        {Object.keys(userRanksDescriptions).length > 0 ? userRanks.map(rank => (
-            <Typography variant="h5" key={rank}>{userRanksDescriptions[rank].description}</Typography>
-        ))
-        : null}
+        {Object.keys(userRanksDescriptions).length > 0 ? userRanks.map(rank => {
+            if (userRanksDescriptions[rank] && userRanksDescriptions[rank].description) {
+                return (
+                    <Typography variant="h5" key={rank}>{userRanksDescriptions[rank].description}</Typography>
+                )
+            }
+        })
+            : null}
         <div className={classes.root}>
             {/*{Object.keys(unlimStages).map(pCase => (*/}
             {/*    Object.keys(unlimStages[pCase]).map(stage => (*/}
@@ -467,11 +509,11 @@ const Page = () => {
             <Paper position="static" color="default">
 
                 <Tabs value={tabValue} onChange={handleTabChange} variant="fullWidth" centered
-                      aria-label="simple tabs example">
-                    <Tab label="Невыполненные" {...a11yProps(0)}/>
-                    <Tab label="Выполненные" {...a11yProps(1)}/>
+                    aria-label="simple tabs example">
+                    <Tab label="Невыполненные" {...a11yProps(0)} />
+                    <Tab label="Выполненные" {...a11yProps(1)} />
                     {(Object.keys(availableTasks).length > 0 && Object.keys(availableStages).length > 0) ?
-                        <Tab label="Доступные" {...a11yProps(2)}/>
+                        <Tab label="Доступные" {...a11yProps(2)} />
                         :
                         null}
 
@@ -483,13 +525,13 @@ const Page = () => {
         <TabPanel value={tabValue} index={0}>
             {Object.keys(filteredStages).map(pCase => (
                 Object.keys(filteredStages[pCase]).map(stage => (
-                    <Grid key={pCase + stage} style={{padding: 10}}>
+                    <Grid key={pCase + stage} style={{ padding: 10 }}>
                         <TaskCard complete={false}
-                                  stage={filteredStages[pCase][stage]}
-                                  stageID={stage}
-                                  user={currentUser}
-                                  pCase={pCase}
-                                  cardType = "creatable"/>
+                            stage={filteredStages[pCase][stage]}
+                            stageID={stage}
+                            user={currentUser}
+                            pCase={pCase}
+                            cardType="creatable" />
                     </Grid>
                 ))
             ))}
@@ -501,13 +543,13 @@ const Page = () => {
         </TabPanel>
 
         {(Object.keys(availableTasks).length > 0 && Object.keys(availableStages).length > 0) ?
-        <TabPanel value={tabValue} index={2}>
-            {console.log("availableTasks: ", availableTasks)}
-            {showFilters(availableStages, bgStages, filterFormData, handleFilterFormChange)}
-            {displayTasks(availableTasks, availableStages, false, "selectable", false)}
-        </TabPanel>
-        :
-        null}
+            <TabPanel value={tabValue} index={2}>
+                {/* {console.log("availableTasks: ", availableTasks)} */}
+                {showFilters(availableStages, bgStages, filterFormData, handleFilterFormChange)}
+                {displayTasks(availableTasks, availableStages, false, "selectable", false)}
+            </TabPanel>
+            :
+            null}
         {/* <TabPanel value={value} index={2}>
                 быстрые задания
             </TabPanel>*/}
