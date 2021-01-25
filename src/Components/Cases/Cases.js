@@ -16,8 +16,8 @@ const Cases = () => {
     useEffect(() => {
         if (currentUser) {
             firebase.firestore().collection('users').doc(currentUser.uid).collection('user_private').doc('private').get().then(doc => {
-                
-                if (doc && doc.exists) {                
+
+                if (doc && doc.exists) {
 
                     let ranks = doc.data().ranks
                     console.log(ranks)
@@ -72,9 +72,16 @@ const Cases = () => {
 
     return (
         <div>
-            {ready && allCases.map((c, i) => (
-                <Case key={i} title={c.title} description={c.description} caseId={c.id} userRanks={userRanks} />
-            ))}
+            {ready && allCases.map((c, i) => {
+                if (c.hide) {
+                    return null
+                }
+                else {
+                    return (
+                        <Case key={i} title={c.title} description={c.description} caseId={c.id} userRanks={userRanks} />
+                    )
+                }
+            })}
         </div>
     )
 }
