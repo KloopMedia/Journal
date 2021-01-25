@@ -108,8 +108,8 @@ function ResponsiveDrawer(props) {
 				.doc(currentUser.uid)
 				.collection("user_private")
 				.doc("private")
-				.onSnapshot( doc => {
-					if(doc.data()) {
+				.onSnapshot(doc => {
+					if (doc.data()) {
 						setUserRanks(doc.data().ranks)
 					}
 				})
@@ -126,7 +126,7 @@ function ResponsiveDrawer(props) {
 					snapshot.docChanges().forEach(change => {
 						if (change.type === "added" || change.type === "modified") {
 							setUserPages(prevState => {
-								return {...prevState, [change.doc.id]: change.doc.data()}
+								return { ...prevState, [change.doc.id]: change.doc.data() }
 							})
 							console.log("User pages: ", change.doc.id)
 						}
@@ -184,12 +184,12 @@ function ResponsiveDrawer(props) {
 					<li>
 						<Link to="/profile">Профиль</Link>
 					</li>
-					{/*<li>*/}
-					{/*	<Link to="/tasks">Задания</Link>*/}
-					{/*</li>*/}
-					{/*<li>*/}
-					{/*	<Link to="/request">Получить задание</Link>*/}
-					{/*</li>*/}
+					<li>
+						<Link to="/tasks">Задания</Link>
+					</li>
+					<li>
+						<Link to="/request">Получить задание</Link>
+					</li>
 					<li>
 						<Link to="/notifications">Уведомления</Link>
 					</li>
@@ -199,8 +199,8 @@ function ResponsiveDrawer(props) {
 					{moderator ? <li>
 						<Link to="/faq">FAQ для модераторов</Link>
 					</li> : null}
-					</ul>
-				<ul>
+				</ul>
+				{/* <ul>
 					<li>
 						{
 							Object.keys(userPages).map(page => {
@@ -210,7 +210,7 @@ function ResponsiveDrawer(props) {
 							})
 						}
 					</li>
-				</ul>
+				</ul> */}
 			</nav>
 		</div>
 	);
@@ -278,12 +278,12 @@ function ResponsiveDrawer(props) {
 					{currentUser
 						?
 						<div>
-							<span style={{color: 'black', fontSize: 12, marginLeft: 7}}>
+							<span style={{ color: 'black', fontSize: 12, marginLeft: 7 }}>
 								{currentUser.email}
 							</span>
-							<Button style={{borderColor: "black", color: 'black', marginLeft: 10, fontSize: 12}}
-									variant="outlined" size="small"
-									onClick={() => firebase.auth().signOut()}>
+							<Button style={{ borderColor: "black", color: 'black', marginLeft: 10, fontSize: 12 }}
+								variant="outlined" size="small"
+								onClick={() => firebase.auth().signOut()}>
 								Выход
 							</Button>
 						</div>
