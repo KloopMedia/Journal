@@ -68,6 +68,9 @@ const Page = () => {
     const [allCases, setAllCases] = useState({})
     const [userTasks, setUserTasks] = useState({})
     const [filteredStages, setFilteredStages] = useState({})
+    const [caseData, setCaseData] = useState({})
+    const [caseSelector, setCaseSelector] = useState({})
+    const [caseSelectorResponse, setCaseSelectorResponse] = useState({})
     //const [unlimStages, setUnlimStages] = useState({})
     const [tabValue, setTabValue] = useState(0)
     const [availableStages, setAvailableStages] = useState({})
@@ -124,6 +127,13 @@ const Page = () => {
 
             pageData.cases.map(pCase => {
                 console.log("PCASE", pCase)
+                casesPath.doc(pCase).get().then(doc => {
+                    setCaseData(prevState => {
+                        const newState = Object.assign({}, prevState)
+                        newState[doc.id] = doc.data()
+                        return newState
+                    })
+                })
                 casesPath.doc(pCase)
                     .collection("stages")
                     .where("ranks_write", "array-contains-any", userRanks)
@@ -382,6 +392,12 @@ const Page = () => {
         }
     }, [userRanks])
 
+    useEffect(() => {
+        if (Object.keys(userCases).length > 0) {
+            createCaseSelectorForm()
+        }
+    }, [userCases])
+
     const displayTasks = (tasks, stages, cases, cardType, complete) => {
         const displayedTasks = Object.keys(tasks).map(taskId => {
             const caseType = tasks[taskId].case_type
@@ -463,6 +479,97 @@ const Page = () => {
     };
 
 
+    const createCaseSelectorForm = () => {
+        let schema = {
+            type: "object",
+            properties: {
+                request: {
+                    title: "Получить задание",
+                    $ref: "#/definitions/cases"
+                }
+            },
+            definitions: {
+                cases: {
+                    type: "object",
+                    properties: {
+                        case: {
+                            type: "string",
+                            enum: ["none", ...Object.keys(userCases)],
+                            default: "none"
+                        }
+                    },
+                    required: ['case'],
+                    dependencies: {
+                        case: {
+                            oneOf: [
+                                {
+                                    properties: {
+                                        case: {
+                                            enum: [
+                                                "none"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        }
+
+        Object.keys(userCases).forEach((k, i) => {
+            let c = userCases[k]
+            console.log('cc', c)
+            if (pageData.cases.includes(k)) {
+                schema.definitions.cases.dependencies.case.oneOf.push(
+                    {
+                        properties: {
+                            case: {
+                                enum: [
+                                    k
+                                ]
+                            },
+                            task: {
+                                type: "string",
+                                enum: ['none', ...Object.keys(c)],
+                                default: 'none'
+                            }
+                        },
+                        required: [
+                            'task'
+                        ]
+                    }
+                )
+            }
+        })
+
+        // console.log('schema', schema)
+        // console.log('schema', JSON.stringify(schema))
+        setCaseSelector(schema)
+    }
+
+    const handleFormChange = e => {
+        setCaseSelectorResponse(e.formData)
+    };
+
+    const requestTask = () => {
+
+        if (caseSelectorResponse.request.case !== 'none' && caseSelectorResponse.request.task !== 'none') {
+            console.log('rrrr', caseSelectorResponse)
+            firebase.firestore().collection("task_requests").doc(currentUser.uid).collection("requests").add({
+                status: "pending",
+                user: currentUser.uid,
+                case_type: caseSelectorResponse.request.case,
+                case_stage_id: caseSelectorResponse.request.task
+            })
+        }
+        else {
+            alert('Выберите case и task!')
+        }
+    }
+
+
     return (<Grid container justify="center" alignItems="center" direction="column">
         {console.log("pageData: ", pageData)}
         {console.log("userRanks: ", userRanks)}
@@ -471,16 +578,32 @@ const Page = () => {
         {console.log("filteredStages: ", filteredStages)}
         {console.log("availableStages: ", availableStages)}
         {console.log("availableTasks: ", availableTasks)}
+        {console.log("caseData", caseData)}
 
-        {Object.keys(userCases).map((k, i) => {
-            let c = userCases[k]
-            console.log("ID", k, id, pageData)
-            if (pageData.cases.includes(k)) {
-                return (
-                    <Case key={i} title={c.title} description={c.description} caseId={k} userRanks={userRanks} />
-                )
-            }
-        })}
+        <Grid style={{paddingBottom: 30}}>
+            <JSchemaForm
+                schema={caseSelector}
+                // uiSchema={formUI}
+                formData={caseSelectorResponse}
+                onChange={e => {
+                    handleFormChange(e)
+                }}
+            >
+                <button type="submit" onClick={requestTask} className='btn btn-info'>Получить</button>
+            </JSchemaForm>
+        </Grid>
+
+        {/* <Grid>
+            {Object.keys(userCases).map((k, i) => {
+                let c = caseData[k]
+                console.log(c)
+                if (pageData.cases.includes(k) && c) {
+                    return (
+                        <Case key={i} title={c.title} description={c.description} caseId={k} userRanks={userRanks} />
+                    )
+                }
+            })}
+        </Grid> */}
 
         {/* <Grid>
 				<Button onClick={requestTask}>Получить задание</Button>
