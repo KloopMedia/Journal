@@ -6,6 +6,7 @@ import { AuthContext } from "../../util/Auth";
 import Dialog from "../Dialog/Dialog"
 import DialogFeedback from "../Dialog/FeedbackDialog"
 import Feedback from "../form/feedback"
+import {complexStateFirebaseUpdate, simpleStateFirebaseUpdate} from "../../util/Utilities"
 
 import Loader from "../form/Loader"
 import CustomFileUpload from "../form/CustomFileUpload";
@@ -230,15 +231,7 @@ const JSchemaTask = () => {
 					.doc(key)
 					.collection("questions")
 					.onSnapshot(snapshot => {
-						snapshot.docChanges().forEach(change => {
-							if (change.type === "added" || change.type === "modified") {
-								setBackgroundTaskForms(prevState => {
-									const newState = Object.assign({}, prevState)
-									newState[key][change.doc.id] = change.doc.data()
-									return newState
-								})
-							}
-						})
+						complexStateFirebaseUpdate(snapshot, setBackgroundTaskForms, key)
 					})
 				firebase.firestore()
 					.collection("tasks")
