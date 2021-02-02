@@ -200,7 +200,7 @@ function ResponsiveDrawer(props) {
 						<Link to="/faq">FAQ для модераторов</Link>
 					</li> : null}
 				</ul>
-				{/* <ul>
+				<ul>
 					<li>
 						{
 							Object.keys(userPages).map(page => {
@@ -210,7 +210,7 @@ function ResponsiveDrawer(props) {
 							})
 						}
 					</li>
-				</ul> */}
+				</ul>
 			</nav>
 		</div>
 	);
