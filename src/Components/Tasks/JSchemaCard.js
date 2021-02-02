@@ -139,7 +139,7 @@ const JSchemaTaskCard = (props) => {
 					:
 					<Grid>
 						<Button size="small" onClick={handleOpen}>{(cardType === "creatableUnlim") ? "СОЗДАТЬ НОВУЮ ФОРМУ" : "Открыть"}</Button>
-						<Button size="small" onClick={handleOpenOld}>Открыть (Old)</Button>
+						{/* <Button size="small" onClick={handleOpenOld}>Открыть (Old)</Button> */}
 					</Grid>
 				}
 			</CardActions>
