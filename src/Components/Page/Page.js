@@ -122,6 +122,12 @@ const Page = () => {
 
     useEffect(() => {
         if (pageData && Object.entries(pageData).length > 0 && userRanks.length > 0) {
+            setUserCases({})
+            setUserTasks({})
+            setAllCases({})
+            setAvailableStages({})
+            setAvailableTasks({})
+            setBgStages({})
             const casesPath = firebase.firestore()
                 .collection("schema")
                 .doc("structure")
@@ -357,6 +363,9 @@ const Page = () => {
     useEffect(() => {
         if (Object.keys(userCases).length > 0) {
             createCaseSelectorForm()
+        }
+        else {
+            setCaseSelector({})
         }
     }, [userCases])
 
