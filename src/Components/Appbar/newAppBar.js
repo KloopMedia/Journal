@@ -136,29 +136,28 @@ function ResponsiveDrawer(props) {
 	}, [userRanks])
 
 
-	// useEffect(() => {
-	// 	//let unsubscribe = () => {}
-	// 	if (currentUser) {
-	// 		firebase.firestore()
-	// 			.collection('notifications')
-	// 			.where('user_id', 'array-contains', currentUser.uid)
-	// 			.onSnapshot(snap => {
-	// 			console.log(snap.size)
-	// 			let m = []
-	// 			let count = 0
-	// 			snap.forEach(doc => {
-	// 				if (!doc.data().shown) {
-	// 					m.push({ id: doc.id, ...doc.data() })
-	// 					count++
-	// 				}
-	// 			})
-	// 			m.sort((a, b) => b.created_date.toDate() - a.created_date.toDate())
-	// 			setNumOfMessages(count)
-	// 			setMessages(m)
-	// 		})
-	// 	}
-	// 	//return () => unsubscribe
-	// }, [currentUser])
+	useEffect(() => {
+		let unsubscribe = () => { }
+		if (currentUser) {
+			firebase.firestore()
+				.collection('notifications')
+				.where('user_id', 'array-contains', currentUser.uid)
+				.where('shown', '!=', true)
+				.onSnapshot(snap => {
+					console.log(snap.size)
+					let m = []
+					let count = 0
+					snap.forEach(doc => {
+						m.push({ id: doc.id, ...doc.data() })
+						count++
+					})
+					m.sort((a, b) => b.created_date.toDate() - a.created_date.toDate())
+					setNumOfMessages(count)
+					setMessages(m)
+				})
+		}
+		return () => unsubscribe
+	}, [currentUser])
 
 	const updateFirestoreStatus = (id, index) => {
 		firebase.firestore().collection('notifications').doc(id).update({ shown: true })
@@ -201,15 +200,14 @@ function ResponsiveDrawer(props) {
 					</li> : null}
 				</ul>
 				<ul>
-					<li>
-						{
-							Object.keys(userPages).map(page => {
-								return <li key={page}> <Link to={"/p/" + page}>
-									{userPages[page].name}
-								</Link> </li>
-							})
-						}
-					</li>
+					{
+						Object.keys(userPages).map(page => {
+							return <li key={page}> <Link to={"/p/" + page}>
+								{userPages[page].name}
+							</Link> </li>
+						})
+					}
+
 				</ul>
 			</nav>
 		</div>
