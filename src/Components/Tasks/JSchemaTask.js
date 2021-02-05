@@ -645,11 +645,15 @@ const JSchemaTask = () => {
 		}
 	}
 
-	// useEffect(() => {
-	// 	firebase.firestore().collection("schema").doc("structure").collection("feedbacks").doc("release").get().then(doc => {
-	// 		setReleaseFeedbackData(doc.data())
-	// 	})
-	// }, [])
+	useEffect(() => {
+		firebase.firestore().collection("schema").doc("structure").collection("feedbacks").doc("release").get().then(doc => {
+			let feedback = <Grid>
+				<Typography>{doc.data().description}</Typography>
+				<Feedback answers={doc.data().answers} returnAnswer={handleFeedbackSave}/>
+			</Grid>
+			setReleaseFeedbackData(feedback)
+		})
+	}, [])
 	//
 	// const releaseTask = () => {
 	// 	firebase.firestore().collection("tasks").doc(id).collection("user_editable").doc("user_editable").update({ status: 'open' })
@@ -661,9 +665,9 @@ const JSchemaTask = () => {
 	// 	// alert(feedbackValue)
 	// }
 	//
-	// const handleFeedbackSave = (value) => {
-	// 	setFeedback(value)
-	// }
+	const handleFeedbackSave = (value) => {
+		setFeedback(value)
+	}
 
 	const changeTaskStatus = (status) => {
 		firebase.firestore()
@@ -671,7 +675,7 @@ const JSchemaTask = () => {
 			.doc(id)
 			.collection("user_editable")
 			.doc("user_editable")
-			.update({ status: status })
+			.update({ status: status, release_status: feedbackValue.reason, release_description: feedbackValue.text })
 	}
 
 	return (
@@ -691,8 +695,9 @@ const JSchemaTask = () => {
 					handleClose={handleDialogClose}
 					handleOk={handleOk}
 					showOk={formStatus === "released"}
+					answers={releaseFeedbackData.answers}
+					content={formStatus === "released" ? "Спасибо" : releaseFeedbackData}
 					title={formStatus === "released" ? "Форма успешно освобождена. Теперь ею сможет заняться кто-то еще." : "Освободить форму?"}
-					content={formStatus === "released" ? "Спасибо" : "Вы собираетесь ОСВОБОДИТЬ форму. Ваши изменения не сохранятся и форма будет передана другому пользователю."}
 					dialogFunction={()=>{changeTaskStatus('released')}} />}
 
 				{/*{dialogType === 'release' && <DialogFeedback*/}
