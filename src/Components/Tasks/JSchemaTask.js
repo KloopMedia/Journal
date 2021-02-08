@@ -4,13 +4,16 @@ import { AuthContext } from "../../util/Auth";
 
 //import Form from "../form/form"
 import Dialog from "../Dialog/Dialog"
+import DefaultDialog from '@material-ui/core/Dialog';
+import DialogContent from '@material-ui/core/DialogContent';
+import DialogActions from '@material-ui/core/DialogActions';
 import DialogFeedback from "../Dialog/FeedbackDialog"
 import Feedback from "../form/feedback"
-import {complexStateFirebaseUpdate, simpleStateFirebaseUpdate} from "../../util/Utilities"
+import { complexStateFirebaseUpdate, simpleStateFirebaseUpdate } from "../../util/Utilities"
 
 import Loader from "../form/Loader"
 import CustomFileUpload from "../form/CustomFileUpload";
-import { Button, Divider, Grid, Typography } from '@material-ui/core';
+import { Button, DialogContentText, DialogTitle, Divider, Grid, Typography } from '@material-ui/core';
 import Snackbar from '@material-ui/core/Snackbar';
 import IconButton from '@material-ui/core/IconButton';
 import CloseIcon from '@material-ui/icons/Close';
@@ -85,7 +88,7 @@ const JSchemaTask = () => {
 					setFormStatus("sent")
 				}
 
-				if (! doc.data().assigned_users.includes(currentUser.uid)) {
+				if (!doc.data().assigned_users.includes(currentUser.uid)) {
 					setFormStatus("released")
 				}
 				console.log("Task Metadata: ", doc.data());
@@ -126,7 +129,7 @@ const JSchemaTask = () => {
 					snapshot.docChanges().forEach(change => {
 						if (change.type === "added" || change.type === "modified") {
 							setTaskForm(prevState => {
-								return {...prevState, [change.doc.id]: change.doc.data()}
+								return { ...prevState, [change.doc.id]: change.doc.data() }
 							})
 						}
 					})
@@ -135,7 +138,7 @@ const JSchemaTask = () => {
 
 	}, [id, currentUser])
 
-	useEffect( () => {
+	useEffect(() => {
 		if (Object.entries(taskMetadata).length > 0) {
 			console.log("Task metadata: ", taskMetadata)
 			firebase.firestore()
@@ -149,7 +152,7 @@ const JSchemaTask = () => {
 						if (change.type === "added" || change.type === "modified") {
 							console.log("Case stage: ", change.doc.data())
 							setCaseStages(prevState => {
-								return {...prevState, [change.doc.id]: change.doc.data()}
+								return { ...prevState, [change.doc.id]: change.doc.data() }
 							})
 						}
 						if (change.type === "removed") {
@@ -170,7 +173,7 @@ const JSchemaTask = () => {
 		console.log("Bg tasks: ", backgroundTasks)
 		Object.keys(backgroundTasks).map(taskId => {
 			const stage = backgroundTasks[taskId].case_stage_id
-			if (! mergedBgForms[stage]) {
+			if (!mergedBgForms[stage]) {
 				mergedBgForms[stage] = {}
 			}
 			mergedBgForms[stage][taskId] = mergeForm(backgroundTaskForms[taskId],
@@ -207,7 +210,7 @@ const JSchemaTask = () => {
 							if (change.type === "added" || change.type === "modified") {
 								console.log("Background task: ", change.doc.data())
 								setBackgroundTasks(prevState => {
-									return {...prevState, [change.doc.id]: change.doc.data()}
+									return { ...prevState, [change.doc.id]: change.doc.data() }
 								})
 							}
 							if (change.type === "removed") {
@@ -242,7 +245,7 @@ const JSchemaTask = () => {
 							if (change.type === "added" || change.type === "modified") {
 								setBackgroundResponses(prevState => {
 									const newState = Object.assign({}, prevState)
-									if (! newState[key]) {
+									if (!newState[key]) {
 										newState[key] = {}
 									}
 									newState[key][change.doc.id] = change.doc.data().contents
@@ -322,8 +325,8 @@ const JSchemaTask = () => {
 			Object.keys(formResponses).map(k => {
 				gRef.collection("responses")
 					.doc(k)
-					.set({contents: formResponses[k] ? formResponses[k] : firebase.firestore.FieldValue.delete()},
-						{merge: true})
+					.set({ contents: formResponses[k] ? formResponses[k] : firebase.firestore.FieldValue.delete() },
+						{ merge: true })
 			})
 		}
 	}
@@ -359,7 +362,8 @@ const JSchemaTask = () => {
 		} else if (cForms.end.title) {
 			title = cForms.end.title
 		} else if (cForms.start.title) {
-			title = cForms.start.title}
+			title = cForms.start.title
+		}
 
 		let description = ""
 		if (tForm.form_questions.description) {
@@ -367,7 +371,8 @@ const JSchemaTask = () => {
 		} else if (cForms.end.description) {
 			description = cForms.end.description
 		} else if (cForms.start.description) {
-			description = cForms.start.description}
+			description = cForms.start.description
+		}
 
 		const required = [...new Set([
 			...(cForms.start.required ? cForms.start.required : []),
@@ -377,7 +382,7 @@ const JSchemaTask = () => {
 
 		const uiOrder = [...new Set([
 			...(cForms.start_ui_schema["ui:order"] ? cForms.start_ui_schema["ui:order"] : []),
-			...(tForm.ui_schema["ui:order"]	 ? tForm.ui_schema["ui:order"] : []),
+			...(tForm.ui_schema["ui:order"] ? tForm.ui_schema["ui:order"] : []),
 			...(cForms.end_ui_schema["ui:order"] ? cForms.end_ui_schema["ui:order"] : [])
 		])]
 
@@ -387,7 +392,7 @@ const JSchemaTask = () => {
 			...(tForm.ui_schema ? tForm.ui_schema : {})
 		}
 
-		uiSchema = {...uiSchema, ...{"ui:order": uiOrder}}
+		uiSchema = { ...uiSchema, ...{ "ui:order": uiOrder } }
 
 		const form = {
 			properties: properties,
@@ -396,7 +401,7 @@ const JSchemaTask = () => {
 			description: description,
 			required: required
 		}
-		return {form_questions: form, ui_schema: uiSchema}
+		return { form_questions: form, ui_schema: uiSchema }
 
 	}
 
@@ -645,15 +650,53 @@ const JSchemaTask = () => {
 		}
 	}
 
-	useEffect(() => {
-		firebase.firestore().collection("schema").doc("structure").collection("feedbacks").doc("release").get().then(doc => {
-			let feedback = <Grid>
-				<Typography>{doc.data().description}</Typography>
-				<Feedback answers={doc.data().answers} returnAnswer={handleFeedbackSave}/>
-			</Grid>
-			setReleaseFeedbackData(feedback)
-		})
-	}, [])
+	let schm = {
+		"title": "Освободить задание?",
+		"description": "Вы собираетесь ОСВОБОДИТЬ форму. Ваши изменения не сохранятся и форма будет передана другому пользователю.",
+		"type": "object",
+		"required": ["reasons"],
+		"properties": {
+			"reasons": {
+				"type": "string",
+				"title": "Причина освобождения:",
+				"enum": [
+					"Нажал задание по ошибке",
+					"Не хочу выполнять",
+					"Задание выполнить невозможно, так как не хватает исходных данных",
+					"Исходных данных достаточно, но задание для меня слишком трудное"
+				]
+			},
+			"extra": {
+				"type": "string",
+				"title": "Примечание"
+			}
+		}
+	}
+	let ui = {
+		"reasons": {
+			"ui:widget": "radio"
+		},
+		"extra": {
+			"ui:emptyValue": "",
+			"ui:widget": "textarea"
+		}
+	}
+
+	// useEffect(() => {
+	// 	firebase.firestore().collection("schema").doc("structure").collection("feedbacks").doc("release").get().then(doc => {
+	// 		let feedback = <Grid>
+	// 			{/* <Typography>{doc.data().description}</Typography>
+	// 			<Feedback answers={doc.data().answers} returnAnswer={handleFeedbackSave}/> */}
+	// 			<JSchemaForm
+	// 				schema={schm}
+	// 				uiSchema={ui}
+	// 				formData={testData}
+	// 			> </JSchemaForm>
+
+	// 		</Grid>
+	// 		setReleaseFeedbackData(feedback)
+	// 	})
+	// }, [])
 	//
 	// const releaseTask = () => {
 	// 	firebase.firestore().collection("tasks").doc(id).collection("user_editable").doc("user_editable").update({ status: 'open' })
@@ -665,17 +708,26 @@ const JSchemaTask = () => {
 	// 	// alert(feedbackValue)
 	// }
 	//
-	const handleFeedbackSave = (value) => {
-		setFeedback(value)
+	const handleFeedbackSave = (event) => {
+		setFeedback(event.formData)
+		console.log('event', event.formData)
 	}
 
 	const changeTaskStatus = (status) => {
-		firebase.firestore()
+		let root = firebase.firestore()
 			.collection("tasks")
 			.doc(id)
 			.collection("user_editable")
 			.doc("user_editable")
-			.update({ status: status, release_status: feedbackValue.reason, release_description: feedbackValue.text })
+		if (status === 'released') {
+			if (feedbackValue.reasons) {
+				root.update({ status: status, release_status: feedbackValue.reasons, release_description: feedbackValue.extra })
+			}
+		}
+		else {
+			root.update({ status: status })
+		}
+
 	}
 
 	return (
@@ -688,9 +740,9 @@ const JSchemaTask = () => {
 					showOk={formStatus === "sent"}
 					title={formStatus === "sent" ? "Форма успешно отправлена." : "Отправить форму?"}
 					content={formStatus === "sent" ? "Спасибо" : "Вы собираетесь отправить форму. Это значит, что вы больше не сможете изменять ответы."}
-					dialogFunction={()=>{changeTaskStatus('complete')}} />}
+					dialogFunction={() => { changeTaskStatus('complete') }} />}
 
-					{dialogType === 'release' && <Dialog
+				{dialogType === 'release1' && <Dialog
 					state={dialogState}
 					handleClose={handleDialogClose}
 					handleOk={handleOk}
@@ -698,7 +750,43 @@ const JSchemaTask = () => {
 					answers={releaseFeedbackData.answers}
 					content={formStatus === "released" ? "Спасибо" : releaseFeedbackData}
 					title={formStatus === "released" ? "Форма успешно освобождена. Теперь ею сможет заняться кто-то еще." : "Освободить форму?"}
-					dialogFunction={()=>{changeTaskStatus('released')}} />}
+					dialogFunction={() => { changeTaskStatus('released') }} />}
+
+				{dialogType === 'release' && <DefaultDialog
+					open={dialogState}
+					onClose={handleDialogClose}
+				>
+					{formStatus === "released" &&
+						<DialogTitle id="alert-dialog-title">Форма успешно освобождена. Теперь ею сможет заняться кто-то еще.</DialogTitle>
+					}
+					<DialogContent>
+						{formStatus === "released" ?
+							<DialogContentText>Спасибо</DialogContentText>
+							: <JSchemaForm
+								schema={caseStages[taskMetadata.case_stage_id].feedbackRelease}
+								uiSchema={caseStages[taskMetadata.case_stage_id].feedbackReleaseUI}
+								formData={feedbackValue}
+								onChange={e => {
+									handleFeedbackSave(e)
+								}}
+							>
+								<DialogActions>
+									<Button onClick={handleDialogClose} color="primary">
+										Отмена
+                      				</Button>
+									<Button type="submit" onClick={() => { changeTaskStatus('released') }} color="primary" autoFocus>
+										Подтвердить
+                      				</Button>
+								</DialogActions>
+							</JSchemaForm>
+						}
+					</DialogContent>
+					{formStatus === "released" && <DialogActions>
+						<Button onClick={handleOk} color="primary">
+							Ok
+						</Button>
+					</DialogActions>}
+				</DefaultDialog>}
 
 				{/*{dialogType === 'release' && <DialogFeedback*/}
 				{/*	state={dialogState}*/}
@@ -749,7 +837,7 @@ const JSchemaTask = () => {
 					caseStages[taskMetadata.case_stage_id].backgroundStages &&
 					caseStages[taskMetadata.case_stage_id].backgroundStages.length > 0 &&
 					Object.keys(mergedBackgroundForms).length > 0) ?
-					<Grid style={{padding: 30}}>
+					<Grid style={{ padding: 30 }}>
 						{caseStages[taskMetadata.case_stage_id].backgroundStages.map(stage => {
 							return <div key={stage}>
 								{console.log("STAGE: ", stage)}
@@ -757,12 +845,12 @@ const JSchemaTask = () => {
 								{
 									mergedBackgroundForms[stage] ?
 										(Object.keys(mergedBackgroundForms[stage]).map(taskId => (
-											<Grid style={{padding: 30}} key={taskId}>
+											<Grid style={{ padding: 30 }} key={taskId}>
 												<JSchemaForm
 													schema={mergedBackgroundForms[stage][taskId].form_questions}
 													uiSchema={mergedBackgroundForms[stage][taskId].ui_schema}
 													formData={backgroundResponses[taskId]}
-													fields={{customFileUpload: a => CustomFileUpload({...a, ...{taskID: taskId}, ...{"currentUserUid": currentUser.uid}})}}
+													fields={{ customFileUpload: a => CustomFileUpload({ ...a, ...{ taskID: taskId }, ...{ "currentUserUid": currentUser.uid } }) }}
 													disabled={true}
 												> </JSchemaForm>
 											</Grid>
@@ -782,8 +870,8 @@ const JSchemaTask = () => {
 						schema={mergedForm.form_questions}
 						uiSchema={mergedForm.ui_schema}
 						formData={formResponses}
-						fields={{customFileUpload: a => CustomFileUpload({...a, ...{taskID: id}, ...{"currentUserUid": currentUser.uid}})}}
-						disabled={formStatus === "loading" || formStatus === "sent" || formStatus === "released" }
+						fields={{ customFileUpload: a => CustomFileUpload({ ...a, ...{ taskID: id }, ...{ "currentUserUid": currentUser.uid } }) }}
+						disabled={formStatus === "loading" || formStatus === "sent" || formStatus === "released"}
 						onChange={e => {
 							handleFormChange(e)
 						}}
@@ -800,25 +888,26 @@ const JSchemaTask = () => {
 							null}
 
 						{formStatus === "ready" ? <div>
-								{caseStages[taskMetadata.case_stage_id].additionalButtons && caseStages[taskMetadata.case_stage_id].additionalButtons.includes("release") ?
-									<Button variant="outlined" disabled={formStatus === "loading" || formStatus === "sent" || formStatus === "released"} style={{
-										borderWidth: 2,
-										borderColor: "#003366",
-										color: "#003366",
-										margin: 5
-									}} onClick={() => handleDialogOpen('release')}>Освободить</Button>
-									:
-									null}
-								<Button variant="outlined" disabled={formStatus === "loading" || formStatus === "sent" || formStatus === "released"}
-										style={{
-											borderWidth: 2,
-											borderColor: "red",
-											color: "red",
-											margin: 5}}
-										onClick={() => handleDialogOpen('send')}>Отправить</Button>
+							{caseStages[taskMetadata.case_stage_id].additionalButtons && caseStages[taskMetadata.case_stage_id].additionalButtons.includes("release") ?
+								<Button variant="outlined" disabled={formStatus === "loading" || formStatus === "sent" || formStatus === "released"} style={{
+									borderWidth: 2,
+									borderColor: "#003366",
+									color: "#003366",
+									margin: 5
+								}} onClick={() => handleDialogOpen('release')}>Освободить</Button>
+								:
+								null}
+							<Button variant="outlined" disabled={formStatus === "loading" || formStatus === "sent" || formStatus === "released"}
+								style={{
+									borderWidth: 2,
+									borderColor: "red",
+									color: "red",
+									margin: 5
+								}}
+								onClick={() => handleDialogOpen('send')}>Отправить</Button>
 
 
-							</div>
+						</div>
 							:
 							null
 						}
@@ -827,7 +916,7 @@ const JSchemaTask = () => {
 							:
 							null}
 					</JSchemaForm>
-						:
+					:
 					null}
 
 			</Grid>
