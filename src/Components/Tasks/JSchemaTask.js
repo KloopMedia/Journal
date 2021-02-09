@@ -719,9 +719,15 @@ const JSchemaTask = () => {
 			.doc(id)
 			.collection("user_editable")
 			.doc("user_editable")
+
 		if (status === 'released') {
 			if (feedbackValue.reasons) {
-				root.update({ status: status, release_status: feedbackValue.reasons, release_description: feedbackValue.extra })
+				if (feedbackValue.extra) {
+					root.update({ status: status, release_status: feedbackValue.reasons, release_description: feedbackValue.extra })
+				}
+				else {
+					root.update({ status: status, release_status: feedbackValue.reasons, release_description: "" })
+				}
 			}
 		}
 		else {
@@ -742,7 +748,7 @@ const JSchemaTask = () => {
 					content={formStatus === "sent" ? "Спасибо" : "Вы собираетесь отправить форму. Это значит, что вы больше не сможете изменять ответы."}
 					dialogFunction={() => { changeTaskStatus('complete') }} />}
 
-				{dialogType === 'release1' && <Dialog
+				{/* {dialogType === 'release' && <Dialog
 					state={dialogState}
 					handleClose={handleDialogClose}
 					handleOk={handleOk}
@@ -750,7 +756,7 @@ const JSchemaTask = () => {
 					answers={releaseFeedbackData.answers}
 					content={formStatus === "released" ? "Спасибо" : releaseFeedbackData}
 					title={formStatus === "released" ? "Форма успешно освобождена. Теперь ею сможет заняться кто-то еще." : "Освободить форму?"}
-					dialogFunction={() => { changeTaskStatus('released') }} />}
+					dialogFunction={() => { changeTaskStatus('released') }} />} */}
 
 				{dialogType === 'release' && <DefaultDialog
 					open={dialogState}
@@ -763,8 +769,8 @@ const JSchemaTask = () => {
 						{formStatus === "released" ?
 							<DialogContentText>Спасибо</DialogContentText>
 							: <JSchemaForm
-								schema={caseStages[taskMetadata.case_stage_id].feedbackRelease}
-								uiSchema={caseStages[taskMetadata.case_stage_id].feedbackReleaseUI}
+								schema={caseStages[taskMetadata.case_stage_id].releaseFeedback_schema}
+								uiSchema={caseStages[taskMetadata.case_stage_id].releaseFeedback_ui}
 								formData={feedbackValue}
 								onChange={e => {
 									handleFeedbackSave(e)
