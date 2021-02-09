@@ -650,38 +650,6 @@ const JSchemaTask = () => {
 		}
 	}
 
-	let schm = {
-		"title": "Освободить задание?",
-		"description": "Вы собираетесь ОСВОБОДИТЬ форму. Ваши изменения не сохранятся и форма будет передана другому пользователю.",
-		"type": "object",
-		"required": ["reasons"],
-		"properties": {
-			"reasons": {
-				"type": "string",
-				"title": "Причина освобождения:",
-				"enum": [
-					"Нажал задание по ошибке",
-					"Не хочу выполнять",
-					"Задание выполнить невозможно, так как не хватает исходных данных",
-					"Исходных данных достаточно, но задание для меня слишком трудное"
-				]
-			},
-			"extra": {
-				"type": "string",
-				"title": "Примечание"
-			}
-		}
-	}
-	let ui = {
-		"reasons": {
-			"ui:widget": "radio"
-		},
-		"extra": {
-			"ui:emptyValue": "",
-			"ui:widget": "textarea"
-		}
-	}
-
 	// useEffect(() => {
 	// 	firebase.firestore().collection("schema").doc("structure").collection("feedbacks").doc("release").get().then(doc => {
 	// 		let feedback = <Grid>
