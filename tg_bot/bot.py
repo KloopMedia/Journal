@@ -49,14 +49,16 @@ categories = [
     strings.TECH_CAT
 ]
 forms = [
-    strings.EMERGENCY_FORM_FILLING,
-    strings.ARRIVAL_TO_POLLING_STATION_FORM,
-    strings.MORNING_FORM,
-    strings.AFTERNOON_FORM,
-    strings.EVENING_FORM,
-    strings.ARRIVAL_AT_HOME
+    # strings.EMERGENCY_FORM_FILLING,
+    # strings.ARRIVAL_TO_POLLING_STATION_FORM,
+    # strings.MORNING_FORM,
+    # strings.AFTERNOON_FORM,
+    # strings.EVENING_FORM,
+    # strings.ARRIVAL_AT_HOME
+    # strings.GET_REWARD_FORM
 ]
 ranks = ['election_observer_stationary', 'election_observer_mobile']
+base_url = 'https://kloopmedia.github.io/Journal/#/t'
 
 # Empty webserver index, return nothing, just http 200
 @app.route('/', methods=['GET', 'HEAD'])
@@ -371,7 +373,7 @@ def get_me_handler(message):
                      get_string('ru', strings.YOU_NEED_TO_REGISTER))
 
 
-@bot.message_handler(commands=['create_form'])
+# @bot.message_handler(commands=['create_form'])
 def create_form_handler(message):
     if is_registered(message.chat.id):
         user = get_user(message.chat.id)
@@ -392,20 +394,31 @@ def create_form_handler(message):
                      get_string('ru', strings.YOU_NEED_TO_REGISTER))
 
 
-@bot.callback_query_handler(
-    func=lambda call: True
-    if call.data in [get_callback_data(form) for form in forms] else False)
+# @bot.callback_query_handler(
+    # func=lambda call: True
+    # if call.data in [get_callback_data(form) for form in forms] else False)
 def forms_handler(call):
     try:
         user = get_user(call.message.chat.id)
         if user:
             can_send = can_send_form(call.data, user)
-            # check for True because it can return an error mesage
+            # there is no submitted form
             if can_send is True:
-                callback_id = send_form(
-                    user, get_case_type(call.data),
-                    call.data)
+                callback_id = send_form(user, get_case_type(call.data),
+                                        call.data)
                 create_form_url(callback_id, call.message)
+            # there is already a submitted form
+            elif isinstance(can_send, list):
+                submitted_form = can_send[0]
+                form_title = get_string(
+                    "ru",
+                    get_form_from_callback_data(
+                        submitted_form.get("case_stage_id")))
+                send_message(
+                    call.message,
+                    f'{form_title}\n{base_url}/{submitted_form.get("case_id")}'
+                )
+            # error message
             else:
                 send_message(
                     call.message,
@@ -418,42 +431,48 @@ def forms_handler(call):
 def can_send_form(form, user):
     result = False
     user_ranks = get_ranks(user)
-    if form == get_callback_data(strings.EMERGENCY_FORM_FILLING):
-        result = True
-    elif form == get_callback_data(strings.ARRIVAL_TO_POLLING_STATION_FORM):
-        if 'election_observer_mobile' in user_ranks:
-            result = True
-        elif 'election_observer_stationary' in user_ranks:
-            result = common_check(user,
-                                  strings.ARRIVAL_TO_POLLING_STATION_FORM,
-                                  True)
-    elif form == get_callback_data(strings.MORNING_FORM):
-        result = common_check(user, strings.MORNING_FORM,
-                              any([rank in ranks for rank in user_ranks]))
-    elif form == get_callback_data(strings.AFTERNOON_FORM):
-        result = common_check(user, strings.AFTERNOON_FORM,
-                              'election_observer_stationary' in user_ranks)
-    elif form == get_callback_data(strings.EVENING_FORM):
-        result = common_check(user, strings.EVENING_FORM,
-                              any([rank in ranks for rank in user_ranks]))
-    elif form == get_callback_data(strings.ARRIVAL_AT_HOME):
-        result = common_check(user, strings.ARRIVAL_AT_HOME,
-                              any([rank in ranks for rank in user_ranks]))
+    # if form == get_callback_data(strings.GET_REWARD_FORM):
+        # result = common_check(user, strings.GET_REWARD_FORM,
+                              # any([rank in ranks for rank in user_ranks]))
+
+    # if form == get_callback_data(strings.EMERGENCY_FORM_FILLING):
+        # result = True
+    # elif form == get_callback_data(strings.ARRIVAL_TO_POLLING_STATION_FORM):
+        # if 'election_observer_mobile' in user_ranks:
+            # result = True
+        # elif 'election_observer_stationary' in user_ranks:
+            # result = common_check(user,
+                                  # strings.ARRIVAL_TO_POLLING_STATION_FORM,
+                                  # True)
+    # elif form == get_callback_data(strings.MORNING_FORM):
+        # result = common_check(user, strings.MORNING_FORM,
+                              # any([rank in ranks for rank in user_ranks]))
+    # elif form == get_callback_data(strings.AFTERNOON_FORM):
+        # result = common_check(user, strings.AFTERNOON_FORM,
+                              # 'election_observer_stationary' in user_ranks)
+    # elif form == get_callback_data(strings.EVENING_FORM):
+        # result = common_check(user, strings.EVENING_FORM,
+                              # any([rank in ranks for rank in user_ranks]))
+    # elif form == get_callback_data(strings.ARRIVAL_AT_HOME):
+        # result = common_check(user, strings.ARRIVAL_AT_HOME,
+                              # any([rank in ranks for rank in user_ranks]))
     return result
 
 
 def common_check(user, form, ranks_check):
     result = False
+    lang = user.to_dict().get('interface_lang')
     if ranks_check:
         if is_in_time_range(form.get('timerange')):
-            if not is_form_submitted(user, form):
+            submitted_form = is_form_submitted(user, form)
+            if not submitted_form:
                 result = True
             else:
-                result = get_string('ru', strings.YOU_ALREADY_SUBMITTED_THIS_FORM)
+                result = submitted_form
         else:
-            result = get_string('ru', strings.NOT_IN_TIME_RANGE)
+            result = get_string(lang, strings.NOT_IN_TIME_RANGE)
     else:
-        result = get_string('ru', strings.YOU_DONT_HAVE_RIGHT_RANK)
+        result = get_string(lang, strings.YOU_DONT_HAVE_RIGHT_RANK)
     return result
 
 
@@ -490,7 +509,6 @@ def send_form(user, case_type, case_stage_id):
 
 
 def create_form_url(callback_id, message):
-    base_url = 'https://kloopmedia.github.io/Journal/#/t'
     # Create an Event for notifying main thread.
     callback_done = threading.Event()
 
@@ -618,7 +636,12 @@ def commit_task(message, lang='ru'):
     batch.set(task_ref, task)
     # set question
     question_ref, question = create_question(message, tasks_ref, task_id)
+    form_ref, form_questions = create_form_questions(tasks_ref, task_id)
+    ui_schema_ref, ui_schema = create_question_ui_schema(tasks_ref, task_id)
+
     batch.set(question_ref, question)
+    batch.set(form_ref, form_questions)
+    batch.set(ui_schema_ref, ui_schema)
     # set user editable collection
     user_editable_ref = task_ref\
         .collection('user_editable')\
@@ -642,11 +665,38 @@ def create_task(message, task_id):
         'case_id': task_id,
         'case_stage_id': 'answer_the_question',
         'case_type': 'FAQ',
+        'cardData': {'message': question_dict.get('question')},
         'quick': True,
         'ranks_read': ['faq_moderator', 'election_observer'],
         'ranks_write': ['faq_moderator'],
         'created_date': firestore.SERVER_TIMESTAMP
     }
+
+def create_question_ui_schema(tasks_ref, task_id):
+    schema = {
+        'answer': {
+            'ui:autofocus': True,
+            'ui:widget': 'textarea'
+        },
+        'ui:order': ['answer']
+    }
+    questions_ref = tasks_ref.document(task_id).collection('questions')
+    ui_schema_ref = questions_ref.document('ui_schema')
+    return ui_schema_ref, schema
+
+def create_form_questions(tasks_ref, task_id):
+    form = {
+        'properties': {
+            'answer': {
+                'title': 'Ответ',
+                'type': 'string'
+            }
+        },
+        'title': question_dict.get('question'),
+    }
+    questions_ref = tasks_ref.document(task_id).collection('questions')
+    form_ref = questions_ref.document('form_questions')
+    return form_ref, form
 
 
 def create_question(message, tasks_ref, task_id):

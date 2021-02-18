@@ -126,7 +126,7 @@ ARRIVAL_AT_HOME = {
     'kg': '',
     'callback_data': 'arrival_at_home',
     'case_type': 'electionForms',
-    'timerange': '15:00-18:00'
+    'timerange': '18:00-20:00'
 }
 ARRIVAL_TO_POLLING_STATION_FORM = {
     'ru': 'Форма по прибытию на участок',
@@ -140,7 +140,7 @@ EVENING_FORM = {
     'kg': '',
     'callback_data': 'evening_form',
     'case_type': 'electionForms',
-    'timerange': '15:00-18:00'
+    'timerange': '18:00-20:00'
 }
 MORNING_FORM = {
     'ru': 'Утренняя форма',
@@ -157,12 +157,22 @@ EMERGENCY_FORM_FILLING = {
 }
 YOU_ALREADY_SUBMITTED_THIS_FORM = {
     'ru': 'Вы уже отправляли эту форму',
-    'kg': ''
+    'kg': 'Сиз бул форманы мурун жибергенсиз'
 }
-NOT_IN_TIME_RANGE = {'ru': 'Время для этой формы ещё не пришло или уже истекло', 'kg': ''}
+GET_REWARD_FORM = {
+    'ru': 'Форма для получения денег',
+    'kg': '',
+    'callback_data': 'get_reward_form',
+    'case_type': 'electionForms',
+    'timerange': '00:00-07:00'
+}
+NOT_IN_TIME_RANGE = {
+    'ru': 'Время для этой формы ещё не пришло или уже истекло',
+    'kg': 'Бул форманын убактысы келе элек же өтүп кетти'
+}
 YOU_DONT_HAVE_RIGHT_RANK = {
-    'ru': 'Ваш ранк не позволяет отправить эту форму',
-    'kg': ''
+    'ru': 'Ваш статус наблюдателя не позволяет отправить эту форму',
+    'kg': 'Сиздин байкоочу абалыңыз(статус) бул форманы жиберүүгө жол бербей жатат'
 }
 CHOOSE_LANG = {'ru': 'Выберите язык', 'kg': 'Тилди тантаңыз'}
 LANGUAGE_CHANGED = {'ru': 'Язык изменен', 'kg': 'Тил алмаштырылды'}
