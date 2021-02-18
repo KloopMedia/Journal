@@ -46,7 +46,13 @@ const JSchemaTaskCard = (props) => {
 	}
 
 	const handleOpenOld = () => {
-		history.push("/tasks/" + id)
+		if (cardType === "creatable" || cardType === "selectable" || cardType === "creatableUnlim") {
+			sendCallbackRequestOld()
+		} else {
+			history.push("/tasks/" + id)
+			//setRedirect(true)
+		}
+
 	}
 
 	const sendCallbackRequest = () => {
@@ -94,9 +100,57 @@ const JSchemaTaskCard = (props) => {
 			})
 	}
 
+	const sendCallbackRequestOld = () => {
+		setWaiting(true)
+		let callback = ""
+		let callbackType = ""
+		let callbackName = ""
+		if (cardType === "creatable" || cardType === "creatableUnlim") {
+			callback = uuidv4()
+			callbackType = "callbackId"
+			callbackName = "callbackId"
+		} else if (cardType === "selectable") {
+			callback = id
+			callbackName = "taskId"
+			callbackType = firebase.firestore.FieldPath.documentId()
+		}
+		firebase.firestore()
+			.collection("task_requests")
+			.doc(user.uid)
+			.collection("requests")
+			.add({
+				status: "pending",
+				user: user.uid,
+				case_type: pCase,
+				case_stage_id: stageID,
+				[callbackName]: callback
+			}).then((doc) => {
+				const unsubscribe = firebase.firestore()
+					.collection("tasks")
+					.where("assigned_users", "array-contains", user.uid)
+					.where(callbackType, "==", callback)
+					.onSnapshot(snapshot => {
+						snapshot.docChanges().forEach(change => {
+							if (change.type === "added") {
+								if (change.doc.id) {
+									//setNewTaskId(change.doc.id)
+									//setRedirect(true)
+									unsubscribe()
+									history.push("/tasks/" + change.doc.id)
+								}
+							}
+						})
+					})
+
+			})
+	}
+
 	const displayJSON = (cardData) => {
 		return Object.keys(cardData).map(stage => {
 			// console.log("STAGE: ", stage)
+			if (stage === 'message') {
+				return <Typography>{cardData[stage]}</Typography>
+			}
 			return Object.keys(cardData[stage]).map(response => {
 				// console.log("RESPONSE: ", response)
 				if (response === "attachedFiles") {
@@ -139,7 +193,7 @@ const JSchemaTaskCard = (props) => {
 					:
 					<Grid>
 						<Button size="small" onClick={handleOpen}>{(cardType === "creatableUnlim") ? "СОЗДАТЬ НОВУЮ ФОРМУ" : "Открыть"}</Button>
-						{/* <Button size="small" onClick={handleOpenOld}>Открыть (Old)</Button> */}
+						<Button size="small" onClick={handleOpenOld}>Открыть (Old)</Button>
 					</Grid>
 				}
 			</CardActions>

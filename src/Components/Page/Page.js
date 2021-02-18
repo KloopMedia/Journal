@@ -419,11 +419,12 @@ const Page = () => {
             Object.keys(filters).forEach(stageFilter => {
                 Object.keys(filters[stageFilter]).forEach(filterQuestion => {
                     let endProps = bgStages[stageFilter].end.properties[filterQuestion]
-                    delete endProps.dependencies
-                    formQuestions.properties[filterQuestion] = endProps
-                    // console.log("bgStages: ", bgStages)
-                    formUI[filterQuestion] = { "ui:widget": "select" }
-
+                    if (endProps) {
+                        delete endProps.dependencies
+                        formQuestions.properties[filterQuestion] = endProps
+                        // console.log("bgStages: ", bgStages)
+                        formUI[filterQuestion] = { "ui:widget": "select" }
+                    }
                 })
             })
             return (

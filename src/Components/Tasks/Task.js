@@ -13,7 +13,7 @@ import IconButton from '@material-ui/core/IconButton';
 import CloseIcon from '@material-ui/icons/Close';
 import CircularProgress from '@material-ui/core/CircularProgress';
 
-import { Redirect, useParams } from 'react-router';
+import { Redirect, useParams, useHistory } from 'react-router';
 import { Link } from "react-router-dom";
 
 
@@ -37,6 +37,7 @@ const Tasks = () => {
 
 	const { currentUser } = useContext(AuthContext);
 	const { id } = useParams();
+	const history = useHistory();
 
 	const handleCloseSnackbar = (event, reason) => {
 		if (reason === 'clickaway') {
@@ -347,7 +348,7 @@ const Tasks = () => {
 				{/* Предыдущие задания{caseTasks.map((t, i) => <Button key={"case_button_"+i} component={ Link } to={"/tasks/" + t.id}>{t.title}</Button>)} */}
 				{forms}
 				<Grid container style={{ padding: 20 }} justify="center">
-					<Button variant="outlined" style={{ borderWidth: 2, borderColor: "grey", color: 'grey', margin: 5 }} onClick={() => setRedirect(true)}>Назад</Button>
+					<Button variant="outlined" style={{ borderWidth: 2, borderColor: "grey", color: 'grey', margin: 5 }} onClick={() => history.goBack()}>Назад</Button>
 					{!lockButton &&
 						<div>
 							<Button variant="outlined" disabled={lockButton} style={{ borderWidth: 2, borderColor: "#003366", color: '#003366', margin: 5 }} onClick={() => saveToFirebase(false)}>Сохранить</Button>
