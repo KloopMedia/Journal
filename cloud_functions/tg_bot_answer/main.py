@@ -13,7 +13,10 @@ def send_answer(event, context):
     response_ref = client.collection(collection_path).document(document_path)
     task_ref = client.collection(collection_path).document(path_parts[1])
     question_ref = task_ref.collection('questions').document(path_parts[-1])
-
+    if not question_ref.get().exists:
+        question_ref = task_ref\
+                .collection('questions')\
+                .document('form_questions')
     question_doc = question_ref.get().to_dict()
     if question_doc:
         chat_id = question_doc.get('chat_id')
@@ -34,4 +37,9 @@ def send_answer(event, context):
 
 
 def get_message(question_doc, response_doc):
-    return f'{question_doc.get("title")}\n{response_doc.get("answer")}'
+    answer = ''
+    if response_doc.get('answer'):
+        answer = response_doc.get('answer')
+    elif response_doc.get('contents'):
+        answer = response_doc.get('contents')
+    return f'{question_doc.get("title")}\n{answer}'
