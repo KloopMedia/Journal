@@ -110,11 +110,11 @@ const Home = () => {
     return (
         currentUser ?
             <Grid>
-                <Grid container justify="center" direction="column" alignItems="center" className={classes.root}>
+                {/* <Grid container justify="center" direction="column" alignItems="center" className={classes.root}>
                     <Link variant="h5" align="center"
                           href={"https://kloopmedia.github.io/Journal/#/p/elections_monitoring"}>ФОРМЫ ДЛЯ НАБЛЮДЕНИЯ НА
                         ВЫБОРАХ</Link>
-                </Grid>
+                </Grid> */}
                 {tgId === "" ?
                     <Grid container justify="center" direction="column" alignItems="center" className={classes.root}>
                         <Typography style={{paddingBottom: 10}} variant="h5" align="center">Вы можете связать свой

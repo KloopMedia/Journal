@@ -138,13 +138,26 @@ function ResponsiveDrawer(props) {
 	}, [currentUser])
 
 	useEffect(() => {
-		if (userRanks.length > 0) {
-			let ranks = [...userRanks, ...availableRanks]
-			console.log('all_ranks', ranks)
+		if (userRanks.length > 0 && availableRanks.length > 0) {
 			firebase
 				.firestore()
 				.collection('pages')
-				.where("ranks", "array-contains-any", ranks)
+				.where("ranks", "array-contains-any", userRanks)
+				.onSnapshot(snapshot => {
+					snapshot.docChanges().forEach(change => {
+						if (change.type === "added" || change.type === "modified") {
+							setUserPages(prevState => {
+								return { ...prevState, [change.doc.id]: change.doc.data() }
+							})
+							console.log("User pages: ", change.doc.id)
+						}
+					})
+				})
+
+			firebase
+				.firestore()
+				.collection('pages')
+				.where("ranks", "array-contains-any", availableRanks)
 				.onSnapshot(snapshot => {
 					snapshot.docChanges().forEach(change => {
 						if (change.type === "added" || change.type === "modified") {
@@ -156,7 +169,7 @@ function ResponsiveDrawer(props) {
 					})
 				})
 		}
-	}, [userRanks])
+	}, [userRanks, availableRanks])
 
 
 	useEffect(() => {

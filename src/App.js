@@ -29,7 +29,7 @@ import JSchemaTask from "./Components/Tasks/JSchemaTask";
 
 
 const App = () => {
-
+  const { currentUser } = useContext(AuthContext);
   return (
     <Router>
       <Grid container justify="center">
@@ -63,7 +63,10 @@ const App = () => {
               <FAQ />
             </Route>
             <Route path="/p/:id">
-              <Page />
+              {currentUser ?
+                <Page />
+                :
+                <Signin />}
             </Route>
             <PrivateRoute path="/" component={Home} />
           </Switch>

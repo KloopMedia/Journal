@@ -16,6 +16,7 @@ import JSchemaForm from "@rjsf/bootstrap-4";
 import Case from '../Cases/Case'
 
 import { complexStateFirebaseUpdate, simpleStateFirebaseUpdate } from "../../util/Utilities";
+import Home from '../Home/Home';
 
 function TabPanel(props) {
     const { children, value, index, ...other } = props;
@@ -590,12 +591,14 @@ const Page = () => {
         {console.log("caseData", caseData)}
         {console.log("availableRanks: ", availableRanks)}
 
+        <Home />
+
         {availableRanks.length > 0 && <Grid container justify="center" alignItems="center" direction="column" style={{ paddingBottom: 20 }}>
-            <Typography variant="h5">Доступные ранги для получения:</Typography>
+            <Typography variant="h5">{pageData.message}</Typography>
             {availableRanks.map((rank, i) => <Button key={i} variant="contained" color="primary" onClick={() => requestRank(rank)} style={{ margin: 15 }}>Получить ранг {rank}</Button>)}
         </Grid>}
 
-        <Grid style={{ paddingBottom: 30 }}>
+        {pageData.showTaskSelector && <Grid style={{ paddingBottom: 30 }}>
             <JSchemaForm
                 schema={caseSelector}
                 // uiSchema={formUI}
@@ -606,7 +609,7 @@ const Page = () => {
             >
                 <button type="submit" onClick={requestTask} className='btn btn-info'>Получить</button>
             </JSchemaForm>
-        </Grid>
+        </Grid>}
 
         {/* <Grid>
             {Object.keys(userCases).map((k, i) => {
