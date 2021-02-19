@@ -377,7 +377,7 @@ const JSchemaTask = () => {
 		const required = [...new Set([
 			...(cForms.start.required ? cForms.start.required : []),
 			...(tForm.form_questions.required ? tForm.form_questions.required : []),
-			...(cForms.start.required ? cForms.start.required : [])
+			...(cForms.end.required ? cForms.end.required : [])
 		])]
 
 		const uiOrder = [...new Set([
@@ -743,12 +743,13 @@ const JSchemaTask = () => {
 								onChange={e => {
 									handleFeedbackSave(e)
 								}}
+								onSubmit={() => changeTaskStatus('released')}
 							>
 								<DialogActions>
 									<Button onClick={handleDialogClose} color="primary">
 										Отмена
                       				</Button>
-									<Button type="submit" onClick={() => { changeTaskStatus('released') }} color="primary" autoFocus>
+									<Button type="submit" color="primary" autoFocus>
 										Подтвердить
                       				</Button>
 								</DialogActions>
@@ -853,6 +854,7 @@ const JSchemaTask = () => {
 							console.log("That is what was focused", e)
 							setCurrentFocus(e.split("_")[1])
 						}}
+						onSubmit={() => handleDialogOpen('send')}
 						onBlur={e => {
 							handleBlur(e)
 						}}>
@@ -871,14 +873,14 @@ const JSchemaTask = () => {
 								}} onClick={() => handleDialogOpen('release')}>Освободить</Button>
 								:
 								null}
-							<Button variant="outlined" disabled={formStatus === "loading" || formStatus === "sent" || formStatus === "released"}
+							<Button type="submit" variant="outlined" disabled={formStatus === "loading" || formStatus === "sent" || formStatus === "released"}
 								style={{
 									borderWidth: 2,
 									borderColor: "red",
 									color: "red",
 									margin: 5
 								}}
-								onClick={() => handleDialogOpen('send')}>Отправить</Button>
+								>Отправить</Button>
 
 
 						</div>

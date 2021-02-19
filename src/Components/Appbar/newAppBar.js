@@ -86,6 +86,7 @@ function ResponsiveDrawer(props) {
 	const [messages, setMessages] = useState([])
 	const [userRanks, setUserRanks] = useState([])
 	const [userPages, setUserPages] = useState({})
+	const [availableRanks, setAvailableRanks] = useState([])
 
 	useEffect(() => {
 		if (currentUser) {
@@ -117,11 +118,33 @@ function ResponsiveDrawer(props) {
 	}, [currentUser])
 
 	useEffect(() => {
+		if (currentUser) {
+			firebase
+				.firestore()
+				.collection('schema')
+				.doc('structure')
+				.collection("ranks")
+				.onSnapshot(snap => {
+					let assignableRanks = []
+					snap.forEach(doc => {
+						if (doc.data().assign_without_moderator) {
+							assignableRanks.push(doc.id)
+						}
+					})
+					setAvailableRanks(assignableRanks)
+					console.log("Assignable", assignableRanks)
+				})
+		}
+	}, [currentUser])
+
+	useEffect(() => {
 		if (userRanks.length > 0) {
+			let ranks = [...userRanks, ...availableRanks]
+			console.log('all_ranks', ranks)
 			firebase
 				.firestore()
 				.collection('pages')
-				.where("ranks", "array-contains-any", userRanks)
+				.where("ranks", "array-contains-any", ranks)
 				.onSnapshot(snapshot => {
 					snapshot.docChanges().forEach(change => {
 						if (change.type === "added" || change.type === "modified") {
@@ -183,21 +206,21 @@ function ResponsiveDrawer(props) {
 					<li>
 						<Link to="/profile">Профиль</Link>
 					</li>
-					<li>
+					{/* <li>
 						<Link to="/tasks">Задания</Link>
 					</li>
 					<li>
 						<Link to="/request">Получить задание</Link>
-					</li>
+					</li> */}
 					<li>
 						<Link to="/notifications">Уведомления</Link>
 					</li>
 					{moderator ? <li>
 						<Link to="/tasksObserver">Модератор</Link>
 					</li> : null}
-					{moderator ? <li>
+					{/* {moderator ? <li>
 						<Link to="/faq">FAQ для модераторов</Link>
-					</li> : null}
+					</li> : null} */}
 				</ul>
 				<ul>
 					{

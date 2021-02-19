@@ -3,7 +3,7 @@ import firebase, { signInWithGoogle } from '../../util/Firebase'
 import { AuthContext } from "../../util/Auth";
 import { Redirect, useParams } from 'react-router';
 import Box from "@material-ui/core/Box";
-import { Grid, Typography } from "@material-ui/core";
+import { Grid, Typography, Button } from "@material-ui/core";
 import PropTypes from "prop-types";
 import { makeStyles } from "@material-ui/core/styles";
 import Paper from "@material-ui/core/Paper";
@@ -15,7 +15,7 @@ import CustomFileUpload from "../form/CustomFileUpload";
 import JSchemaForm from "@rjsf/bootstrap-4";
 import Case from '../Cases/Case'
 
-import {complexStateFirebaseUpdate, simpleStateFirebaseUpdate} from "../../util/Utilities";
+import { complexStateFirebaseUpdate, simpleStateFirebaseUpdate } from "../../util/Utilities";
 
 function TabPanel(props) {
     const { children, value, index, ...other } = props;
@@ -81,6 +81,7 @@ const Page = () => {
     const [availableTasks, setAvailableTasks] = useState({})
     const [userRanksDescriptions, setUserRanksDescriptions] = useState({})
     const [filterSettings, setFilterSettings] = useState(() => { })
+    const [availableRanks, setAvailableRanks] = useState([])
 
 
     useEffect(() => {
@@ -541,6 +542,42 @@ const Page = () => {
         }
     }
 
+    useEffect(() => {
+        const checkRank = async () => {
+            let assignableRanks = []
+            await firebase.firestore().collection('schema').doc('structure').collection('ranks').get().then(snap => {
+                snap.forEach(doc => {
+                    if (pageData.ranks.includes(doc.id) && doc.data().assign_without_moderator) {
+                        console.log("RANK_ID", doc.id)
+                        assignableRanks.push(doc.id)
+                    }
+                })
+            })
+            return assignableRanks
+        }
+
+        const notInUserRanks = (ranks) => {
+            return ranks.filter(rank => userRanks && !userRanks.includes(rank))
+        }
+
+        if (pageData && pageData.ranks) {
+            let assignableRanks = checkRank()
+            assignableRanks.then(ranks => setAvailableRanks(notInUserRanks(ranks)))
+        }
+
+    }, [pageData, userRanks])
+
+    const requestRank = (rank) => {
+        console.log("Отправляем запрос")
+        firebase.firestore().collection('rank_requests').add({
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            user_id: currentUser.uid,
+            processed: false,
+            rank: rank
+        })
+    }
+
+
 
     return (<Grid container justify="center" alignItems="center" direction="column">
         {console.log("pageData: ", pageData)}
@@ -551,8 +588,14 @@ const Page = () => {
         {console.log("availableStages: ", availableStages)}
         {console.log("availableTasks: ", availableTasks)}
         {console.log("caseData", caseData)}
+        {console.log("availableRanks: ", availableRanks)}
 
-        <Grid style={{paddingBottom: 30}}>
+        {availableRanks.length > 0 && <Grid container justify="center" alignItems="center" direction="column" style={{ paddingBottom: 20 }}>
+            <Typography variant="h5">Доступные ранги для получения:</Typography>
+            {availableRanks.map((rank, i) => <Button key={i} variant="contained" color="primary" onClick={() => requestRank(rank)} style={{ margin: 15 }}>Получить ранг {rank}</Button>)}
+        </Grid>}
+
+        <Grid style={{ paddingBottom: 30 }}>
             <JSchemaForm
                 schema={caseSelector}
                 // uiSchema={formUI}
