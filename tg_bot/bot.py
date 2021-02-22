@@ -45,8 +45,8 @@ bucket = storage.bucket()
 question_dict = {}
 # lang = 'ru'
 categories = [
-    strings.PAYMENT, strings.SCHEDULE, strings.STUDY, strings.MY_SITE,
-    strings.TECH_CAT
+    strings.PAYMENT, strings.SCHEDULE, strings.STUDY, strings.MY_SITE, 
+    strings.TRAININGS, strings.TECH_CAT
 ]
 forms = [
     # strings.EMERGENCY_FORM_FILLING,
@@ -212,12 +212,12 @@ def register_user(message):
                                              token,
                                              message.chat.id)
         if result:
-            response = get_string('ru', strings.SUCCESSFULLY_REGISTERED)
+            response = get_text(strings.SUCCESSFULLY_REGISTERED, 'ru')
             print(f'user {message.chat.id} registered successfully')
         else:
-            response = get_string('ru', strings.YOU_NEED_TO_REGISTER)\
+            response = get_text(strings.YOU_NEED_TO_REGISTER, 'ru')\
                      + '\n\n'\
-                     + get_string('kg', strings.YOU_NEED_TO_REGISTER)
+                     + get_text(strings.YOU_NEED_TO_REGISTER, 'kg')
         return response
     except Exception as e:
         print('method: register_user()', e)
@@ -256,7 +256,7 @@ def ask_question(message):
     else:
         # bot.reply_to(message, get_string('ru', strings.YOU_NEED_TO_REGISTER))
         send_message(message,
-                     get_string('ru', strings.YOU_NEED_TO_REGISTER),
+                     get_text(strings.YOU_NEED_TO_REGISTER, 'ru'),
                      reply=True)
 
 
@@ -265,12 +265,13 @@ def ask_question(message):
     if call.data in [get_callback_data(cat) for cat in categories] else False)
 def categories_handler(call):
     try:
-        if call.data == get_callback_data(strings.MY_SITE):
-            get_me_handler(call.message)
+        # if call.data == get_callback_data(strings.MY_SITE):
+        #     get_me_handler(call.message)
+        if call.data == get_callback_data(strings.TRAININGS):
+            send_message(call.message, 'Скоро')
         else:
             for cat in categories:
                 if call.data == get_callback_data(cat):
-
                     user = get_user(call.message.chat.id)
                     if user:
                         print(user.to_dict())
@@ -284,15 +285,32 @@ def categories_handler(call):
                                 strings.ASK_YOUR_OWN_QUESTION))
                         buttons.append(ask_question_btn)
                         markup.add(*buttons)
-                        send_message(call.message,
-                                     get_text(cat, lang),
-                                     reply_markup=markup,
-                                     parse_mode='markdown')
+                        text = get_text(cat, lang) 
+                        text_parts = split_text(text)
+                        for i, text_part in enumerate(text_parts):
+                            # send markup with only the last message
+                            send_message(call.message,
+                                        text_part,
+                                        reply_markup=markup if i == len(text_parts) - 1 else None,
+                                        parse_mode='markdown')
                     else:
                         print(f'no user {call.message.chat.id}')
                     break
     except Exception as e:
         print('method: categories_handler()', e)
+
+def split_text(text, max_len=1000, delimiter='\n'):
+    result = []
+    text_parts = text.split(delimiter)
+    sentence = ''
+    for text_part in text_parts:
+        if len(sentence) <= max_len:
+            sentence += text_part + delimiter
+        else:
+            result.append(sentence)
+            sentence =  text_part + delimiter
+    result.append(sentence)
+    return(result)
 
 
 @bot.callback_query_handler(
@@ -370,7 +388,7 @@ def get_me_handler(message):
         send_message(message, show_info)
     else:
         send_message(message,
-                     get_string('ru', strings.YOU_NEED_TO_REGISTER))
+                     get_text(strings.YOU_NEED_TO_REGISTER, 'ru'))
 
 
 # @bot.message_handler(commands=['create_form'])
@@ -391,7 +409,7 @@ def create_form_handler(message):
 
     else:
         send_message(message,
-                     get_string('ru', strings.YOU_NEED_TO_REGISTER))
+                     get_text(strings.YOU_NEED_TO_REGISTER, 'ru'))
 
 
 # @bot.callback_query_handler(
@@ -563,7 +581,7 @@ def attach_file_handler(message):
                                             strings.YOU_CANT_UPLOAD_FILES))
         else:
             send_message(message,
-                         get_string('ru', strings.YOU_NEED_TO_REGISTER),
+                         get_text(strings.YOU_NEED_TO_REGISTER, 'ru'),
                          reply=True)
     except Exception as e:
         print('method attach_file_handler(): ', e)
@@ -636,7 +654,7 @@ def commit_task(message, lang='ru'):
     batch.set(task_ref, task)
     # set question
     question_ref, question = create_question(message, tasks_ref, task_id)
-    form_ref, form_questions = create_form_questions(tasks_ref, task_id)
+    form_ref, form_questions = create_form_questions(message, tasks_ref, task_id)
     ui_schema_ref, ui_schema = create_question_ui_schema(tasks_ref, task_id)
 
     batch.set(question_ref, question)
@@ -684,7 +702,7 @@ def create_question_ui_schema(tasks_ref, task_id):
     ui_schema_ref = questions_ref.document('ui_schema')
     return ui_schema_ref, schema
 
-def create_form_questions(tasks_ref, task_id):
+def create_form_questions(message, tasks_ref, task_id):
     form = {
         'properties': {
             'answer': {
@@ -693,6 +711,7 @@ def create_form_questions(tasks_ref, task_id):
             }
         },
         'title': question_dict.get('question'),
+        'chat_id': message.chat.id
     }
     questions_ref = tasks_ref.document(task_id).collection('questions')
     form_ref = questions_ref.document('form_questions')
