@@ -45,7 +45,7 @@ bucket = storage.bucket()
 question_dict = {}
 # lang = 'ru'
 categories = [
-    strings.PAYMENT, strings.SCHEDULE, strings.STUDY, strings.MY_SITE, 
+    strings.PAYMENT, strings.SCHEDULE, strings.STUDY, strings.MY_SITE,
     strings.TRAININGS, strings.TECH_CAT
 ]
 forms = [
@@ -116,11 +116,13 @@ def get_form_from_callback_data(form_callback_data):
     return form
 
 
-def get_text(category, lang='ru'):
+def get_text(category, lang='ru', no_replace=False):
     try:
-        return db.document(f'faq_texts/{category.get("callback_data")}')\
-                .get()\
-                .get(lang).replace('\\n', '\n')
+        text = db.document(f'faq_texts/{category.get("callback_data")}')\
+                .get().get(lang)
+        if not no_replace:
+            text = text.replace('\\n', '\n')
+        return text
     except Exception as e:
         print('method: get_text()', e)
 
@@ -285,14 +287,11 @@ def categories_handler(call):
                                 strings.ASK_YOUR_OWN_QUESTION))
                         buttons.append(ask_question_btn)
                         markup.add(*buttons)
-                        text = get_text(cat, lang) 
-                        text_parts = split_text(text)
-                        for i, text_part in enumerate(text_parts):
-                            # send markup with only the last message
-                            send_message(call.message,
-                                        text_part,
-                                        reply_markup=markup if i == len(text_parts) - 1 else None,
-                                        parse_mode='markdown')
+                        text = get_text(cat, lang)
+                        send_large_message(call.message,
+                                           text,
+                                           reply_markup=markup,
+                                           parse_mode='markdown')
                     else:
                         print(f'no user {call.message.chat.id}')
                     break
@@ -413,8 +412,8 @@ def create_form_handler(message):
 
 
 # @bot.callback_query_handler(
-    # func=lambda call: True
-    # if call.data in [get_callback_data(form) for form in forms] else False)
+# func=lambda call: True
+# if call.data in [get_callback_data(form) for form in forms] else False)
 def forms_handler(call):
     try:
         user = get_user(call.message.chat.id)
@@ -450,30 +449,30 @@ def can_send_form(form, user):
     result = False
     user_ranks = get_ranks(user)
     # if form == get_callback_data(strings.GET_REWARD_FORM):
-        # result = common_check(user, strings.GET_REWARD_FORM,
-                              # any([rank in ranks for rank in user_ranks]))
+    # result = common_check(user, strings.GET_REWARD_FORM,
+    # any([rank in ranks for rank in user_ranks]))
 
     # if form == get_callback_data(strings.EMERGENCY_FORM_FILLING):
-        # result = True
+    # result = True
     # elif form == get_callback_data(strings.ARRIVAL_TO_POLLING_STATION_FORM):
-        # if 'election_observer_mobile' in user_ranks:
-            # result = True
-        # elif 'election_observer_stationary' in user_ranks:
-            # result = common_check(user,
-                                  # strings.ARRIVAL_TO_POLLING_STATION_FORM,
-                                  # True)
+    # if 'election_observer_mobile' in user_ranks:
+    # result = True
+    # elif 'election_observer_stationary' in user_ranks:
+    # result = common_check(user,
+    # strings.ARRIVAL_TO_POLLING_STATION_FORM,
+    # True)
     # elif form == get_callback_data(strings.MORNING_FORM):
-        # result = common_check(user, strings.MORNING_FORM,
-                              # any([rank in ranks for rank in user_ranks]))
+    # result = common_check(user, strings.MORNING_FORM,
+    # any([rank in ranks for rank in user_ranks]))
     # elif form == get_callback_data(strings.AFTERNOON_FORM):
-        # result = common_check(user, strings.AFTERNOON_FORM,
-                              # 'election_observer_stationary' in user_ranks)
+    # result = common_check(user, strings.AFTERNOON_FORM,
+    # 'election_observer_stationary' in user_ranks)
     # elif form == get_callback_data(strings.EVENING_FORM):
-        # result = common_check(user, strings.EVENING_FORM,
-                              # any([rank in ranks for rank in user_ranks]))
+    # result = common_check(user, strings.EVENING_FORM,
+    # any([rank in ranks for rank in user_ranks]))
     # elif form == get_callback_data(strings.ARRIVAL_AT_HOME):
-        # result = common_check(user, strings.ARRIVAL_AT_HOME,
-                              # any([rank in ranks for rank in user_ranks]))
+    # result = common_check(user, strings.ARRIVAL_AT_HOME,
+    # any([rank in ranks for rank in user_ranks]))
     return result
 
 
@@ -750,6 +749,21 @@ def get_buttons(categories, lang='ru'):
     return buttons
 
 
+def send_large_message(message,
+                       text,
+                       reply_markup=None,
+                       parse_mode='markdown',
+                       reply=False,
+                       delimiter='\n'):
+    text_parts = split_text(text, delimiter=delimiter)
+    for i, text_part in enumerate(text_parts):
+        # send markup with only the last message
+        send_message(message,
+                     text_part,
+                     reply_markup=reply_markup if i == len(text_parts) - 1 else None,
+                     parse_mode=parse_mode)
+
+
 def send_message(message,
                  text,
                  reply_markup=None,
@@ -767,6 +781,95 @@ def send_message(message,
     # TODO: probably needs to return sended message
     return message
 
+"""
+*******************************************************************
+                        Moderators 
+*******************************************************************
+"""
+
+def is_moderator(tg_id):
+    moderator = db.collection('bot_moderators').document(str(tg_id))
+    if moderator.get().exists:
+        return True
+    return False
+
+def make_buttons(buttons_meta):
+    buttons = []
+    for meta in buttons_meta:
+        buttons.append(
+            types.InlineKeyboardButton(
+                text=meta.get('callback_data'),
+                callback_data=meta.get('callback_data')))
+    return buttons
+
+
+@bot.message_handler(commands=['mod'])
+def mod_handler(message):
+    if is_registered(message.chat.id):
+        if is_moderator(message.chat.id):
+            markup = types.InlineKeyboardMarkup(row_width=2)
+            texts = db.collection(f'faq_texts').stream()
+            buttons_meta = []
+            for text in texts:
+                text_id = text.id
+                text = text.to_dict()
+                text['callback_data'] = text_id + '_mod'
+                buttons_meta.append(text)
+            buttons = make_buttons(buttons_meta)
+            markup.add(*buttons)
+            send_message(message,
+                         'Choose category to edit',
+                         reply_markup=markup)
+
+@bot.callback_query_handler(
+    func=lambda call: True
+    if call.data in [get_callback_data(cat) + '_mod' for cat in categories]\
+        or call.data in [get_callback_data(cat) for cat in [strings.YOU_ARE_ALREADY_REGISTERED,
+                                                         strings.SUCCESSFULLY_REGISTERED,
+                                                         strings.YOU_NEED_TO_REGISTER]] \
+            else False)
+def mod_categories_handler(call):
+    if is_registered(call.message.chat.id):
+        if is_moderator(call.message.chat.id):
+            buttons = []
+            markup = types.ReplyKeyboardMarkup(row_width=1,
+                                               resize_keyboard=True,
+                                               one_time_keyboard=True)
+            for lang in strings.LANGUAGES:
+                buttons.append(types.KeyboardButton(get_callback_data(lang)))
+            markup.row(*buttons)
+            message = send_message(call.message,
+                                   get_string('ru', strings.CHOOSE_LANG),
+                                   reply_markup=markup)
+            bot.register_next_step_handler(message, process_mod_lang_answer,
+                                           call.data.replace('_mod', ''))
+
+
+mod_buttons = [
+    {"title": "Edit", "callback_data": 'edit_text_mod_button'},
+    {"title": "Cancel", "callback_data": 'cancel_edit_text_mod_button'},
+    {"title": "Back", "callback_data": 'back_edit_text_mod_button'}]
+
+def process_mod_lang_answer(message, callback_data):
+    print(f'callback data: {callback_data}, text: {message.text}')
+    markup = types.InlineKeyboardMarkup(row_width=2)
+    buttons = make_buttons(mod_buttons)
+    markup.add(*buttons)
+    text = get_text({'callback_data': callback_data},
+                    message.text,
+                    no_replace=True)
+    send_large_message(message,
+                       text,
+                       reply_markup=markup,
+                       parse_mode=None,
+                       delimiter='\\n')
+
+@bot.callback_query_handler(
+    func=lambda call: True 
+        if call.data in [get_callback_data(mod_button) for mod_button in mod_buttons] 
+        else False)
+def mod_edit_text_buttons_handler(call):
+    pass
 
 bot.remove_webhook()
 sleep(0.1)
