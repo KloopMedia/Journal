@@ -1,11 +1,11 @@
 SUCCESSFULLY_REGISTERED = {
-    'callback_data': 'successfully_registered'
+    'callback_data': 'successfully_registered_mod'
 }
 YOU_ARE_ALREADY_REGISTERED = {
-    'callback_data': 'already_registered'
+    'callback_data': 'already_registered_mod'
 }
 YOU_NEED_TO_REGISTER = {
-    'callback_data': 'need_to_register'
+    'callback_data': 'need_to_register_mod'
 }
 CHOOSE_CATEGORY = {'ru': 'Выберите категорию', 'kg': 'Категорияны тандаңыз'}
 CHOOSE_FORM = {'ru': 'Выберите форму', 'kg': 'Форманы тандаңыз'}
