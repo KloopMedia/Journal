@@ -16,11 +16,21 @@ const useStyles = makeStyles(theme => ({
         [theme.breakpoints.down("sm")]: {
             maxWidth: 300
         }
+    },
+    message: {
+        background: 'lightgreen',
+        // height: 200,
+        width: 500,
+        margin: 10,
+        padding: 10,
+        [theme.breakpoints.down("sm")]: {
+            maxWidth: 300
+        }
     }
 }));
 
 
-const Home = () => {
+const Home = (props) => {
     const classes = useStyles();
     const [token, setToken] = useState(null)
     const { currentUser } = useContext(AuthContext);
@@ -30,8 +40,8 @@ const Home = () => {
         const makeToken = () => {
             return uuid().toString() + '_' + Date.now()
         }
-        let unsubscribeUser = () => {}
-        let unsubscribeUserPrivate = () => {}
+        let unsubscribeUser = () => { }
+        let unsubscribeUserPrivate = () => { }
         if (currentUser) {
             unsubscribeUser = firebase.firestore()
                 .collection('users')
@@ -53,7 +63,7 @@ const Home = () => {
                         console.log(date)
                         if (date > 0) {
                             let newToken = makeToken()
-                            firebase.firestore().collection('users').doc(currentUser.uid).update({tg_token: newToken})
+                            firebase.firestore().collection('users').doc(currentUser.uid).update({ tg_token: newToken })
                             setToken(newToken)
                         } else {
                             setToken(oldToken)
@@ -61,7 +71,7 @@ const Home = () => {
                     } else {
                         console.log('no token')
                         let newToken = makeToken()
-                        firebase.firestore().collection('users').doc(currentUser.uid).update({tg_token: newToken})
+                        firebase.firestore().collection('users').doc(currentUser.uid).update({ tg_token: newToken })
                         setToken(newToken)
                     }
                 })
@@ -110,14 +120,16 @@ const Home = () => {
     return (
         currentUser ?
             <Grid>
-                {/* <Grid container justify="center" direction="column" alignItems="center" className={classes.root}>
-                    <Link variant="h5" align="center"
-                          href={"https://kloopmedia.github.io/Journal/#/p/elections_monitoring"}>ФОРМЫ ДЛЯ НАБЛЮДЕНИЯ НА
-                        ВЫБОРАХ</Link>
-                </Grid> */}
+                <Grid container className={classes.message}>
+                    <Typography>Здравствуйте, дорогие наблюдатели! Мы рады приветствовать вас в наших рядах!</Typography>
+                    <Typography>Чтобы связать бот с системой, перейдите по ссылке: <Link to="https://kloopmedia.github.io/Journal">https://kloopmedia.github.io/Journal</Link></Typography>
+                    <Typography>Если у вас не получилось сделать это самостоятельно, посмотрите нашу видео-инструкцию. Как заполнить анкету? <Link to="https://www.youtube.com/watch?v=bkukGAemNTY&feature=youtu.be">https://www.youtube.com/watch?v=bkukGAemNTY&feature=youtu.be</Link></Typography>
+                    <Typography>Как пользоваться ботом? <Link to="https://www.youtube.com/watch?v=jJX5uMqqC7Q&feature=youtu.be">https://www.youtube.com/watch?v=jJX5uMqqC7Q&feature=youtu.be</Link></Typography>
+                    <Typography>Если у вас в разделе «невыполненное» стоит форма, то пожалуйста заполните ее. После того, как вы это сделаете, она автоматически должна перейти в раздел «выполненное»</Typography>
+                </Grid>
                 {tgId === "" ?
                     <Grid container justify="center" direction="column" alignItems="center" className={classes.root}>
-                        <Typography style={{paddingBottom: 10}} variant="h5" align="center">Вы можете связать свой
+                        <Typography style={{ paddingBottom: 10 }} variant="h5" align="center">Вы можете связать свой
                             аккаунт с нашим Телеграм-ботом. Для этого нажмите на ссылку ниже.</Typography>
                         {token ? <Link variant="h5" href={"https://telegram.me/journal_tg_bot?start=" + token}>Ссылка на
                                 бот</Link>
@@ -128,9 +140,9 @@ const Home = () => {
                     null}
             </Grid>
             :
-            <Grid container direction="column" style={{padding: 20}} justify="center">
+            <Grid container direction="column" style={{ padding: 20 }} justify="center">
                 <Typography align="center" variant="h3">Регистрация</Typography>
-                <br/>
+                <br />
                 <Button size="large" color="primary" variant="contained" onClick={signInWithGoogle}>Войти с помощью
                     аккаунта Google</Button>
             </Grid>
