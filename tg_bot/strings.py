@@ -1,11 +1,11 @@
 SUCCESSFULLY_REGISTERED = {
-    'callback_data': 'successfully_registered_mod'
+    'callback_data': 'successfully_registered'
 }
 YOU_ARE_ALREADY_REGISTERED = {
-    'callback_data': 'already_registered_mod'
+    'callback_data': 'already_registered'
 }
 YOU_NEED_TO_REGISTER = {
-    'callback_data': 'need_to_register_mod'
+    'callback_data': 'need_to_register'
 }
 CHOOSE_CATEGORY = {'ru': 'Выберите категорию', 'kg': 'Категорияны тандаңыз'}
 CHOOSE_FORM = {'ru': 'Выберите форму', 'kg': 'Форманы тандаңыз'}
@@ -16,6 +16,31 @@ SOMETHING_WENT_WRONG = {
 }
 OK = {'ru': 'Да', 'kg': 'Макул'}
 CANCEL = {'ru': 'Отмена', 'kg': 'Баш тартуу'}
+EDIT_MOD_BUTTON = {"title": 'Изменить', "callback_data": 'edit_text_mod_button'}
+OK_MOD_BUTTON = {
+    'title': 'Ок',
+    'callback_data': 'ok_mod_button'
+}
+CANCEL_MOD_BUTTON = {
+    'title': 'Отмена',
+    'callback_data': 'cancel_mod_button'
+}
+CANCEL_MOD_BUTTON = {
+    "title": 'Отмена',
+    "callback_data": 'cancel_edit_text_mod_button'
+}
+BACK_MOD_BUTTON = {
+    "title": 'Назад',
+    "callback_data": 'back_edit_text_mod_button'
+}
+RUSSIAN_LANG_MOD_BUTTON = {
+    'title': 'Русский язык',
+    'callback_data': 'ru_mod_button'
+}
+KYRGYZ_LANG_MOD_BUTTON = {
+    'title': 'Кыргыз тили',
+    'callback_data': 'kg_mod_button'
+}
 CANCELLED = {
     'ru': 'Отправка вопроса отменена',
     'kg': 'Суроону жиберүүдөн баш тартылды'
@@ -125,6 +150,14 @@ YOU_DONT_HAVE_RIGHT_RANK = {
 }
 CHOOSE_LANG = {'ru': 'Выберите язык', 'kg': 'Тилди тантаңыз'}
 LANGUAGE_CHANGED = {'ru': 'Язык изменен', 'kg': 'Тил алмаштырылды'}
-RUSSIAN = {'ru': 'Русский язык', 'kg': 'Орус тили', 'callback_data': 'ru'}
-KYRGYZ = {'ru': 'Кыргызский язык', 'kg': 'Кыргыз тили', 'callback_data': 'kg'}
+RUSSIAN = {
+    'ru': 'Русский язык',
+    'kg': 'Орус тили',
+    'callback_data': 'ru'
+}
+KYRGYZ = {
+    'ru': 'Кыргызский язык',
+    'kg': 'Кыргыз тили',
+    'callback_data': 'kg'
+}
 LANGUAGES = [RUSSIAN, KYRGYZ]

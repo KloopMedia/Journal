@@ -43,6 +43,7 @@ global bucket
 bucket = storage.bucket()
 
 question_dict = {}
+mod_dict = {}
 # lang = 'ru'
 categories = [
     strings.PAYMENT, strings.SCHEDULE, strings.STUDY, strings.MY_SITE,
@@ -269,32 +270,29 @@ def categories_handler(call):
     try:
         # if call.data == get_callback_data(strings.MY_SITE):
         #     get_me_handler(call.message)
-        if call.data == get_callback_data(strings.TRAININGS):
-            send_message(call.message, 'Скоро')
-        else:
-            for cat in categories:
-                if call.data == get_callback_data(cat):
-                    user = get_user(call.message.chat.id)
-                    if user:
-                        print(user.to_dict())
-                        lang = user.get('interface_lang')
-                        question_dict['category'] = call.data
-                        markup = types.InlineKeyboardMarkup(row_width=2)
-                        buttons = get_buttons(categories, lang)
-                        ask_question_btn = types.InlineKeyboardButton(
-                            text=get_string(lang, strings.ASK_YOUR_OWN_QUESTION),
-                            callback_data=get_callback_data(
-                                strings.ASK_YOUR_OWN_QUESTION))
-                        buttons.append(ask_question_btn)
-                        markup.add(*buttons)
-                        text = get_text(cat, lang)
-                        send_large_message(call.message,
-                                           text,
-                                           reply_markup=markup,
-                                           parse_mode='markdown')
-                    else:
-                        print(f'no user {call.message.chat.id}')
-                    break
+        for cat in categories:
+            if call.data == get_callback_data(cat):
+                user = get_user(call.message.chat.id)
+                if user:
+                    print(user.to_dict())
+                    lang = user.get('interface_lang')
+                    question_dict['category'] = call.data
+                    markup = types.InlineKeyboardMarkup(row_width=2)
+                    buttons = get_buttons(categories, lang)
+                    ask_question_btn = types.InlineKeyboardButton(
+                        text=get_string(lang, strings.ASK_YOUR_OWN_QUESTION),
+                        callback_data=get_callback_data(
+                            strings.ASK_YOUR_OWN_QUESTION))
+                    buttons.append(ask_question_btn)
+                    markup.add(*buttons)
+                    text = get_text(cat, lang)
+                    send_large_message(call.message,
+                                        text,
+                                        reply_markup=markup,
+                                        parse_mode='markdown')
+                else:
+                    print(f'no user {call.message.chat.id}')
+                break
     except Exception as e:
         print('method: categories_handler()', e)
 
@@ -771,7 +769,7 @@ def send_message(message,
                  reply=False):
     m = json.dumps({
         'chat_id': message.chat.id,
-        'text': text,
+        'text': str(text).replace('_', '\_'),
         'reply_markup': reply_markup.to_json() if reply_markup else None,
         'parse_mode': parse_mode,
         'reply_to_message_id': message.message_id if reply else None
@@ -786,6 +784,14 @@ def send_message(message,
                         Moderators 
 *******************************************************************
 """
+mod_buttons = [
+    strings.EDIT_MOD_BUTTON,
+    strings.CANCEL_MOD_BUTTON,
+]
+mod_lang_buttons = [
+    strings.RUSSIAN_LANG_MOD_BUTTON,
+    strings.KYRGYZ_LANG_MOD_BUTTON
+]
 
 def is_moderator(tg_id):
     moderator = db.collection('bot_moderators').document(str(tg_id))
@@ -798,7 +804,7 @@ def make_buttons(buttons_meta):
     for meta in buttons_meta:
         buttons.append(
             types.InlineKeyboardButton(
-                text=meta.get('callback_data'),
+                text=meta.get('title'),
                 callback_data=meta.get('callback_data')))
     return buttons
 
@@ -824,52 +830,77 @@ def mod_handler(message):
 @bot.callback_query_handler(
     func=lambda call: True
     if call.data in [get_callback_data(cat) + '_mod' for cat in categories]\
-        or call.data in [get_callback_data(cat) for cat in [strings.YOU_ARE_ALREADY_REGISTERED,
+        or call.data in [get_callback_data(cat) + '_mod' for cat in [strings.YOU_ARE_ALREADY_REGISTERED,
                                                          strings.SUCCESSFULLY_REGISTERED,
                                                          strings.YOU_NEED_TO_REGISTER]] \
             else False)
 def mod_categories_handler(call):
     if is_registered(call.message.chat.id):
         if is_moderator(call.message.chat.id):
-            buttons = []
-            markup = types.ReplyKeyboardMarkup(row_width=1,
-                                               resize_keyboard=True,
-                                               one_time_keyboard=True)
-            for lang in strings.LANGUAGES:
-                buttons.append(types.KeyboardButton(get_callback_data(lang)))
-            markup.row(*buttons)
-            message = send_message(call.message,
-                                   get_string('ru', strings.CHOOSE_LANG),
-                                   reply_markup=markup)
-            bot.register_next_step_handler(message, process_mod_lang_answer,
-                                           call.data.replace('_mod', ''))
+            markup = types.InlineKeyboardMarkup()
+            mod_dict['category'] = call.data
+            buttons = make_buttons(mod_lang_buttons)
+            markup.add(*buttons)
+            send_message(call.message,
+                         get_string('ru', strings.CHOOSE_LANG),
+                         reply_markup=markup)
 
-
-mod_buttons = [
-    {"title": "Edit", "callback_data": 'edit_text_mod_button'},
-    {"title": "Cancel", "callback_data": 'cancel_edit_text_mod_button'},
-    {"title": "Back", "callback_data": 'back_edit_text_mod_button'}]
-
-def process_mod_lang_answer(message, callback_data):
-    print(f'callback data: {callback_data}, text: {message.text}')
-    markup = types.InlineKeyboardMarkup(row_width=2)
-    buttons = make_buttons(mod_buttons)
-    markup.add(*buttons)
-    text = get_text({'callback_data': callback_data},
-                    message.text,
-                    no_replace=True)
-    send_large_message(message,
-                       text,
-                       reply_markup=markup,
-                       parse_mode=None,
-                       delimiter='\\n')
 
 @bot.callback_query_handler(
-    func=lambda call: True 
-        if call.data in [get_callback_data(mod_button) for mod_button in mod_buttons] 
+    func=lambda call: True
+    if call.data in [get_callback_data(button)
+                     for button in mod_lang_buttons] else False)
+def mod_text_lang_handler(call):
+    # send_message(call.message, 'mod button')
+    if is_registered(call.message.chat.id):
+        if is_moderator(call.message.chat.id):
+            callback_data = call.data
+            message = call.message
+            # def process_mod_lang_answer(message, callback_data):
+            markup = types.InlineKeyboardMarkup(row_width=2)
+            buttons = make_buttons(mod_buttons)
+            markup.add(*buttons)
+            lang = callback_data.replace('_mod_button', '')
+            mod_dict['mod_text_lang'] = lang
+            text = get_text(
+                {'callback_data': mod_dict.get('category').replace('_mod', '')},
+                lang,
+                no_replace=True)
+            send_large_message(message,
+                            text,
+                            reply_markup=markup,
+                            parse_mode=None,
+                            delimiter='\\n')
+
+@bot.callback_query_handler(
+    func=lambda call: True
+        if call.data in [get_callback_data(mod_button) for mod_button in mod_buttons]
         else False)
 def mod_edit_text_buttons_handler(call):
-    pass
+    if is_registered(call.message.chat.id):
+        if is_moderator(call.message.chat.id):
+            markup = types.InlineKeyboardMarkup()
+            markup.add(*make_buttons(
+                [strings.OK_MOD_BUTTON, strings.CANCEL_MOD_BUTTON]))
+            if call.data == get_callback_data(strings.EDIT_MOD_BUTTON):
+                msg = send_message(call.message, 'Введите измененный текст')
+                bot.register_next_step_handler(msg, process_mod_edit_text)
+            elif call.data == get_callback_data(strings.CANCEL_MOD_BUTTON):
+                send_message(call.message,
+                             get_string('title', strings.CANCEL_MOD_BUTTON))
+                # hide inline buttons
+                bot.edit_message_reply_markup(call.message.chat.id,
+                                              call.message.message_id)
+
+
+def process_mod_edit_text(message):
+    if is_registered(message.chat.id):
+        if is_moderator(message.chat.id):
+            lang = mod_dict.get('mod_text_lang')
+            db.document(f"faq_texts/{mod_dict.get('category').replace('_mod', '')}").update(
+                {lang: message.text}
+            )
+            send_large_message(message, message.text.replace('\\n', '\n'))
 
 bot.remove_webhook()
 sleep(0.1)
