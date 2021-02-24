@@ -707,14 +707,37 @@ const JSchemaTask = () => {
 	const customImageWidget = (props) => {
 		console.log("PROPS", props)
 		return (
-			<img src={props.value} alt={props.schema.title}></img>
+			<img src={props.value} alt={props.schema.title}
+				style={{
+					maxWidth: "100%",
+					height: "auto"
+				}}></img>
 		);
 	};
 
 	const customVideoWidget = (props) => {
 		console.log("PROPS", props)
 		return (
+			<video title={props.schema.title}
+				style={{
+					maxWidth: "100%",
+					height: "auto"
+				}}
+				controls
+			>
+				<source src={props.value} type="video/mp4"></source>
+			</video>
+		)
+	}
+
+	const customIframeWidget = (props) => {
+		console.log("PROPS", props)
+		return (
 			<iframe title={props.schema.title}
+				style={{
+					maxWidth: "100%",
+					height: "auto"
+				}}
 				src={props.value}>
 			</iframe>
 		)
@@ -722,7 +745,8 @@ const JSchemaTask = () => {
 
 	const widgets = {
 		customImageWidget: customImageWidget,
-		customVideoWidget: customVideoWidget
+		customVideoWidget: customVideoWidget,
+		customIframeWidget: customIframeWidget
 	};
 
 	return (
