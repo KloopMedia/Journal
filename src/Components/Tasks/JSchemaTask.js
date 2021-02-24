@@ -725,20 +725,6 @@ const JSchemaTask = () => {
 		customVideoWidget: customVideoWidget
 	};
 
-	mergedForm.form_questions = {
-		title: "test", 
-		properties:
-		{
-			test1: { title: 'test1', type: 'string', default: "https://miro.medium.com/max/256/1*lcRm2muyWDct3FW2drmptA.png" },
-			test2: { title: 'test2', type: 'string', default: 'https://www.youtube.com/embed/tgbNymZ7vqY' }
-		}
-	}
-
-	mergedForm.ui_schema = {
-		test1: { "ui:widget": "customImageWidget" },
-		test2: { "ui:widget": "customVideoWidget" }
-	}
-
 	return (
 		currentUser ?
 			<Grid style={{ padding: 30 }}>
