@@ -704,6 +704,41 @@ const JSchemaTask = () => {
 
 	}
 
+	const customImageWidget = (props) => {
+		console.log("PROPS", props)
+		return (
+			<img src={props.value} alt={props.schema.title}></img>
+		);
+	};
+
+	const customVideoWidget = (props) => {
+		console.log("PROPS", props)
+		return (
+			<iframe title={props.schema.title}
+				src={props.value}>
+			</iframe>
+		)
+	}
+
+	const widgets = {
+		customImageWidget: customImageWidget,
+		customVideoWidget: customVideoWidget
+	};
+
+	mergedForm.form_questions = {
+		title: "test", 
+		properties:
+		{
+			test1: { title: 'test1', type: 'string', default: "https://miro.medium.com/max/256/1*lcRm2muyWDct3FW2drmptA.png" },
+			test2: { title: 'test2', type: 'string', default: 'https://www.youtube.com/embed/tgbNymZ7vqY' }
+		}
+	}
+
+	mergedForm.ui_schema = {
+		test1: { "ui:widget": "customImageWidget" },
+		test2: { "ui:widget": "customVideoWidget" }
+	}
+
 	return (
 		currentUser ?
 			<Grid style={{ padding: 30 }}>
@@ -740,6 +775,7 @@ const JSchemaTask = () => {
 								schema={caseStages[taskMetadata.case_stage_id].releaseFeedback_schema}
 								uiSchema={caseStages[taskMetadata.case_stage_id].releaseFeedback_ui}
 								formData={feedbackValue}
+								widgets={widgets}
 								onChange={e => {
 									handleFeedbackSave(e)
 								}}
@@ -825,6 +861,7 @@ const JSchemaTask = () => {
 													schema={mergedBackgroundForms[stage][taskId].form_questions}
 													uiSchema={mergedBackgroundForms[stage][taskId].ui_schema}
 													formData={backgroundResponses[taskId]}
+													widgets={widgets}
 													fields={{ customFileUpload: a => CustomFileUpload({ ...a, ...{ taskID: taskId }, ...{ "currentUserUid": currentUser.uid } }) }}
 													disabled={true}
 												> </JSchemaForm>
@@ -847,6 +884,7 @@ const JSchemaTask = () => {
 						formData={formResponses}
 						fields={{ customFileUpload: a => CustomFileUpload({ ...a, ...{ taskID: id }, ...{ "currentUserUid": currentUser.uid } }) }}
 						disabled={formStatus === "loading" || formStatus === "sent" || formStatus === "released"}
+						widgets={widgets}
 						onChange={e => {
 							handleFormChange(e)
 						}}
@@ -880,7 +918,7 @@ const JSchemaTask = () => {
 									color: "red",
 									margin: 5
 								}}
-								>Отправить</Button>
+							>Отправить</Button>
 
 
 						</div>
