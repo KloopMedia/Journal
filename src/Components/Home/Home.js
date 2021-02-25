@@ -122,10 +122,10 @@ const Home = (props) => {
             <Grid>
                 <Grid container className={classes.message}>
                     <Typography>Здравствуйте, дорогие наблюдатели! Мы рады приветствовать вас в наших рядах!</Typography>
-                    {/* <Typography>Чтобы связать бот с системой, перейдите по ссылке: <Link href="https://kloopmedia.github.io/Journal">https://kloopmedia.github.io/Journal</Link></Typography> */}
-                    <Typography>Если у вас не получилось связать бот с системой, посмотрите нашу видео-инструкцию. Как заполнить анкету? <Link href="https://www.youtube.com/watch?v=bkukGAemNTY&feature=youtu.be">https://www.youtube.com/watch?v=bkukGAemNTY&feature=youtu.be</Link></Typography>
-                    <Typography>Как пользоваться ботом? <Link href="https://www.youtube.com/watch?v=jJX5uMqqC7Q&feature=youtu.be">https://www.youtube.com/watch?v=jJX5uMqqC7Q&feature=youtu.be</Link></Typography>
-                    <Typography>Если у вас в разделе «невыполненное» стоит форма, то пожалуйста заполните ее. После того, как вы это сделаете, она автоматически должна перейти в раздел «выполненное»</Typography>
+                    <Typography>Если вы не знаете, как заполнить анкету, то посмотрите <Link href="https://www.youtube.com/watch?v=bkukGAemNTY&feature=youtu.be">наше видео</Link></Typography>
+                    <Typography>Чтобы понять, как работает бот посмотрите нашу <Link href="https://www.youtube.com/watch?v=jJX5uMqqC7Q&feature=youtu.be">видео-инструкцию</Link></Typography>
+                    <Typography>Чтобы все начало работать, вам необходимо в самом начале нажать на кнопку Получить ранг El-Monitor</Typography>
+                    <Typography>Чтобы получать каждый день задания от нас, перейдите в раздел <Link href="https://kloopmedia.github.io/Journal/#/p/test_page">Тест</Link></Typography>
                 </Grid>
                 {tgId === "" ?
                     <Grid container justify="center" direction="column" alignItems="center" className={classes.root}>
