@@ -733,13 +733,14 @@ const JSchemaTask = () => {
 	const customIframeWidget = (props) => {
 		console.log("PROPS", props)
 		return (
-			<iframe title={props.schema.title}
-				style={{
-					maxWidth: "100%",
-					height: "auto"
-				}}
-				src={props.value}>
-			</iframe>
+			<iframe
+				title={props.schema.title}
+				width="560"
+				height="315"
+				src={props.value}
+				frameborder="0"
+				allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+				allowfullscreen></iframe>
 		)
 	}
 
@@ -757,7 +758,7 @@ const JSchemaTask = () => {
 					handleClose={handleDialogClose}
 					handleOk={handleOk}
 					showOk={formStatus === "sent"}
-					title={formStatus === "sent" ? caseStages[taskMetadata.case_stage_id].releaseTitle ? caseStages[taskMetadata.case_stage_id].releaseTitle :  "Форма успешно отправлена." : "Отправить форму?"}
+					title={formStatus === "sent" ? caseStages[taskMetadata.case_stage_id].releaseTitle ? caseStages[taskMetadata.case_stage_id].releaseTitle : "Форма успешно отправлена." : "Отправить форму?"}
 					content={formStatus === "sent" ? caseStages[taskMetadata.case_stage_id].releaseMessage ? caseStages[taskMetadata.case_stage_id].releaseMessage : "Спасибо" : "Вы собираетесь отправить форму. Это значит, что вы больше не сможете изменять ответы."}
 					dialogFunction={() => { changeTaskStatus('complete') }} />}
 
