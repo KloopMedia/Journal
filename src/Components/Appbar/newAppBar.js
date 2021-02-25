@@ -138,7 +138,7 @@ function ResponsiveDrawer(props) {
 	}, [currentUser])
 
 	useEffect(() => {
-		if (userRanks.length > 0 && availableRanks.length > 0) {
+		if (userRanks && userRanks.length > 0 && availableRanks.length > 0) {
 			firebase
 				.firestore()
 				.collection('pages')
