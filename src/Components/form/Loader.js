@@ -62,14 +62,18 @@ const Loader = props => {
                 }, () => {
                     // Upload completed successfully, now we can get the download URL
                     snap.snapshot.ref.getDownloadURL().then(async downloadURL => {
-                        await props.filesLinks.set({contents: {[downloadURL]: {name: file.name, url: downloadURL}}},
+                        let fileLink = downloadURL
+                        if (props.secure) {
+                            fileLink = downloadURL.split('?')[0]
+                        }
+                        await props.filesLinks.set({contents: {[fileLink]: {name: file.name, url: fileLink}}},
 					{merge: true})
                         setFileBeingUploaded(prevState => {
                             const newState = Object.assign({}, prevState)
                             delete newState[file.name]
                             return newState
                         })
-                        console.log('File available at', downloadURL);
+                        console.log('File available at', fileLink);
                     });
                 });
 

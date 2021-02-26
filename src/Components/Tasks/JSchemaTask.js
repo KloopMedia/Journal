@@ -897,7 +897,7 @@ const JSchemaTask = () => {
 						schema={mergedForm.form_questions}
 						uiSchema={mergedForm.ui_schema}
 						formData={formResponses}
-						fields={{ customFileUpload: a => CustomFileUpload({ ...a, ...{ taskID: id }, ...{ "currentUserUid": currentUser.uid } }) }}
+						fields={{ customFileUpload: a => CustomFileUpload({ ...a, ...{ taskID: id }, ...{ "currentUserUid": currentUser.uid }, ...{stage: caseStages[taskMetadata.case_stage_id]} }) }}
 						disabled={formStatus === "loading" || formStatus === "sent" || formStatus === "released"}
 						widgets={widgets}
 						onChange={e => {

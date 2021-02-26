@@ -49,6 +49,7 @@ const CustomFileUpload = props => {
 			{props.disabled ? null :
 				<div>
 					<Loader storageRef={pathToFolder}
+							secure={props.stage && props.stage.cleanFileLink ? props.stage.cleanFileLink : false}
 							filesLinks={linksToFiles}/>
 					{connectingTelegram ?
 						<CircularProgress/>
