@@ -606,8 +606,9 @@ const Page = () => {
                 onChange={e => {
                     handleFormChange(e)
                 }}
+                onSubmit={requestTask}
             >
-                <button type="submit" onClick={requestTask} className='btn btn-info'>Получить</button>
+                <button type="submit" className='btn btn-info'>Получить</button>
             </JSchemaForm>
         </Grid>}
 

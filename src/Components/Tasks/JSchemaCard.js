@@ -146,10 +146,10 @@ const JSchemaTaskCard = (props) => {
 	}
 
 	const displayJSON = (cardData) => {
-		return Object.keys(cardData).map(stage => {
+		return Object.keys(cardData).map((stage, i) => {
 			// console.log("STAGE: ", stage)
 			if (stage === 'message') {
-				return <Typography>{cardData[stage]}</Typography>
+				return <Typography key={stage + i}>{cardData[stage]}</Typography>
 			}
 			return Object.keys(cardData[stage]).map(response => {
 				// console.log("RESPONSE: ", response)

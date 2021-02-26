@@ -172,12 +172,15 @@ const JSchemaTask = () => {
 		const mergedBgForms = {}
 		console.log("Bg tasks: ", backgroundTasks)
 		Object.keys(backgroundTasks).map(taskId => {
-			const stage = backgroundTasks[taskId].case_stage_id
-			if (!mergedBgForms[stage]) {
-				mergedBgForms[stage] = {}
+			if (taskId !== id) {
+				const stage = backgroundTasks[taskId].case_stage_id
+				if (!mergedBgForms[stage]) {
+					mergedBgForms[stage] = {}
+				}
+				mergedBgForms[stage][taskId] = mergeForm(backgroundTaskForms[taskId],
+					caseStages[stage])
 			}
-			mergedBgForms[stage][taskId] = mergeForm(backgroundTaskForms[taskId],
-				caseStages[stage])
+
 		})
 		console.log("Merged bg forms: ", mergedBgForms)
 		setMergedBackgroundForms(mergedBgForms)
@@ -205,6 +208,7 @@ const JSchemaTask = () => {
 					.collection("tasks")
 					.where("case_id", "==", taskMetadata.case_id)
 					.where("case_stage_id", "in", backgroundTasksList)
+					.orderBy("created_date")
 					.onSnapshot(snapshot => {
 						snapshot.docChanges().forEach(change => {
 							if (change.type === "added" || change.type === "modified") {
