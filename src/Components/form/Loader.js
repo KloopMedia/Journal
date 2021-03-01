@@ -71,7 +71,7 @@ const Loader = props => {
                             fileLink = clear_url(downloadURL.split('?')[0])
                         }
                         await props.filesLinks.set({contents: {[fileLink]: {name: file.name, url: fileLink}}},
-					{merge: true})
+					{merge: props.allowMultipleFiles})
                         setFileBeingUploaded(prevState => {
                             const newState = Object.assign({}, prevState)
                             delete newState[file.name]
@@ -99,7 +99,7 @@ const Loader = props => {
             <input
                 type="file"
                 onChange={handleChange}
-                // multiple
+                multiple={props.allowMultipleFiles}
             />
             {Object.keys(fileBeingUploaded).map(filename =>
                 <div key={filename}>
