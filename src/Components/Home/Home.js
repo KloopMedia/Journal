@@ -11,7 +11,7 @@ const useStyles = makeStyles(theme => ({
     root: {
         marginTop: 20,
         background: 'lightgreen',
-        height: 200,
+        // height: 200,
         width: 500,
         [theme.breakpoints.down("sm")]: {
             maxWidth: 300
@@ -128,11 +128,10 @@ const Home = (props) => {
                     <Typography>Чтобы получать каждый день задания от нас, перейдите в раздел <Link href="https://kloopmedia.github.io/Journal/#/p/test_page">Тест</Link></Typography>
                 </Grid>
                 {tgId === "" ?
-                    <Grid container justify="center" direction="column" alignItems="center" className={classes.root}>
+                    <Grid container justify="center" className={classes.message}>
                         <Typography style={{ paddingBottom: 10 }} variant="h5" align="center">Вы можете связать свой
                             аккаунт с нашим Телеграм-ботом. Для этого нажмите на ссылку ниже.</Typography>
-                        {token ? <Link variant="h5" href={"https://telegram.me/journal_tg_bot?start=" + token}>Ссылка на
-                                бот</Link>
+                        {token ? <Link variant="h5" href={"https://telegram.me/journal_tg_bot?start=" + token}>Ссылка на бот</Link>
                             : <Typography variant="body2" align="center">Если ссылка не создалась в течение 5 секунд,
                                 перезагрузите страницу</Typography>}
                     </Grid>
