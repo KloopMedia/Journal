@@ -14,6 +14,10 @@ const Loader = props => {
     //     });
     // }, [props.filesLinks])
 
+    const clear_url = (url) => {
+        return url.replace('https://firebasestorage.googleapis.com/v0/b/journal-bb5e3.appspot.com/o', 'https://storage.cloud.google.com/journal-bb5e3.appspot.com') + '?authuser=1'
+    }
+
 
     const upload = async files => {
         await Promise.all(files.map(async file => {
@@ -64,7 +68,7 @@ const Loader = props => {
                     snap.snapshot.ref.getDownloadURL().then(async downloadURL => {
                         let fileLink = downloadURL
                         if (props.secure) {
-                            fileLink = downloadURL.split('?')[0]
+                            fileLink = clear_url(downloadURL.split('?')[0])
                         }
                         await props.filesLinks.set({contents: {[fileLink]: {name: file.name, url: fileLink}}},
 					{merge: true})
@@ -95,7 +99,7 @@ const Loader = props => {
             <input
                 type="file"
                 onChange={handleChange}
-                multiple
+                // multiple
             />
             {Object.keys(fileBeingUploaded).map(filename =>
                 <div key={filename}>
