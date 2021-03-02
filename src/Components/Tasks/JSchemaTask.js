@@ -761,8 +761,8 @@ const JSchemaTask = () => {
 					handleClose={handleDialogClose}
 					handleOk={handleOk}
 					showOk={formStatus === "sent"}
-					title={formStatus === "sent" ? caseStages[taskMetadata.case_stage_id].releaseTitle ? <ReactMarkdown>{caseStages[taskMetadata.case_stage_id].releaseTitle}</ReactMarkdown> : "Форма успешно отправлена." : "Отправить форму?"}
-					content={formStatus === "sent" ? caseStages[taskMetadata.case_stage_id].releaseMessage ? <ReactMarkdown>{caseStages[taskMetadata.case_stage_id].releaseMessage}</ReactMarkdown> : "Спасибо" : "Вы собираетесь отправить форму. Это значит, что вы больше не сможете изменять ответы."}
+					title={formStatus === "sent" ? caseStages[taskMetadata.case_stage_id].releaseTitle ? <ReactMarkdown children={caseStages[taskMetadata.case_stage_id].releaseTitle} /> : "Форма успешно отправлена." : "Отправить форму?"}
+					content={formStatus === "sent" ? caseStages[taskMetadata.case_stage_id].releaseMessage ? <ReactMarkdown children={caseStages[taskMetadata.case_stage_id].releaseMessage} /> : "Спасибо" : "Вы собираетесь отправить форму. Это значит, что вы больше не сможете изменять ответы."}
 					dialogFunction={() => { changeTaskStatus('complete') }} />}
 
 				{/* {dialogType === 'release' && <Dialog
