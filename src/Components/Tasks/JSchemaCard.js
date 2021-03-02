@@ -146,21 +146,23 @@ const JSchemaTaskCard = (props) => {
 	}
 
 	const displayJSON = (cardData) => {
-		return Object.keys(cardData).map((stage, i) => {
+		return Object.keys(cardData).map((stgId, i) => {
 			// console.log("STAGE: ", stage)
-			if (stage === 'message') {
-				return <Typography key={stage + i}>{cardData[stage]}</Typography>
+			if (stgId === 'message') {
+				return <Typography key={stgId + i}>{cardData[stgId]}</Typography>
 			}
-			return Object.keys(cardData[stage]).map(response => {
+			return Object.keys(cardData[stgId]).map(response => {
 				// console.log("RESPONSE: ", response)
-				if (response === "attachedFiles") {
-					// console.log("FILES: ")
-					return <div key={stage + response}>Files</div>
-				} else return (
-					<typography variant="body2" component="p" key={stage + response}>
-						{/* {console.log("TEXT: ", cardData[stage][response])} */}
-						{JSON.stringify(cardData[stage][response], null, 2)}
-					</typography>)
+				if (stage && stage.cardData && stage.cardData[stgId] && stage.cardData[stgId].includes(response)) {
+					if (response === "attachedFiles") {
+						// console.log("FILES: ")
+						return <div key={stgId + response}>Files</div>
+					} else return (
+						<typography variant="body2" component="p" key={stgId + response}>
+							{/* {console.log("TEXT: ", cardData[stgId][response])} */}
+							{JSON.stringify(cardData[stgId][response], null, 2)}
+						</typography>)
+				}
 			})
 		})
 	}
