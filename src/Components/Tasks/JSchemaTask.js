@@ -898,6 +898,7 @@ const JSchemaTask = () => {
 						fields={{ customFileUpload: a => CustomFileUpload({ ...a, ...{ taskID: id }, ...{ "currentUserUid": currentUser.uid }, ...{stage: caseStages[taskMetadata.case_stage_id]} }) }}
 						disabled={formStatus === "loading" || formStatus === "sent" || formStatus === "released"}
 						widgets={widgets}
+						noHtml5Validate  
 						onChange={e => {
 							handleFormChange(e)
 						}}
