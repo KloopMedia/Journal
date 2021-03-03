@@ -7,6 +7,7 @@
     "@fluentui/react": "^7.155.3",
     "@material-ui/core": "^4.11.0",
     "@material-ui/icons": "^4.9.1",
+    "@material-ui/lab": "^4.0.0-alpha.57",
     "@rjsf/antd": "^2.4.1",
     "@rjsf/bootstrap-4": "^2.4.1",
     "@rjsf/core": "^2.4.1",

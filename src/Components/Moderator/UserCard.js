@@ -29,7 +29,7 @@ export default function UserCard(props) {
   console.log('TEST CARD')
   console.log(props)
 
-  if(props.userInfo == {}){
+  if (props.userInfo == {}) {
     return (<div></div>)
   }
 
@@ -40,7 +40,7 @@ export default function UserCard(props) {
           id: {props.userInfo.id}
         </Typography>
         <Typography variant="h5" component="h2">
-        {props.userInfo.surname} {props.userInfo.name}
+          {props.userInfo.surname + " " + props.userInfo.name}
         </Typography>
         <Typography className={classes.pos} color="textSecondary">
           Регион: {props.userInfo.district}

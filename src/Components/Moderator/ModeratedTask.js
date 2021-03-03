@@ -5,6 +5,7 @@ import Form from '../form/form'
 import { Button, Grid, Typography } from '@material-ui/core';
 
 import UserCard from '../Moderator/UserCard'
+import NewForm from './NewForm'
 
 
 const ModeratedTask = (props) => {
@@ -166,7 +167,7 @@ const ModeratedTask = (props) => {
 	return (
 		<Grid style={{ padding: 30 }}>
 
-			<Grid container style={{ padding: 20 }} justify="center">
+			{/* <Grid container style={{ padding: 20 }} justify="center">
 				<Button variant="contained" color={pending ? "secondary" : '{}'} onClick={handlePending}>
 					PENDING
 				</Button>
@@ -182,14 +183,14 @@ const ModeratedTask = (props) => {
 				<Button variant="contained" color={notVerified ? "secondary" : '{}'} onClick={handleNotVerified}>
 					NOT VERIFIED
 				</Button>
-            </Grid>
+            </Grid> */}
 
 			<Grid container justify = "center">
                 <UserCard userInfo={userInfo}> </UserCard>
             </Grid>
 
-            {forms}
-            
+            {/* {forms} */}
+            <NewForm id={props.task.id} />
 
 			</Grid>
 	);
