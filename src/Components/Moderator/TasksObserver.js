@@ -80,7 +80,7 @@ const TasksObserver = (props) => {
 
     const getTasks = async () => {
         let tasksList = []
-        let tasksRef = firebase.firestore().collection('tasks')
+        let tasksRef = firebase.firestore().collection('tasks').where("is_complete", "==", true)
 
         // console.log('USER ID')
         // console.log(user)
