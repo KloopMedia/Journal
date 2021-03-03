@@ -126,6 +126,7 @@ const Home = (props) => {
                     <Typography>Чтобы понять, как работает бот посмотрите нашу <Link href="https://www.youtube.com/watch?v=jJX5uMqqC7Q&feature=youtu.be">видео-инструкцию</Link></Typography>
                     <Typography>Чтобы все начало работать, вам необходимо в самом начале нажать на кнопку Получить ранг El-Monitor</Typography>
                     <Typography>Чтобы получать каждый день задания от нас, перейдите в раздел <Link href="https://kloopmedia.github.io/Journal/#/p/test_page">Тест</Link></Typography>
+                    <Typography>Чтобы понять, как получать тесты и как заполнять формы посмотрите нашу <Link href="https://www.youtube.com/watch?v=V4U8JFOzLFo">видео-инструкцию</Link></Typography>
                 </Grid>
                 {tgId === "" ?
                     <Grid container justify="center" className={classes.message}>
