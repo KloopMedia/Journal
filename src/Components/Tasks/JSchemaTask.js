@@ -58,6 +58,7 @@ const JSchemaTask = () => {
 	const [openSnackbar, setOpenSnackbar] = useState(false);
 	const [files, setFiles] = useState({})
 	const [uploading, setUploading] = useState(false)
+	const [enableButton, setEnableButton] = useState(false)
 
 	const { currentUser } = useContext(AuthContext);
 	const { id } = useParams();
@@ -140,7 +141,7 @@ const JSchemaTask = () => {
 	}, [id, currentUser])
 
 	useEffect(() => {
-		if (Object.entries(taskMetadata).length > 0) {
+		if (Object.entries(taskMetadata).length > 0 && taskMetadata.case_type) {
 			console.log("Task metadata: ", taskMetadata)
 			firebase.firestore()
 				.collection("schema")
@@ -167,7 +168,7 @@ const JSchemaTask = () => {
 				});
 
 		}
-	}, [taskMetadata.case_type])
+	}, [taskMetadata])
 
 	useEffect(() => {
 		const mergedBgForms = {}
@@ -191,6 +192,11 @@ const JSchemaTask = () => {
 		if (Object.keys(mergedForm).length > 0 && formStatus === "loading") {
 			setFormStatus("ready")
 		}
+		if (mergedForm && mergedForm.form_questions && mergedForm.form_questions.required && formResponses) {
+			let requirementsSatisfied = mergedForm.form_questions.required.every(checker)
+			setEnableButton(requirementsSatisfied)
+		}
+		
 	}, [formResponses, mergedForm])
 
 	useEffect(() => {
@@ -643,6 +649,21 @@ const JSchemaTask = () => {
 		history.goBack()
 	};
 
+	const checker = (q) => {
+		if (typeof formResponses[q] === 'object' && formResponses[q] !== null && Object.values(formResponses[q]).length > 0) {
+			// console.log(q, "object not empty")
+			return true
+		}
+		else if (typeof formResponses[q] !== 'object' && formResponses[q] !== null && formResponses[q] !== "" && formResponses[q] !== {} && formResponses[q] !== undefined) {
+			// console.log(q, "primitive not empty")
+			return true
+		}
+		else {
+			// console.log(q, "empty")
+			return false
+		}
+	}
+
 	const handleDialogOpen = (type) => {
 		console.log("Dialog open")
 		if (type === 'send') {
@@ -896,10 +917,10 @@ const JSchemaTask = () => {
 						schema={mergedForm.form_questions}
 						uiSchema={mergedForm.ui_schema}
 						formData={formResponses}
-						fields={{ customFileUpload: a => CustomFileUpload({ ...a, ...{ taskID: id }, ...{ "currentUserUid": currentUser.uid }, ...{stage: caseStages[taskMetadata.case_stage_id]} }) }}
+						fields={{ customFileUpload: a => CustomFileUpload({ ...a, ...{ taskID: id }, ...{ "currentUserUid": currentUser.uid }, ...{ stage: caseStages[taskMetadata.case_stage_id] } }) }}
 						disabled={formStatus === "loading" || formStatus === "sent" || formStatus === "released"}
 						widgets={widgets}
-						noHtml5Validate  
+						noHtml5Validate
 						onChange={e => {
 							handleFormChange(e)
 						}}
@@ -926,13 +947,13 @@ const JSchemaTask = () => {
 								}} onClick={() => handleDialogOpen('release')}>Освободить</Button>
 								:
 								null}
-							<Button type="submit" variant="outlined" disabled={formStatus === "loading" || formStatus === "sent" || formStatus === "released"}
-								style={{
+							<Button type="submit" variant="outlined" disabled={formStatus === "loading" || formStatus === "sent" || formStatus === "released" || !enableButton}
+								style={enableButton ? {
 									borderWidth: 2,
 									borderColor: "red",
 									color: "red",
 									margin: 5
-								}}
+								} : null}
 							>Отправить</Button>
 
 
