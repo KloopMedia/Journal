@@ -947,6 +947,7 @@ const JSchemaTask = () => {
 								}} onClick={() => handleDialogOpen('release')}>Освободить</Button>
 								:
 								null}
+							{!enableButton && <Typography color="error">Вы не можете отправить, пока не заполните все поля</Typography>}
 							<Button type="submit" variant="outlined" disabled={formStatus === "loading" || formStatus === "sent" || formStatus === "released" || !enableButton}
 								style={enableButton ? {
 									borderWidth: 2,
