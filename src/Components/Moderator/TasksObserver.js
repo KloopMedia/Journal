@@ -2,73 +2,75 @@ import React, { useEffect, useState, useContext } from 'react';
 import firebase from '../../util/Firebase'
 import { AuthContext } from "../../util/Auth";
 
-import Form from '../form/form'
-import { Button, Grid, Typography } from '@material-ui/core';
+import { Button, Grid } from '@material-ui/core';
 
 import PaginatedTasks from '../Moderator/PaginatedTasks'
 
-import NativeSelect from '@material-ui/core/NativeSelect';
-import FormHelperText from '@material-ui/core/FormHelperText';
-import FormControl from '@material-ui/core/FormControl';
 import Autocomplete from '@material-ui/lab/Autocomplete';
 import TextField from '@material-ui/core/TextField';
-import InputLabel from '@material-ui/core/InputLabel';
-import MenuItem from '@material-ui/core/MenuItem';
-import Select from '@material-ui/core/Select';
-
 import SearchIcon from '@material-ui/icons/Search';
 
 const TasksObserver = (props) => {
 
-    // console.log('TEST FUNCT')
-    // console.log(props)
     const { currentUser } = useContext(AuthContext);
 
-    //TODO load from SCHEMA
-    // useEffect(() => {
-    //     firebase.firestore().collection('schema').doc('structure').collection('cases')
-    // }, [currentUser])
-    const taskTypes = ['ВСЕ', 'Поиск контактных данных', 'interview']
-
-    //TODO load from SCHEMA        
-    const taskTitles = ['ВСЕ', 'Задание № 1.1', 'Задание № 1.2', 'Задание № 1.3', 'Задание № 2.1', 'Задание № 2.2', 'Задание № 2.3', 'Задание 3.1', 'Задание 3.2', 'Задание 3.3']
-
-    //TODO load from SCHEMA        
-    const taskReviewStatuses = ['ВСЕ', 'pending', 'passed', 'not passed', 'verified', 'not verified']
-
     const [tasks, setTasks] = React.useState([]);
-    const [user, setUser] = React.useState('ВСЕ');
+    const [allCases, setCases] = useState([])
+    const [allStages, setStages] = useState({})
     const [users, setUsers] = React.useState([]);
-    const [taskType, setTaskType] = React.useState(taskTypes[0]);
-    const [taskTitle, setTaskTitle] = React.useState(taskTitles[0]);
-    const [taskReviewStatus, setTaskReviewStatus] = React.useState(taskReviewStatuses[0]);
 
-    const setTaskTypeHandler = (event) => {
-        setTaskType(event.target.value);
+    const [user, setUser] = React.useState("");
+    const [selectedCase, setSelectedCase] = useState(null)
+    const [selectedStage, setSelectedStage] = React.useState(null);
+
+    const casesPath = firebase.firestore().collection('schema').doc('structure').collection('cases')
+
+    useEffect(() => {
+        casesPath.get().then(docs => {
+            const cases = []
+            docs.forEach(doc => {
+                cases.push(doc.id)
+            })
+            return cases
+        }).then(cases => setCases(cases))
+
+    }, [currentUser])
+
+    useEffect(() => {
+        setStages(null)
+        if (selectedCase) {
+            casesPath.doc(selectedCase).collection("stages").get().then(docs => {
+                const stages = []
+                docs.forEach(doc => {
+                    stages.push(doc.id)
+                })
+                return stages
+            }).then(stages => setStages(stages))
+        }
+    }, [selectedCase])
+
+
+    const setSelectedCaseHandler = (value) => {
+        setSelectedStage(null)
+        setSelectedCase(value);
     };
 
-    const setTaskTitleHandler = (event) => {
-        setTaskTitle(event.target.value);
+    const setSelectedStageHandler = (value) => {
+        setSelectedStage(value);
     };
 
-    const setUserHandler = (event) => {
-        setUser(event.target.value);
-    };
-
-    const setTaskReviewStatusHandler = (event) => {
-        setTaskReviewStatus(event.target.value);
-    };
+    const setUserHandler = (value) => {
+        setUser(value);
+    }
 
     const handleClickApplyFilters = (event) => {
-
         getTasks()
-
     }
 
 
     const getUsers = async () => {
-        let usersList = [{ id: '', name: 'NONE', surname: '' }]
-        let usersRef = firebase.firestore().collection('users').orderBy("surname")
+        let usersList = []
+        let usersRef = firebase.firestore().collection('users')
         await usersRef.get().then(docs => {
             docs.forEach(doc => {
                 usersList.push({ id: doc.id, ...doc.data() })
@@ -83,22 +85,24 @@ const TasksObserver = (props) => {
         let tasksRef = firebase.firestore().collection('tasks').where("is_complete", "==", true)
 
         // console.log('USER ID')
-        // console.log(user)
+        console.log(user)
+        console.log(selectedCase)
+        console.log(selectedStage)
 
-        if (user !== 'ВСЕ') {
+        if (user !== "") {
             tasksRef = tasksRef.where("assigned_users", "array-contains", user)
+            console.log("USER FIRED", user)
         }
 
-        if (taskTitle !== 'ВСЕ') {
-            tasksRef = tasksRef.where("title", "==", taskTitle)
+        if (selectedCase !== null) {
+            tasksRef = tasksRef.where("case_type", "==", selectedCase)
+            console.log("CASE FIRED", selectedCase)
         }
 
-        if (taskType !== 'ВСЕ') {
-            tasksRef = tasksRef.where("type", "==", taskType)
-        }
+        if (selectedStage !== null) {
+            tasksRef = tasksRef.where("case_stage_id", "==", selectedStage)
+            console.log("STAGE FIRED", selectedStage)
 
-        if (taskReviewStatus !== 'ВСЕ') {
-            tasksRef = tasksRef.where("review_status", "==", taskReviewStatus)
         }
 
         await tasksRef.get().then(docs => {
@@ -114,96 +118,44 @@ const TasksObserver = (props) => {
         getUsers()
     }, [])
 
-    // console.log('USERS')
-    // console.log(users)
 
     return (
         <div>
-            {/* <Grid container justify="center">
-                <FormControl style={{ width: '350px' }}>
-                <NativeSelect
-                        value={user.value}
-                        onChange={setUserHandler}
-                        name="filterUser"
-                    //inputProps={{ 'aria-label': 'filterViolation' }}
-                    >
-                        {
-                            users.map(userInfo => (
-                                <option value={userInfo.id}> {userInfo.surname} {userInfo.name}</option>
-                            ))
-                        }
-                    </NativeSelect>
-                <FormHelperText>Выберите фильтр по users</FormHelperText>
-                </FormControl>
-            </Grid> */}
-
-            {/* <Grid container justify = "center">
-                <FormControl style={{width:'350px'}}>
-                <NativeSelect
-                    value={taskTitle}
-                    onChange={setTaskTitleHandler}
-                    name="filterTaskTitle"
-                    //inputProps={{ 'aria-label': 'filterViolation' }}
-                >
-                    {
-                        taskTitles.map(taskTitle => (
-                        <option value={taskTitle}>{taskTitle}</option>
-                    ))
-                    }
-                </NativeSelect>
-                 <FormHelperText>Выберите фильтр по наименованию задачи</FormHelperText>
-                </FormControl>
+            <Grid container justify="center" style={{ padding: 15 }}>
+                <Autocomplete
+                    id="combo-box-demo"
+                    options={allCases}
+                    style={{ width: 350 }}
+                    value={selectedCase}
+                    onChange={(event, newValue) => setSelectedCaseHandler(newValue)}
+                    renderInput={(params) => <TextField {...params} fullWidth label="Выберите фильтр по case" variant="outlined" />}
+                />
             </Grid>
 
-            <Grid container justify = "center">
-                <FormControl style={{width:'350px'}}>
-                <NativeSelect
-                    value={taskType}
-                    onChange={setTaskTypeHandler}
-                    name="filterTaskType"
-                    //inputProps={{ 'aria-label': 'filterViolation' }}
-                >
-                    {
-                        taskTypes.map(taskType => (
-                        <option value={taskType}>{taskType}</option>
-                    ))
-                    }
-                </NativeSelect>
-                 <FormHelperText>Выберите фильтр по типу задачи</FormHelperText>
-                </FormControl>
-            </Grid>
+            {allStages !== null && allStages.length > 0 && <Grid container justify="center" style={{ padding: 15 }}>
+                <Autocomplete
+                    id="combo-box-demo"
+                    options={allStages}
+                    style={{ width: 350 }}
+                    value={selectedStage}
+                    onChange={(event, newValue) => setSelectedStageHandler(newValue)}
+                    renderInput={(params) => <TextField {...params} fullWidth label="Выберите фильтр по stage" variant="outlined" />}
+                />
+            </Grid>}
 
-            <Grid container justify = "center">
-                <FormControl style={{width:'350px'}}>
-                <NativeSelect
-                    value={taskReviewStatus}
-                    onChange={setTaskReviewStatusHandler}
-                    name="filterReviewStatus"
-                    //inputProps={{ 'aria-label': 'filterViolation' }}
-                >
-                    {
-                        taskReviewStatuses.map(taskReviewStatus => (
-                        <option value={taskReviewStatus}>{taskReviewStatus}</option>
-                    ))
-                    }
-                </NativeSelect>
-                 <FormHelperText>Выберите фильтр по review_status</FormHelperText>
-                </FormControl>
-            </Grid> */}
-
-            <Grid container justify="center" style={{padding: 15}}>
+            <Grid container justify="center" style={{ padding: 15 }}>
                 <Autocomplete
                     id="combo-box-demo"
                     options={users}
-                    getOptionLabel={(option) => option.surname + " " + option.name}
-                    style={{ width: 300 }}
+                    getOptionLabel={(option) => option.surname + " " + option.name + " (" + option.username + ")"}
+                    style={{ width: 350 }}
                     value={user.value}
                     onChange={(event, newValue) => {
                         if (newValue) {
-                            setUser(newValue.id)
-                        } 
+                            setUserHandler(newValue.id)
+                        }
                         else {
-                            setUser("")
+                            setUserHandler("")
                         }
                     }}
                     renderInput={(params) => <TextField {...params} fullWidth label="Выберите фильтр по users" variant="outlined" />}

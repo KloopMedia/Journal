@@ -43,6 +43,9 @@ export default function UserCard(props) {
           {props.userInfo.surname + " " + props.userInfo.name}
         </Typography>
         <Typography className={classes.pos} color="textSecondary">
+          username: {props.userInfo.username}
+        </Typography>
+        <Typography className={classes.pos} color="textSecondary">
           Регион: {props.userInfo.district}
         </Typography>
         <Typography variant="body2" component="p">
