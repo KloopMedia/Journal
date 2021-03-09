@@ -2,6 +2,8 @@ import firebase from "../../util/Firebase";
 import Loader from "./Loader";
 import React, { useState } from "react";
 import CircularProgress from '@material-ui/core/CircularProgress';
+import ClearIcon from '@material-ui/icons/Clear';
+import IconButton from '@material-ui/core/IconButton';
 
 const CustomFileUpload = props => {
 	console.log("All props: ", props)
@@ -27,7 +29,7 @@ const CustomFileUpload = props => {
 				.firestore()
 				.collection("users")
 				.doc(props.currentUserUid)
-				.set({fileUpload: props.taskID + "/" + props.name }, {merge: true})
+				.set({ fileUpload: props.taskID + "/" + props.name }, { merge: true })
 			setConnectingTelegram(false)
 			setTelegramConnected(true)
 
@@ -42,6 +44,15 @@ const CustomFileUpload = props => {
 
 	console.log("Props formData: ", props.formData)
 
+	const removeFile = (path) => {
+		console.log(path)
+		linksToFiles.set({
+			contents: {[path]: firebase.firestore.FieldValue.delete()}
+		}, {merge: true})
+		.then(() => console.log("file removed"))
+		.catch(error => console.log(error))
+	}
+
 	return (
 		<div>
 			{props.schema.title ? <div>{props.schema.title}</div> : <div></div>}
@@ -49,11 +60,11 @@ const CustomFileUpload = props => {
 			{props.disabled ? null :
 				<div>
 					<Loader storageRef={pathToFolder}
-							allowMultipleFiles={props.stage && props.stage.allowMultipleFiles ? props.stage.allowMultipleFiles : false}
-							secure={props.stage && props.stage.cleanFileLink ? props.stage.cleanFileLink : false}
-							filesLinks={linksToFiles}/>
+						allowMultipleFiles={props.stage && props.stage.allowMultipleFiles ? props.stage.allowMultipleFiles : false}
+						secure={props.stage && props.stage.cleanFileLink ? props.stage.cleanFileLink : false}
+						filesLinks={linksToFiles} />
 					{connectingTelegram ?
-						<CircularProgress/>
+						<CircularProgress />
 						:
 						telegramConnected ?
 							<div>Вы можете начать загрузку файлов через бота. Все файлы, отправляемые боту, будут сохраняться здесь. После загрузки файлов через бот, не забудьте вернуться сюда и нажать "ОТПРАВИТЬ". <a href="https://t.me/journal_tg_bot">Перейти в бот.</a></div>
@@ -70,6 +81,7 @@ const CustomFileUpload = props => {
 					{Object.keys(props.formData).map(path =>
 						<div key={path}>
 							<a href={props.formData[path].url}>{props.formData[path].name}</a>
+							<IconButton onClick={() => removeFile(path)} size="small"><ClearIcon /></IconButton>
 						</div>
 					)}
 				</div>
