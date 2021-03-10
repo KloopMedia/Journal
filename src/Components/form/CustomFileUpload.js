@@ -81,7 +81,7 @@ const CustomFileUpload = props => {
 					{Object.keys(props.formData).map(path =>
 						<div key={path}>
 							<a href={props.formData[path].url}>{props.formData[path].name}</a>
-							<IconButton onClick={() => removeFile(path)} size="small"><ClearIcon /></IconButton>
+							{props.metadata && !props.metadata.is_complete && <IconButton onClick={() => removeFile(path)} size="small"><ClearIcon /></IconButton>}
 						</div>
 					)}
 				</div>
