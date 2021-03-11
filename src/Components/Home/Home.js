@@ -3,7 +3,7 @@ import firebase, { signInWithGoogle } from '../../util/Firebase'
 import { AuthContext } from "../../util/Auth";
 import moment from 'moment';
 import { v1 as uuid } from 'uuid'
-import { Button, Grid, Link, makeStyles, Typography } from '@material-ui/core';
+import { Button, Dialog, DialogContent, DialogContentText, DialogTitle, Grid, Link, makeStyles, Typography } from '@material-ui/core';
 
 const queryString = require('query-string');
 
@@ -35,6 +35,7 @@ const Home = (props) => {
     const [token, setToken] = useState(null)
     const { currentUser } = useContext(AuthContext);
     const [tgId, setTgId] = useState("")
+    const [open, setOpen] = React.useState(false);
 
     useEffect(() => {
         const makeToken = () => {
@@ -86,6 +87,9 @@ const Home = (props) => {
                         console.log("TGID: ", doc.data().tg_id)
                         setTgId(doc.data().tg_id)
                     }
+                    else {
+                        setOpen(true)
+                    }
                 })
         }
         return () => {
@@ -129,15 +133,37 @@ const Home = (props) => {
                     <Typography>Чтобы понять, как получать тесты и как заполнять формы посмотрите нашу <Link href="https://www.youtube.com/watch?v=V4U8JFOzLFo">видео-инструкцию</Link></Typography>
                 </Grid>
                 {tgId === "" ?
-                    <Grid container justify="center" className={classes.message}>
+                    <Dialog
+                        fullWidth
+                        open={open}
+                        aria-labelledby="max-width-dialog-title"
+                    >
+                        <DialogTitle id="max-width-dialog-title">
+                            <Typography style={{ paddingBottom: 10 }} variant="h5" align="center">Подключите бот, чтобы пользоваться системой / Системаны колдонуу үчүн ботко кошулуңуз</Typography>
+                        </DialogTitle>
+                        <DialogContent>
+                            <DialogContentText>
+                                <Grid container justify="center">
+                                    <Typography style={{ paddingBottom: 10 }} variant="h5" align="center">Вы можете связать свой
+                            аккаунт с нашим Телеграм-ботом. Для этого нажмите на ссылку ниже.</Typography>
+                                    <Typography style={{ paddingBottom: 10 }} variant="h5" align="center">Сиз өзүңүздүн аккаунтуңузду биздин телеграм-ботко туташтыра аласыз. Ал үчүн төмөндөгү шилтемени басыңыз.</Typography>
+                                    {token ? <Link variant="h5" href={"https://telegram.me/journal_tg_bot?start=" + token}>Ссылка на бот / Ботко шилтеме</Link>
+                                        : <Typography variant="body2" align="center">Если ссылка не создалась в течение 5 секунд,
+                                перезагрузите страницу</Typography>}
+                                </Grid>
+                            </DialogContentText>
+                        </DialogContent>
+                    </Dialog> :
+                    null}
+                {/* <Grid container justify="center" className={classes.message}>
                         <Typography style={{ paddingBottom: 10 }} variant="h5" align="center">Вы можете связать свой
                             аккаунт с нашим Телеграм-ботом. Для этого нажмите на ссылку ниже.</Typography>
                         {token ? <Link variant="h5" href={"https://telegram.me/journal_tg_bot?start=" + token}>Ссылка на бот</Link>
                             : <Typography variant="body2" align="center">Если ссылка не создалась в течение 5 секунд,
                                 перезагрузите страницу</Typography>}
-                    </Grid>
-                    :
-                    null}
+                    </Grid> */}
+
+
             </Grid>
             :
             <Grid container direction="column" style={{ padding: 20 }} justify="center">

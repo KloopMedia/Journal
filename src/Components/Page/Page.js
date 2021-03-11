@@ -161,9 +161,25 @@ const Page = () => {
             firebase.firestore()
                 .collection("tasks")
                 .where("assigned_users", "array-contains", currentUser.uid)
-                .where("case_type", "in", pageData.cases)
+                // .where("case_type", "in", pageData.cases)
                 .onSnapshot(snapshot => {
-                    simpleStateFirebaseUpdate(snapshot, setUserTasks)
+                    // simpleStateFirebaseUpdate(snapshot, setUserTasks)
+                    snapshot.docChanges().forEach(change => {
+                        if (pageData.cases.includes(change.doc.data().case_type)) {
+                            if (change.type === "added" || change.type === "modified") {
+                                setUserTasks(prevState => (
+                                    { ...prevState, [change.doc.id]: change.doc.data() }
+                                ))
+                            }
+                            if (change.type === "removed") {
+                                setUserTasks(prevState => {
+                                    const newState = Object.assign({}, prevState)
+                                    delete newState[change.doc.id]
+                                    return newState
+                                })
+                            }
+                        }
+                    })
                 })
 
             if (pageData.caseWithSelectableTasks) {

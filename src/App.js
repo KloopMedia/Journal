@@ -1,5 +1,6 @@
-import React, { useState, useContext } from 'react'
+import React, { useState, useContext, useEffect } from 'react'
 import { AuthProvider } from "./util/Auth";
+import firebase from './util/Firebase'
 import {
   HashRouter as Router,
   Switch,
@@ -30,46 +31,75 @@ import JSchemaTask from "./Components/Tasks/JSchemaTask";
 
 const App = () => {
   const { currentUser } = useContext(AuthContext);
+
+  const [tgId, setTgId] = useState("")
+
+  useEffect(() => {
+    let unsubscribeUserPrivate = () => { }
+    if (currentUser) {
+      unsubscribeUserPrivate = firebase.firestore()
+        .collection('users')
+        .doc(currentUser.uid)
+        .collection("user_private")
+        .doc("private")
+        .onSnapshot(doc => {
+          if (doc.exists && "tg_id" in doc.data()) {
+            console.log("APP TGID: ", doc.data().tg_id)
+            setTgId(doc.data().tg_id)
+          }
+        })
+    }
+    return () => {
+      unsubscribeUserPrivate()
+    }
+  }, [currentUser])
+
+
   return (
     <Router>
       <Grid container justify="center">
         <Appbar>
-          <Switch>
-            <Route exact path="/profile">
-              <Profile />
-            </Route>
-            <Route exact path="/request">
-              <Cases />
-            </Route>
-            <Route exact path="/tasks">
-              <Tasks />
-            </Route>
-            <Route path="/tasks/:id">
-              <Task />
-            </Route>
-            <Route path="/t/:id">
-              <JSchemaTask />
-            </Route>
-            <Route exact path="/tasksObserver">
-              <TasksObserver />
-            </Route>
-            <Route exact path="/notifications">
-              <Notifications />
-            </Route>
-            <Route exact path="/signin">
-              <Signin />
-            </Route>
-            <Route exact path="/faq">
-              <FAQ />
-            </Route>
-            <Route path="/p/:id">
-              {currentUser ?
-                <Page />
-                :
-                <Signin />}
-            </Route>
-            <PrivateRoute path="/" component={Home} />
-          </Switch>
+            {tgId !== "" ? <Switch>
+              <Route exact path="/profile">
+                <Profile />
+              </Route>
+              <Route exact path="/request">
+                <Cases />
+              </Route>
+              <Route exact path="/tasks">
+                <Tasks />
+              </Route>
+              <Route path="/tasks/:id">
+                <Task />
+              </Route>
+              <Route path="/t/:id">
+                <JSchemaTask />
+              </Route>
+              <Route exact path="/tasksObserver">
+                <TasksObserver />
+              </Route>
+              <Route exact path="/notifications">
+                <Notifications />
+              </Route>
+              <Route exact path="/signin">
+                <Signin />
+              </Route>
+              <Route exact path="/faq">
+                <FAQ />
+              </Route>
+              <Route path="/p/:id">
+                {currentUser ?
+                  <Page />
+                  :
+                  <Signin />}
+              </Route>
+              <PrivateRoute path="/" component={Home} />
+            </Switch>
+              :
+              <Route>
+                <Home />
+              </Route>
+            }
         </Appbar>
       </Grid>
     </Router>
