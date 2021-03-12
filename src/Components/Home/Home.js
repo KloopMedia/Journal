@@ -82,8 +82,7 @@ const Home = (props) => {
                 .collection("user_private")
                 .doc("private")
                 .onSnapshot(doc => {
-                    console.log("TGID: ", doc.data().tg_id)
-                    if (doc.exists && "tg_id" in doc.data()) {
+                    if (doc.exists && doc.data().tg_id) {
                         console.log("TGID: ", doc.data().tg_id)
                         setTgId(doc.data().tg_id)
                     }
@@ -132,7 +131,7 @@ const Home = (props) => {
                     <Typography>Чтобы получать каждый день задания от нас, перейдите в раздел <Link href="https://kloopmedia.github.io/Journal/#/p/test_page">Тест</Link></Typography>
                     <Typography>Чтобы понять, как получать тесты и как заполнять формы посмотрите нашу <Link href="https://www.youtube.com/watch?v=V4U8JFOzLFo">видео-инструкцию</Link></Typography>
                 </Grid>
-                {tgId === "" ?
+                {tgId.length === 0 ?
                     <Dialog
                         fullWidth
                         open={open}
