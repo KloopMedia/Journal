@@ -128,8 +128,9 @@ const Home = (props) => {
                     <Typography>Если вы не знаете, как заполнить анкету, то посмотрите <Link href="https://www.youtube.com/watch?v=bkukGAemNTY&feature=youtu.be">наше видео</Link></Typography>
                     <Typography>Чтобы понять, как работает бот посмотрите нашу <Link href="https://www.youtube.com/watch?v=jJX5uMqqC7Q&feature=youtu.be">видео-инструкцию</Link></Typography>
                     <Typography>Чтобы все начало работать, вам необходимо в самом начале нажать на кнопку Получить ранг El-Monitor</Typography>
-                    <Typography>Чтобы получать каждый день задания от нас, перейдите в раздел <Link href="https://kloopmedia.github.io/Journal/#/p/test_page">Тест</Link></Typography>
-                    <Typography>Чтобы понять, как получать тесты и как заполнять формы посмотрите нашу <Link href="https://www.youtube.com/watch?v=V4U8JFOzLFo">видео-инструкцию</Link></Typography>
+                    {/* <Typography>Чтобы получать каждый день задания от нас, перейдите в раздел <Link href="https://kloopmedia.github.io/Journal/#/p/test_page">Тест</Link></Typography> */}
+                    {/* <Typography>Чтобы понять, как получать тесты и как заполнять формы посмотрите нашу <Link href="https://www.youtube.com/watch?v=V4U8JFOzLFo">видео-инструкцию</Link></Typography> */}
+                    <Typography>Все тренинги мы отправляем через наш телеграм-бот</Typography>
                 </Grid>
                 {tgId.length === 0 ?
                     <Dialog
