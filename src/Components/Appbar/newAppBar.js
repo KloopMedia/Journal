@@ -124,21 +124,22 @@ function ResponsiveDrawer(props) {
 				.collection('schema')
 				.doc('structure')
 				.collection("ranks")
-				.onSnapshot(snap => {
+				.where('assign_without_moderator', '==', true)
+				.get().then(snap => {
 					let assignableRanks = []
 					snap.forEach(doc => {
-						if (doc.data().assign_without_moderator) {
-							assignableRanks.push(doc.id)
-						}
+						assignableRanks.push(doc.id)
 					})
-					setAvailableRanks(assignableRanks)
 					console.log("Assignable", assignableRanks)
-				})
+					return assignableRanks
+					// setAvailableRanks(assignableRanks)
+
+				}).then(ranks => setAvailableRanks(ranks))
 		}
 	}, [currentUser])
 
 	useEffect(() => {
-		if (userRanks && userRanks.length > 0 && availableRanks.length > 0) {
+		if (userRanks && userRanks.length > 0) {
 			firebase
 				.firestore()
 				.collection('pages')
@@ -151,9 +152,20 @@ function ResponsiveDrawer(props) {
 							})
 							console.log("User pages: ", change.doc.id)
 						}
+						if (change.type === "removed") {
+							setUserPages(prevState => {
+								const newState = Object.assign({}, prevState)
+								delete newState[change.doc.id]
+								return newState
+							})
+						}
 					})
 				})
+		}
+	}, [userRanks])
 
+	useEffect(() => {
+		if (availableRanks && availableRanks.length > 0) {
 			firebase
 				.firestore()
 				.collection('pages')
@@ -164,12 +176,19 @@ function ResponsiveDrawer(props) {
 							setUserPages(prevState => {
 								return { ...prevState, [change.doc.id]: change.doc.data() }
 							})
-							console.log("User pages: ", change.doc.id)
+							console.log("User pages assign: ", change.doc.id)
+						}
+						if (change.type === "removed") {
+							setUserPages(prevState => {
+								const newState = Object.assign({}, prevState)
+								delete newState[change.doc.id]
+								return newState
+							})
 						}
 					})
 				})
 		}
-	}, [userRanks, availableRanks])
+	}, [availableRanks])
 
 
 	useEffect(() => {
