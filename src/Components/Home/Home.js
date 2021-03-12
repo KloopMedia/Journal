@@ -130,7 +130,7 @@ const Home = (props) => {
                     <Typography>Чтобы все начало работать, вам необходимо в самом начале нажать на кнопку Получить ранг El-Monitor</Typography>
                     {/* <Typography>Чтобы получать каждый день задания от нас, перейдите в раздел <Link href="https://kloopmedia.github.io/Journal/#/p/test_page">Тест</Link></Typography> */}
                     {/* <Typography>Чтобы понять, как получать тесты и как заполнять формы посмотрите нашу <Link href="https://www.youtube.com/watch?v=V4U8JFOzLFo">видео-инструкцию</Link></Typography> */}
-                    <Typography>Все тренинги мы отправляем через наш телеграм-бот</Typography>
+                    <Typography>Все необходимые тренинги и задания мы отправляем только через телеграм-бот. Пожалуйста выполняйте все задания.</Typography>
                 </Grid>
                 {tgId.length === 0 ?
                     <Dialog
