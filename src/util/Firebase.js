@@ -11,10 +11,16 @@ const firebaseConfig = {
 };
   // Initialize Firebase
   firebase.initializeApp(firebaseConfig);
+  // const db = firebase.firestore();
+  // if (window.location.hostname === "localhost") {
+  //   db.useEmulator("localhost", 8080);
+  // }
 
   const provider = new firebase.auth.GoogleAuthProvider();
   export const signInWithGoogle = () => {
     firebase.auth().signInWithPopup(provider);
   };
+
+  // export {db}
 
 export default firebase;

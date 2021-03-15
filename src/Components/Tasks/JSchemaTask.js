@@ -13,6 +13,7 @@ import { complexStateFirebaseUpdate, simpleStateFirebaseUpdate } from "../../uti
 
 import Loader from "../form/Loader"
 import CustomFileUpload from "../form/CustomFileUpload";
+import CustomUIKField from "../form/CustomUIKField"
 import { Button, DialogContentText, DialogTitle, Divider, Grid, Typography } from '@material-ui/core';
 import Snackbar from '@material-ui/core/Snackbar';
 import IconButton from '@material-ui/core/IconButton';
@@ -917,9 +918,10 @@ const JSchemaTask = () => {
 						schema={mergedForm.form_questions}
 						uiSchema={mergedForm.ui_schema}
 						formData={formResponses}
-						fields={{ customFileUpload: a => CustomFileUpload({ ...a, ...{ taskID: id }, ...{ "currentUserUid": currentUser.uid }, ...{metadata: taskMetadata}, ...{ stage: caseStages[taskMetadata.case_stage_id] } }) }}
+						fields={{ CustomUIKField: a => CustomUIKField({...a, ...{ taskID: id }}), customFileUpload: a => CustomFileUpload({ ...a, ...{ taskID: id }, ...{ "currentUserUid": currentUser.uid }, ...{metadata: taskMetadata}, ...{ stage: caseStages[taskMetadata.case_stage_id] } }) }}
 						disabled={formStatus === "loading" || formStatus === "sent" || formStatus === "released"}
 						widgets={widgets}
+						formContext={formResponses}
 						noHtml5Validate
 						onChange={e => {
 							handleFormChange(e)
