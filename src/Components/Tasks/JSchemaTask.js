@@ -20,14 +20,15 @@ import IconButton from '@material-ui/core/IconButton';
 import CloseIcon from '@material-ui/icons/Close';
 import CircularProgress from '@material-ui/core/CircularProgress';
 
-import JSchemaForm from "@rjsf/bootstrap-4";
+import JSchemaForm from "@rjsf/fluent-ui";
 import { cloneDeep, isEqual } from 'lodash'
 import ReactMarkdown from 'react-markdown'
-
 
 import { Redirect, useParams, useHistory } from 'react-router';
 import { Link } from "react-router-dom";
 
+// import 'semantic-ui-css/semantic.min.css'
+var breaks = require('remark-breaks')
 
 const JSchemaTask = () => {
 	const [formResponses, setFormResponses] = useState({})
@@ -783,8 +784,8 @@ const JSchemaTask = () => {
 					handleClose={handleDialogClose}
 					handleOk={handleOk}
 					showOk={formStatus === "sent"}
-					title={formStatus === "sent" ? caseStages[taskMetadata.case_stage_id].releaseTitle ? <ReactMarkdown children={caseStages[taskMetadata.case_stage_id].releaseTitle} /> : "Форма успешно отправлена." : "Отправить форму?"}
-					content={formStatus === "sent" ? caseStages[taskMetadata.case_stage_id].releaseMessage ? <ReactMarkdown children={caseStages[taskMetadata.case_stage_id].releaseMessage} /> : "Спасибо" : "Вы собираетесь отправить форму. Это значит, что вы больше не сможете изменять ответы."}
+					title={formStatus === "sent" ? caseStages[taskMetadata.case_stage_id].releaseTitle ? <ReactMarkdown allowDangerousHtml plugins={[breaks]} children={caseStages[taskMetadata.case_stage_id].releaseTitle} /> : "Форма успешно отправлена." : "Отправить форму?"}
+					content={formStatus === "sent" ? caseStages[taskMetadata.case_stage_id].releaseMessage ? <ReactMarkdown allowDangerousHtml plugins={[breaks]} children={caseStages[taskMetadata.case_stage_id].releaseMessage} /> : "Спасибо" : "Вы собираетесь отправить форму. Это значит, что вы больше не сможете изменять ответы."}
 					dialogFunction={() => { changeTaskStatus('complete') }} />}
 
 				{/* {dialogType === 'release' && <Dialog
