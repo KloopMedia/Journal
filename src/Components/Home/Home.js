@@ -124,13 +124,10 @@ const Home = (props) => {
         currentUser ?
             <Grid>
                 <Grid container className={classes.message}>
-                    <Typography>Здравствуйте, дорогие наблюдатели! Мы рады приветствовать вас в наших рядах!</Typography>
-                    <Typography>Если вы не знаете, как заполнить анкету, то посмотрите <Link href="https://www.youtube.com/watch?v=bkukGAemNTY&feature=youtu.be">наше видео</Link></Typography>
-                    <Typography>Чтобы понять, как работает бот посмотрите нашу <Link href="https://www.youtube.com/watch?v=jJX5uMqqC7Q&feature=youtu.be">видео-инструкцию</Link></Typography>
-                    <Typography>Чтобы все начало работать, вам необходимо в самом начале нажать на кнопку Получить ранг El-Monitor</Typography>
-                    {/* <Typography>Чтобы получать каждый день задания от нас, перейдите в раздел <Link href="https://kloopmedia.github.io/Journal/#/p/test_page">Тест</Link></Typography> */}
-                    {/* <Typography>Чтобы понять, как получать тесты и как заполнять формы посмотрите нашу <Link href="https://www.youtube.com/watch?v=V4U8JFOzLFo">видео-инструкцию</Link></Typography> */}
-                    <Typography>Все необходимые тренинги и задания мы отправляем только через телеграм-бот. Пожалуйста выполняйте все задания.</Typography>
+                    <Typography>Здравствуйте, дорогие наблюдатели!</Typography>
+                    <Typography>10-го марта началось обучение. Все необходимые тренинги и задания мы отправляем только через телеграм-бот.</Typography>
+                    <Typography>Чтобы понять, как работает бот посмотрите нашу <Link href="https://www.youtube.com/watch?v=jJX5uMqqC7Q&feature=youtu.be">видео-инструкцию</Link>. Пожалуйста выполняйте все задания.</Typography>
+                    <Typography>После окончания всех тренингов будет финальный тест, он состоится 27 марта в 18:00. Если вы не сдадите тест, то, к сожалению, вы не сможете быть наблюдателем от «Клоопа»</Typography>
                 </Grid>
                 {tgId.length === 0 ?
                     <Dialog
