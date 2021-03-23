@@ -19,25 +19,30 @@ const CustomUIKField = (props) => {
         .doc(props.name)
 
     useEffect(() => {
-        if (formContext && formContext.observerOrMobile && formContext.observerOrMobile.observer && formContext.observerOrMobile.observer.locality) {
+        if (formContext && formContext.conditional && formContext.role) {
             let uikRef = firebase.firestore().collection('UIKS')
             let unsubscribe = {}
-            let locality = formContext.observerOrMobile.observer.locality
+            let locality = formContext.conditional
             console.log("DEBUG PROPS", props)
+            if (formContext.role === 'Стационарный наблюдатель / стационардук байкоочу') {
+                setReady(true)
+            }
+            else {
+                setReady(false)
+            }
             // TO DO: Fix Bishkek and Osh don't show any options if any subregion was selected
             if (locality.region) {
                 uikRef = uikRef.where('region', '==', locality.region)
-                setReady(true)
             }
             if (locality.subregion) {
                 uikRef = uikRef.where('subregion', '==', locality.subregion)
             }
-            // if (locality.locality) {
-            //     uikRef = uikRef.where('locality', '==', locality.locality)
-            // }
-            // if (locality.district) {
-            //     uikRef = uikRef.where('district', '==', locality.district)
-            // }
+            if (locality.locality) {
+                uikRef = uikRef.where('locality', '==', locality.locality)
+            }
+            if (locality.district) {
+                uikRef = uikRef.where('district', '==', locality.district)
+            }
             unsubscribe = uikRef.onSnapshot(snap => {
                 let allUiks = {}
                 snap.forEach(doc => {

@@ -338,8 +338,7 @@ const JSchemaTask = () => {
 			Object.keys(formResponses).map(k => {
 				gRef.collection("responses")
 					.doc(k)
-					.set({ contents: formResponses[k] ? formResponses[k] : firebase.firestore.FieldValue.delete() },
-						{ merge: true })
+					.set({ contents: formResponses[k] ? formResponses[k] : firebase.firestore.FieldValue.delete() })
 			})
 		}
 	}
@@ -922,6 +921,8 @@ const JSchemaTask = () => {
 						fields={{ CustomUIKField: a => CustomUIKField({...a, ...{ taskID: id }}), customFileUpload: a => CustomFileUpload({ ...a, ...{ taskID: id }, ...{ "currentUserUid": currentUser.uid }, ...{metadata: taskMetadata}, ...{ stage: caseStages[taskMetadata.case_stage_id] } }) }}
 						disabled={formStatus === "loading" || formStatus === "sent" || formStatus === "released"}
 						widgets={widgets}
+						omitExtraData={true}
+						liveOmit={true}
 						formContext={formResponses}
 						noHtml5Validate
 						onChange={e => {
