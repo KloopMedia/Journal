@@ -44,6 +44,8 @@ const JSchemaTask = () => {
 	const [gRef, setGRef] = useState(null)
 	const [formStatus, setFormStatus] = useState("loading")
 
+	const [prevFormResponses, setPrevResponses] = useState({})
+
 	const [questions, setQuestions] = useState([])
 	const [responses, setResponses] = useState([])
 	const [answers, setAnswers] = useState({})
@@ -119,8 +121,10 @@ const JSchemaTask = () => {
 						}
 					});
 					if (modifyResponses) {
+						console.log("DEBUG FIRED MODIFIED")
 						setFormResponses(prevState => {
 							const newState = cloneDeep(prevState)
+							setPrevResponses(newState)
 							deletes.forEach(d => delete newState[d])
 							Object.keys(changes).forEach(key => newState[key] = changes[key])
 							return newState
@@ -918,7 +922,7 @@ const JSchemaTask = () => {
 						schema={mergedForm.form_questions}
 						uiSchema={mergedForm.ui_schema}
 						formData={formResponses}
-						fields={{ CustomUIKField: a => CustomUIKField({...a, ...{ taskID: id }}), customFileUpload: a => CustomFileUpload({ ...a, ...{ taskID: id }, ...{ "currentUserUid": currentUser.uid }, ...{metadata: taskMetadata}, ...{ stage: caseStages[taskMetadata.case_stage_id] } }) }}
+						fields={{ CustomUIKField: a => CustomUIKField({...a, ...{prevResp: prevFormResponses}, ...{ taskID: id }}), customFileUpload: a => CustomFileUpload({ ...a, ...{ taskID: id }, ...{ "currentUserUid": currentUser.uid }, ...{metadata: taskMetadata}, ...{ stage: caseStages[taskMetadata.case_stage_id] } }) }}
 						disabled={formStatus === "loading" || formStatus === "sent" || formStatus === "released"}
 						widgets={widgets}
 						omitExtraData={true}

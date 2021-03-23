@@ -9,6 +9,7 @@ const CustomUIKField = (props) => {
     const { formContext } = props
     const [JSchema, setJSchema] = useState({})
     const [ready, setReady] = useState(false)
+    const [UIKS, setUIKS] = useState({})
     const { currentUser } = useContext(AuthContext);
 
     const uiksRef = firebase.firestore().collection('UIKS1')
@@ -20,21 +21,39 @@ const CustomUIKField = (props) => {
         .collection("responses")
         .doc(props.name)
 
+    const uikDataRef = firebase
+        .firestore()
+        .collection("tasks")
+        .doc(props.taskID)
+        .collection("responses")
+        .doc("uikData")
+
     useEffect(() => {
         if (formContext && formContext.conditional && formContext.role) {
             let uikRef = firebase.firestore().collection('UIKS1')
             let unsubscribe = {}
             let locality = formContext.conditional
             console.log("DEBUG PROPS", props)
+            if (props.prevResp.conditional) {
+                if (props.prevResp.conditional.region !== locality.region
+                    || props.prevResp.conditional.subregion !== locality.subregion
+                    || props.prevResp.conditional.locality !== locality.locality
+                    || props.prevResp.conditional.district !== locality.district) {
+                    taskRef.set({ contents: "" })
+                    uikDataRef.set({})
+                }
+            }
             if (formContext.role === 'Стационарный наблюдатель / стационардук байкоочу') {
                 setReady(true)
                 if (formContext.uik === "mobile") {
                     taskRef.set({ contents: "" })
+                    uikDataRef.set({})
                 }
             }
             else {
                 setReady(false)
                 taskRef.set({ contents: "mobile" })
+                uikDataRef.set({})
             }
 
             if (locality.region) {
@@ -54,6 +73,7 @@ const CustomUIKField = (props) => {
                 snap.forEach(doc => {
                     allUiks[doc.id] = doc.data()
                 })
+                setUIKS(allUiks)
                 createUIKSelectorForm(allUiks)
             })
             return () => unsubscribe()
@@ -83,6 +103,7 @@ const CustomUIKField = (props) => {
         console.log("DEBUG FORMDATA", e.formData)
         if (e.formData === "" || e.formData === undefined || e.formData === null) {
             taskRef.set({ contents: "" })
+            uikDataRef.set({})
             await uiksRef.where('observers', 'array-contains', currentUser.uid).get().then(async snap => {
                 snap.forEach(async doc => {
                     await doc.ref.update({ observers: firebase.firestore.FieldValue.arrayRemove(currentUser.uid) })
@@ -91,6 +112,7 @@ const CustomUIKField = (props) => {
         }
         else {
             taskRef.set({ contents: e.formData })
+            uikDataRef.set({ ...UIKS[e.formData], uikNumber: e.formData })
             await uiksRef.where('observers', 'array-contains', currentUser.uid).get().then(async snap => {
                 snap.forEach(async doc => {
                     await doc.ref.update({ observers: firebase.firestore.FieldValue.arrayRemove(currentUser.uid) })
