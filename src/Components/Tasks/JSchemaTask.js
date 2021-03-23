@@ -338,7 +338,7 @@ const JSchemaTask = () => {
 			Object.keys(formResponses).map(k => {
 				gRef.collection("responses")
 					.doc(k)
-					.set({ contents: formResponses[k] ? formResponses[k] : firebase.firestore.FieldValue.delete() })
+					.set({ contents: formResponses[k] ? formResponses[k] : "" })
 			})
 		}
 	}

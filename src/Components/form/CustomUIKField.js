@@ -26,11 +26,15 @@ const CustomUIKField = (props) => {
             console.log("DEBUG PROPS", props)
             if (formContext.role === 'Стационарный наблюдатель / стационардук байкоочу') {
                 setReady(true)
+                if (formContext.uik === "mobile") {
+                    taskRef.set({ contents: "" })
+                }
             }
             else {
                 setReady(false)
+                taskRef.set({ contents: "mobile" })
             }
-            // TO DO: Fix Bishkek and Osh don't show any options if any subregion was selected
+
             if (locality.region) {
                 uikRef = uikRef.where('region', '==', locality.region)
             }
@@ -74,7 +78,16 @@ const CustomUIKField = (props) => {
     }
 
     const uikChangeHandler = async (e) => {
-        if (e.formData) {
+        console.log("DEBUG FORMDATA", e.formData)
+        if (e.formData === "" || e.formData === undefined || e.formData === null) {
+            taskRef.set({ contents: "" })
+            await firebase.firestore().collection('UIKS').where('observers', 'array-contains', currentUser.uid).get().then(async snap => {
+                snap.forEach(async doc => {
+                    await doc.ref.update({ observers: firebase.firestore.FieldValue.arrayRemove(currentUser.uid) })
+                })
+            })
+        }
+        else {
             taskRef.set({ contents: e.formData })
             await firebase.firestore().collection('UIKS').where('observers', 'array-contains', currentUser.uid).get().then(async snap => {
                 snap.forEach(async doc => {
