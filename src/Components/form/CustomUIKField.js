@@ -34,26 +34,43 @@ const CustomUIKField = (props) => {
             let unsubscribe = {}
             let locality = formContext.conditional
             console.log("DEBUG PROPS", props)
-            if (props.prevResp.conditional) {
+            if (props.prevResp.conditional && !props.metadata.is_complete) {
                 if (props.prevResp.conditional.region !== locality.region
                     || props.prevResp.conditional.subregion !== locality.subregion
                     || props.prevResp.conditional.locality !== locality.locality
                     || props.prevResp.conditional.district !== locality.district) {
                     taskRef.set({ contents: "" })
                     uikDataRef.set({})
+                    uiksRef.where('observers', 'array-contains', currentUser.uid).get().then(async snap => {
+                        snap.forEach(async doc => {
+                            await doc.ref.update({ observers: firebase.firestore.FieldValue.arrayRemove(currentUser.uid) })
+                        })
+                    })
                 }
             }
             if (formContext.role === 'Стационарный наблюдатель / стационардук байкоочу') {
                 setReady(true)
-                if (formContext.uik === "mobile") {
+                if (formContext.uik === "mobile" && !props.metadata.is_complete) {
                     taskRef.set({ contents: "" })
                     uikDataRef.set({})
+                    uiksRef.where('observers', 'array-contains', currentUser.uid).get().then(async snap => {
+                        snap.forEach(async doc => {
+                            await doc.ref.update({ observers: firebase.firestore.FieldValue.arrayRemove(currentUser.uid) })
+                        })
+                    })
                 }
             }
             else {
-                setReady(false)
-                taskRef.set({ contents: "mobile" })
-                uikDataRef.set({})
+                if (formContext.uik !== "mobile" && !props.metadata.is_complete) {
+                    setReady(false)
+                    taskRef.set({ contents: "mobile" })
+                    uikDataRef.set({})
+                    uiksRef.where('observers', 'array-contains', currentUser.uid).get().then(async snap => {
+                        snap.forEach(async doc => {
+                            await doc.ref.update({ observers: firebase.firestore.FieldValue.arrayRemove(currentUser.uid) })
+                        })
+                    })
+                }
             }
 
             if (locality.region) {
@@ -102,23 +119,27 @@ const CustomUIKField = (props) => {
     const uikChangeHandler = async (e) => {
         console.log("DEBUG FORMDATA", e.formData)
         if (e.formData === "" || e.formData === undefined || e.formData === null) {
-            taskRef.set({ contents: "" })
-            uikDataRef.set({})
-            await uiksRef.where('observers', 'array-contains', currentUser.uid).get().then(async snap => {
-                snap.forEach(async doc => {
-                    await doc.ref.update({ observers: firebase.firestore.FieldValue.arrayRemove(currentUser.uid) })
+            if (!props.metadata.is_complete) {
+                taskRef.set({ contents: "" })
+                uikDataRef.set({})
+                await uiksRef.where('observers', 'array-contains', currentUser.uid).get().then(async snap => {
+                    snap.forEach(async doc => {
+                        await doc.ref.update({ observers: firebase.firestore.FieldValue.arrayRemove(currentUser.uid) })
+                    })
                 })
-            })
+            }
         }
         else {
-            taskRef.set({ contents: e.formData })
-            uikDataRef.set({ ...UIKS[e.formData], uikNumber: e.formData })
-            await uiksRef.where('observers', 'array-contains', currentUser.uid).get().then(async snap => {
-                snap.forEach(async doc => {
-                    await doc.ref.update({ observers: firebase.firestore.FieldValue.arrayRemove(currentUser.uid) })
+            if (!props.metadata.is_complete) {
+                taskRef.set({ contents: e.formData })
+                uikDataRef.set({ ...UIKS[e.formData], uikNumber: e.formData })
+                await uiksRef.where('observers', 'array-contains', currentUser.uid).get().then(async snap => {
+                    snap.forEach(async doc => {
+                        await doc.ref.update({ observers: firebase.firestore.FieldValue.arrayRemove(currentUser.uid) })
+                    })
                 })
-            })
-            uiksRef.doc(e.formData).update({ observers: firebase.firestore.FieldValue.arrayUnion(currentUser.uid) })
+                uiksRef.doc(e.formData).update({ observers: firebase.firestore.FieldValue.arrayUnion(currentUser.uid) })
+            }
         }
     }
 
@@ -149,6 +170,8 @@ const CustomUIKField = (props) => {
             schema={JSchema.schema ? JSchema.schema : {}}
             uiSchema={JSchema.uiSchema ? JSchema.uiSchema : {}}
             formData={props.formData}
+            disabled={props.metadata.is_complete}
+            noHtml5Validate
             onChange={e => uikChangeHandler(e)} > </JSchemaForm>
     )
 }
