@@ -22,7 +22,7 @@ const CustomUIKField = (props) => {
 
     useEffect(() => {
         if (formContext && formContext.conditional && formContext.role) {
-            let uikRef = firebase.firestore().collection('UIKS')
+            let uikRef = firebase.firestore().collection('UIKS1')
             let unsubscribe = {}
             let locality = formContext.conditional
             console.log("DEBUG PROPS", props)
