@@ -11,6 +11,8 @@ const CustomUIKField = (props) => {
     const [ready, setReady] = useState(false)
     const { currentUser } = useContext(AuthContext);
 
+    const uiksRef = firebase.firestore().collection('UIKS1')
+
     const taskRef = firebase
         .firestore()
         .collection("tasks")
@@ -81,7 +83,7 @@ const CustomUIKField = (props) => {
         console.log("DEBUG FORMDATA", e.formData)
         if (e.formData === "" || e.formData === undefined || e.formData === null) {
             taskRef.set({ contents: "" })
-            await firebase.firestore().collection('UIKS').where('observers', 'array-contains', currentUser.uid).get().then(async snap => {
+            await uiksRef.where('observers', 'array-contains', currentUser.uid).get().then(async snap => {
                 snap.forEach(async doc => {
                     await doc.ref.update({ observers: firebase.firestore.FieldValue.arrayRemove(currentUser.uid) })
                 })
@@ -89,12 +91,12 @@ const CustomUIKField = (props) => {
         }
         else {
             taskRef.set({ contents: e.formData })
-            await firebase.firestore().collection('UIKS').where('observers', 'array-contains', currentUser.uid).get().then(async snap => {
+            await uiksRef.where('observers', 'array-contains', currentUser.uid).get().then(async snap => {
                 snap.forEach(async doc => {
                     await doc.ref.update({ observers: firebase.firestore.FieldValue.arrayRemove(currentUser.uid) })
                 })
             })
-            firebase.firestore().collection('UIKS').doc(e.formData).update({ observers: firebase.firestore.FieldValue.arrayUnion(currentUser.uid) })
+            uiksRef.doc(e.formData).update({ observers: firebase.firestore.FieldValue.arrayUnion(currentUser.uid) })
         }
     }
 
