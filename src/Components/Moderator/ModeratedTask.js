@@ -190,6 +190,7 @@ const ModeratedTask = (props) => {
             </Grid>
 
             {/* {forms} */}
+			<Typography>{props.task.id}</Typography>
             <NewForm id={props.task.id} />
 
 			</Grid>

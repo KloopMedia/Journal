@@ -145,8 +145,10 @@ const Home = (props) => {
                             аккаунт с нашим Телеграм-ботом. Для этого нажмите на ссылку ниже.</Typography>
                                     <Typography style={{ paddingBottom: 10 }} variant="h5" align="center">Сиз өзүңүздүн аккаунтуңузду биздин телеграм-ботко туташтыра аласыз. Ал үчүн төмөндөгү шилтемени басыңыз.</Typography>
                                     {token ? <Link variant="h5" href={"https://telegram.me/journal_tg_bot?start=" + token}>Ссылка на бот / Ботко шилтеме</Link>
-                                        : <Typography variant="body2" align="center">Если ссылка не создалась в течение 5 секунд,
-                                перезагрузите страницу</Typography>}
+                                        : <Typography variant="body2" align="center">Если ссылка не создалась в течение 5 секунд, перезагрузите страницу</Typography>}
+                                    <Button style={{marginTop: 20}} size="large" color="primary" variant="contained" onClick={signInWithGoogle}>
+                                        Войти с другого аккаунта
+                                    </Button>
                                 </Grid>
                             </DialogContentText>
                         </DialogContent>
