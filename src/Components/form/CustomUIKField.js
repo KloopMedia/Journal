@@ -39,7 +39,12 @@ const CustomUIKField = (props) => {
                     || props.prevResp.conditional.subregion !== locality.subregion
                     || props.prevResp.conditional.locality !== locality.locality
                     || props.prevResp.conditional.district !== locality.district) {
-                    taskRef.set({ contents: "" })
+                        if (formContext.role === 'Стационарный наблюдатель / стационардук байкоочу') {
+                            taskRef.set({ contents: "" })
+                        }
+                        else {
+                            taskRef.set({ contents: "mobile" })
+                        }
                     uikDataRef.set({})
                     uiksRef.where('observers', 'array-contains', currentUser.uid).get().then(async snap => {
                         snap.forEach(async doc => {

@@ -309,6 +309,14 @@ const JSchemaTask = () => {
 
 	const handleFormChange = e => {
 		setFormResponses(e.formData)
+		Object.keys(e.formData).forEach(k => {
+			if (mergedForm.ui_schema.hasOwnProperty(k) && mergedForm.ui_schema[k].hasOwnProperty("ui:widget") && mergedForm.ui_schema[k]["ui:widget"] === "radio") {
+				console.log("DEBUG radio", mergedForm.ui_schema[k])
+				gRef.collection("responses")
+				.doc(k)
+				.set({ contents: e.formData[k] ? e.formData[k] : "" })
+			}
+		})
 	};
 
 	// const handleBlur = e => {
@@ -922,7 +930,7 @@ const JSchemaTask = () => {
 						schema={mergedForm.form_questions}
 						uiSchema={mergedForm.ui_schema}
 						formData={formResponses}
-						fields={{ CustomUIKField: a => CustomUIKField({...a, ...{metadata: taskMetadata}, ...{prevResp: prevFormResponses}, ...{ taskID: id }}), customFileUpload: a => CustomFileUpload({ ...a, ...{ taskID: id }, ...{ "currentUserUid": currentUser.uid }, ...{metadata: taskMetadata}, ...{ stage: caseStages[taskMetadata.case_stage_id] } }) }}
+						fields={{ CustomUIKField: a => CustomUIKField({ ...a, ...{ metadata: taskMetadata }, ...{ prevResp: prevFormResponses }, ...{ taskID: id } }), customFileUpload: a => CustomFileUpload({ ...a, ...{ taskID: id }, ...{ "currentUserUid": currentUser.uid }, ...{ metadata: taskMetadata }, ...{ stage: caseStages[taskMetadata.case_stage_id] } }) }}
 						disabled={formStatus === "loading" || formStatus === "sent" || formStatus === "released"}
 						widgets={widgets}
 						omitExtraData={true}
