@@ -202,7 +202,7 @@ const JSchemaTask = () => {
 			let requirementsSatisfied = mergedForm.form_questions.required.every(checker)
 			setEnableButton(requirementsSatisfied)
 		}
-		
+
 	}, [formResponses, mergedForm])
 
 	useEffect(() => {
@@ -313,8 +313,21 @@ const JSchemaTask = () => {
 			if (mergedForm.ui_schema.hasOwnProperty(k) && mergedForm.ui_schema[k].hasOwnProperty("ui:widget") && mergedForm.ui_schema[k]["ui:widget"] === "radio") {
 				console.log("DEBUG radio", mergedForm.ui_schema[k])
 				gRef.collection("responses")
-				.doc(k)
-				.set({ contents: e.formData[k] ? e.formData[k] : "" })
+					.doc(k)
+					.set({ contents: e.formData[k] ? e.formData[k] : "" })
+			}
+			else if (mergedForm.ui_schema.hasOwnProperty(k) && typeof mergedForm.ui_schema[k] === 'object' && mergedForm.ui_schema[k] !== null) {
+				Object.keys(mergedForm.ui_schema[k]).forEach(nestedKey => {
+					if (typeof mergedForm.ui_schema[k][nestedKey] === 'object'
+						&& mergedForm.ui_schema[k][nestedKey] !== null
+						&& mergedForm.ui_schema[k][nestedKey].hasOwnProperty("ui:widget")
+						&& mergedForm.ui_schema[k][nestedKey]["ui:widget"] === "radio") {
+						console.log("DEBUG radio nested", mergedForm.ui_schema[k][nestedKey])
+						gRef.collection("responses")
+							.doc(k)
+							.set({ contents: e.formData[k] ? e.formData[k] : "" })
+					}
+				})
 			}
 		})
 	};
