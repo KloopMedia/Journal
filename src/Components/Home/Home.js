@@ -125,9 +125,12 @@ const Home = (props) => {
             <Grid>
                 <Grid container className={classes.message}>
                     <Typography>Здравствуйте, дорогие наблюдатели!</Typography>
-                    <Typography>10-го марта началось обучение. Все необходимые тренинги и задания мы отправляем только через телеграм-бот.</Typography>
-                    <Typography>Чтобы понять, как работает бот посмотрите нашу <Link href="https://www.youtube.com/watch?v=jJX5uMqqC7Q&feature=youtu.be">видео-инструкцию</Link>. Пожалуйста выполняйте все задания.</Typography>
-                    <Typography>После окончания всех тренингов будет финальный тест, он состоится 27 марта в 18:00. Если вы не сдадите тест, то, к сожалению, вы не сможете быть наблюдателем от «Клоопа»</Typography>
+                    <Typography>Чтобы понять, как работает бот посмотрите нашу <Link href="https://www.youtube.com/watch?v=jJX5uMqqC7Q&feature=youtu.be">видео-инструкцию</Link>.</Typography>
+                    <Typography>30 марта в 18:00  состоится общий созвон для вопросов-ответов по техническим моментам.</Typography>
+                    <Typography>1 апреля с 08:00 до 22:00 состоится репетиция выборов.</Typography>
+                    <Typography>5 апреля в 18:00 состоится  итоговый общий созвон для вопросов-ответов.</Typography>
+                    <Typography>8 апреля с 08:00 до 22:00 состоится генеральная репетиция выборов.</Typography>
+                    <Typography>Всю информацию по репетиции мы вышлем через телеграм-бот, обязательно читайте все сообщения, которые вам приходят.</Typography>
                 </Grid>
                 {tgId.length === 0 ?
                     <Dialog

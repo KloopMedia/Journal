@@ -21,7 +21,8 @@ def completion(event, context):
     task = task_ref.get().to_dict()
 
     # get schema data
-    case_ref = client.collection('schema').document('structure').collection('cases').document(task['case_type'])
+    case_ref = client.collection('schema').document(
+        'structure').collection('cases').document(task['case_type'])
     case = case_ref.get().to_dict()
 
     stage_ref = client.collection('schema').document('structure').collection('cases').document(
@@ -29,7 +30,8 @@ def completion(event, context):
     stage = stage_ref.get().to_dict()
 
     if doc.get('status') == 'complete':
-        task_ref.update({'is_complete': True, 'completionTime': firestore.SERVER_TIMESTAMP})
+        task_ref.update(
+            {'is_complete': True, 'completionTime': firestore.SERVER_TIMESTAMP})
 
         # NEXT TASK
         if stage.get('next_task') and stage['next_task'] != '':
@@ -116,7 +118,8 @@ def completion(event, context):
             responses = dict()
             for res in responses_generator:
                 # make a clean responses dict
-                content = res.to_dict()['contents'] if res.to_dict().get("contents") else res.to_dict()
+                content = res.to_dict()['contents'] if res.to_dict().get(
+                    "contents") else res.to_dict()
                 responses[res.id] = content
 
             big_object = {
@@ -167,8 +170,52 @@ def completion(event, context):
             nextTaskList = json.loads(logic_output)
             for variant in nextTaskList:
                 if variant is not None:
-                    create_task(variant, big_object, task, stage, collection_path)
-                else: print("ERROR! No variant in next tasks list!!!")
+                    create_task(variant, big_object, task,
+                                stage, collection_path)
+                else:
+                    print("ERROR! No variant in next tasks list!!!")
+
+        # NEXT TASK (ATAI) ARRAY LOGICS!!!
+        if stage.get('logicArray') and stage['logicArray'] != '':
+            # create big object
+            responses_generator = client.collection(collection_path) \
+                .document(path_parts[1]) \
+                .collection("responses").stream()
+            responses = dict()
+            for res in responses_generator:
+                # make a clean responses dict
+                content = res.to_dict()['contents'] if res.to_dict().get(
+                    "contents") else res.to_dict()
+                responses[res.id] = content
+
+            big_object = {
+                "stage": stage_ref.id,
+                "userId": task['assigned_users'],
+                "source": {"stage": stage_ref.id,
+                           "userId": task['assigned_users'],
+                           "region": responses.get('region')
+                           }
+            }
+            big_object.update(responses)
+
+            print("BIG OBJECT", big_object)
+
+            # Evaluate (apply) every rule, if true create new task
+            nextData = big_object
+            logics = stage['logicArray']
+
+            for logic in logics:
+                nextRule = eval(logic.nextRule)
+                # logic_output returs boolean value
+                logic_output = jsonLogic.apply(nextRule, nextData)
+                print('Rule: {}, Output: {}'.format(nextRule, logic_output))
+                if (logic_output):
+                    nextTask = json.loads({"nextTask" : logic.nextTask})
+                    if nextTask is not None:
+                        create_task(nextTask, big_object, task,
+                                stage, collection_path)
+                    else:
+                        print("ERROR! No nextStage in next tasks list!!!")
 
 
     else:
@@ -180,7 +227,8 @@ def completion(event, context):
         # print(event)
         # print('USER_ID: ' + user_id)
         # print('PATH: ' + doc_ref.get().reference.path)
-        task_ref.update({'is_complete': False, 'assigned_users': firestore.ArrayRemove([user_id])})
+        task_ref.update(
+            {'is_complete': False, 'assigned_users': firestore.ArrayRemove([user_id])})
 
         if doc.get('release_status') == 'Задание выполнить невозможно, так как не хватает исходных данных':
             task_ref.update({'available': False})
@@ -189,7 +237,8 @@ def completion(event, context):
 
 
 def delete_as_reader(task, user_id):
-    case_tasks = client.collection('tasks').where(u'case_id', u'==', task.get('case_id')).stream()
+    case_tasks = client.collection('tasks').where(
+        u'case_id', u'==', task.get('case_id')).stream()
     for task in case_tasks:
         task_ref = client.collection('tasks').document(task.id)
         task_ref.update({'readers': firestore.ArrayRemove([user_id])})
@@ -217,7 +266,8 @@ def get_card_data(stage, collection_path, task):
             response_data = res.to_dict()
             # make a clean responses dict
             if res.id in responses_needed:
-                content = response_data['contents'] if response_data.get("contents") else response_data
+                content = response_data['contents'] if response_data.get(
+                    "contents") else response_data
                 stage_responses[res.id] = content
         card_data[stage_name] = stage_responses
     return card_data
@@ -248,20 +298,19 @@ def create_task(variant, big_object, task, stage, collection_path):
         "case_type": task['case_type'],
         "case_stage_id": next_stage_name,
         "cardData": get_card_data(next_stage_doc, collection_path, task),
-        "source": { "stage" : task.get("case_stage_id"),
-                  "userId" : task.get("assigned_users"),
-                  "source": task.get("source")
-                  }
+        "source": {"stage": task.get("case_stage_id"),
+                   "userId": task.get("assigned_users"),
+                   "source": task.get("source")
+                   }
     }
 
     print("variant: ", variant)
 
-
     if variant.get("user") is not None and variant.get("user") != "":
-      user = variant['user'].replace("'", '"').strip()  # turn str into list
-      user = json.loads(user)
-      if user:
-        next_task_doc['assigned_users'].extend(user)
+        user = variant['user'].replace("'", '"').strip()  # turn str into list
+        user = json.loads(user)
+        if user:
+            next_task_doc['assigned_users'].extend(user)
 
     new_task_id = uuid.uuid1().__str__()
     print("new task id: ", new_task_id)
