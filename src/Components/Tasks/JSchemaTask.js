@@ -363,7 +363,7 @@ const JSchemaTask = () => {
 			Object.keys(formResponses).map(k => {
 				gRef.collection("responses")
 					.doc(k)
-					.set({ contents: formResponses[k] && formResponses[k].length > 0 ? formResponses[k] : "" })
+					.set({ contents: formResponses[k] ? formResponses[k] : "" })
 			})
 		}
 	}
