@@ -190,7 +190,8 @@ const ModeratedTask = (props) => {
             </Grid>
 
             {/* {forms} */}
-			<Typography>{props.task.id}</Typography>
+			<Typography>{"Task ID: " + props.task.id}</Typography>
+			<Typography>{"Case ID: " + props.task.case_id}</Typography>
             <NewForm id={props.task.id} />
 
 			</Grid>

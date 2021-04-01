@@ -43,6 +43,7 @@ const JSchemaTask = () => {
 	const [currentFocus, setCurrentFocus] = useState("")
 	const [gRef, setGRef] = useState(null)
 	const [formStatus, setFormStatus] = useState("loading")
+	const [lastUpdated, setLastUpdated] = useState(new Date())
 
 	const [prevFormResponses, setPrevResponses] = useState({})
 
@@ -309,27 +310,38 @@ const JSchemaTask = () => {
 
 	const handleFormChange = e => {
 		setFormResponses(e.formData)
-		Object.keys(e.formData).forEach(k => {
-			if (mergedForm.ui_schema.hasOwnProperty(k) && mergedForm.ui_schema[k].hasOwnProperty("ui:widget") && mergedForm.ui_schema[k]["ui:widget"] === "radio") {
-				console.log("DEBUG radio", mergedForm.ui_schema[k])
+		// Object.keys(e.formData).forEach(k => {
+		// 	if (mergedForm.ui_schema.hasOwnProperty(k) && mergedForm.ui_schema[k].hasOwnProperty("ui:widget") && mergedForm.ui_schema[k]["ui:widget"] === "radio") {
+		// 		console.log("DEBUG radio", mergedForm.ui_schema[k])
+		// 		gRef.collection("responses")
+		// 			.doc(k)
+		// 			.set({ contents: e.formData[k] ? e.formData[k] : "" })
+		// 	}
+		// 	else if (mergedForm.ui_schema.hasOwnProperty(k) && typeof mergedForm.ui_schema[k] === 'object' && mergedForm.ui_schema[k] !== null) {
+		// 		Object.keys(mergedForm.ui_schema[k]).forEach(nestedKey => {
+		// 			if (typeof mergedForm.ui_schema[k][nestedKey] === 'object'
+		// 				&& mergedForm.ui_schema[k][nestedKey] !== null
+		// 				&& mergedForm.ui_schema[k][nestedKey].hasOwnProperty("ui:widget")
+		// 				&& mergedForm.ui_schema[k][nestedKey]["ui:widget"] === "radio") {
+		// 				console.log("DEBUG radio nested", mergedForm.ui_schema[k][nestedKey])
+		// 				gRef.collection("responses")
+		// 					.doc(k)
+		// 					.set({ contents: e.formData[k] ? e.formData[k] : "" })
+		// 			}
+		// 		})
+		// 	}
+		// })
+
+		let timeDiff = (new Date().getTime() - lastUpdated.getTime()) / 1000;
+		console.log("TIME DIFF", timeDiff)
+		if (timeDiff > 5) {
+			setLastUpdated(new Date())
+			Object.keys(e.formData).forEach(k => {
 				gRef.collection("responses")
 					.doc(k)
-					.set({ contents: e.formData[k] ? e.formData[k] : "" })
-			}
-			else if (mergedForm.ui_schema.hasOwnProperty(k) && typeof mergedForm.ui_schema[k] === 'object' && mergedForm.ui_schema[k] !== null) {
-				Object.keys(mergedForm.ui_schema[k]).forEach(nestedKey => {
-					if (typeof mergedForm.ui_schema[k][nestedKey] === 'object'
-						&& mergedForm.ui_schema[k][nestedKey] !== null
-						&& mergedForm.ui_schema[k][nestedKey].hasOwnProperty("ui:widget")
-						&& mergedForm.ui_schema[k][nestedKey]["ui:widget"] === "radio") {
-						console.log("DEBUG radio nested", mergedForm.ui_schema[k][nestedKey])
-						gRef.collection("responses")
-							.doc(k)
-							.set({ contents: e.formData[k] ? e.formData[k] : "" })
-					}
-				})
-			}
-		})
+					.set({ contents: e.formData[k] ? e.formData[k] : "" }).then(() => console.log("debug blur k: ", k, " response:", formResponses[k] ? formResponses[k] : ""))
+			})
+		}
 	};
 
 	// const handleBlur = e => {
@@ -355,7 +367,9 @@ const JSchemaTask = () => {
 	// 	}
 	// }
 
-	const handleBlur = e => {
+	const handleBlur = (e, v) => {
+		console.log("onBlur e", e)
+		console.log("onBlur v", v)
 		if (gRef) {
 			console.log("Responses: ", formResponses)
 			console.log("That is what was blured", e)
@@ -363,7 +377,7 @@ const JSchemaTask = () => {
 			Object.keys(formResponses).map(k => {
 				gRef.collection("responses")
 					.doc(k)
-					.set({ contents: formResponses[k] ? formResponses[k] : "" })
+					.set({ contents: formResponses[k] ? formResponses[k] : "" }).then(() => console.log("debug blur k: ", k, " response:", formResponses[k] ? formResponses[k] : ""))
 			})
 		}
 	}
@@ -690,11 +704,20 @@ const JSchemaTask = () => {
 		}
 	}
 
+	const handleSubmit = () => {
+		Object.keys(formResponses).forEach(k => {
+			gRef.collection("responses")
+				.doc(k)
+				.set({ contents: formResponses[k] ? formResponses[k] : "" })
+		})
+	}
+
 	const handleDialogOpen = (type) => {
 		console.log("Dialog open")
 		if (type === 'send') {
 			setDialogType('send')
 			setDialog(true)
+			handleSubmit()
 		}
 		if (type === 'release') {
 			setDialogType('release')
@@ -740,6 +763,8 @@ const JSchemaTask = () => {
 			.collection("user_editable")
 			.doc("user_editable")
 
+		console.log('debug status', status)
+		root.set({ status: status })
 		if (status === 'released') {
 			if (feedbackValue.reasons) {
 				if (feedbackValue.extra) {
@@ -750,10 +775,6 @@ const JSchemaTask = () => {
 				}
 			}
 		}
-		else {
-			root.update({ status: status })
-		}
-
 	}
 
 	const customImageWidget = (props) => {
@@ -958,8 +979,8 @@ const JSchemaTask = () => {
 							setCurrentFocus(e.split("_")[1])
 						}}
 						onSubmit={() => handleDialogOpen('send')}
-						onBlur={e => {
-							handleBlur(e)
+						onBlur={(e, v) => {
+							// handleBlur(e, v)
 						}}>
 						{formStatus === "sent" ?
 							<div>Форма отправлена успешно</div>

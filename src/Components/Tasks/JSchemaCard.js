@@ -14,7 +14,8 @@ import { CircularProgress } from "@material-ui/core";
 
 const useStyles = makeStyles({
 	root: {
-		minWidth: 250
+		minWidth: 250,
+		maxWidth: 400
 	},
 	bullet: {
 		display: 'inline-block',
@@ -168,38 +169,40 @@ const JSchemaTaskCard = (props) => {
 	}
 
 	return (
-		<Card key={id} className={classes.root} style={{ background: cardColor }}>
-			<CardContent>
-				<Box display="flex" justifyContent="space-between" alignItems="center">
-					<Typography variant="h6">
-						{stage.title}
-					</Typography>
-					{complete && <Typography color="error">
-						Сдано
+		<Box>
+			<Card key={id} className={classes.root} style={{ background: cardColor }}>
+				<CardContent>
+					<Box display="flex" justifyContent="space-between" alignItems="center">
+						<Typography variant="h6">
+							{stage.title}
+						</Typography>
+						{complete && <Typography color="error">
+							Сдано
 					</Typography>}
-				</Box>
-				<Typography variant="subtitle1" className={classes.pos} color="textSecondary">
-					#{id}
-				</Typography>
-				<Typography variant="body2" component="p">
-					{(task && task.cardData && (cardType === "selectable" || (stage && stage.showCard))) ?
-						displayJSON(task.cardData)
-						//JSON.stringify(task.cardData, null, 2)
+					</Box>
+					<Typography variant="subtitle1" className={classes.pos} color="textSecondary">
+						#{id}
+					</Typography>
+					<Typography variant="body2" component="p">
+						{(task && task.cardData && (cardType === "selectable" || (stage && stage.showCard))) ?
+							displayJSON(task.cardData)
+							//JSON.stringify(task.cardData, null, 2)
+							:
+							"Задание: " + stage.description}
+					</Typography>
+				</CardContent>
+				<CardActions>
+					{waiting ?
+						<CircularProgress />
 						:
-						"Задание: " + stage.description}
-				</Typography>
-			</CardContent>
-			<CardActions>
-				{waiting ?
-					<CircularProgress />
-					:
-					<Grid>
-						<Button size="small" onClick={handleOpen}>{(cardType === "creatableUnlim") ? "СОЗДАТЬ НОВУЮ ФОРМУ" : "Открыть"}</Button>
-						{stage.showOldButton && <Button size="small" onClick={handleOpenOld}>Открыть (Old)</Button>}
-					</Grid>
-				}
-			</CardActions>
-		</Card>
+						<Grid>
+							<Button size="small" onClick={handleOpen}>{(cardType === "creatableUnlim") ? "СОЗДАТЬ НОВУЮ ФОРМУ" : "Открыть"}</Button>
+							{stage.showOldButton && <Button size="small" onClick={handleOpenOld}>Открыть (Old)</Button>}
+						</Grid>
+					}
+				</CardActions>
+			</Card>
+		</Box>
 	);
 }
 
