@@ -124,13 +124,9 @@ const Home = (props) => {
         currentUser ?
             <Grid>
                 <Grid container className={classes.message}>
-                    <Typography>Здравствуйте, дорогие наблюдатели!</Typography>
                     <Typography>Чтобы понять, как работает бот посмотрите нашу <Link href="https://www.youtube.com/watch?v=jJX5uMqqC7Q&feature=youtu.be">видео-инструкцию</Link>.</Typography>
-                    <Typography>30 марта в 18:00  состоится общий созвон для вопросов-ответов по техническим моментам.</Typography>
-                    <Typography>1 апреля с 08:00 до 22:00 состоится репетиция выборов.</Typography>
-                    <Typography>5 апреля в 18:00 состоится  итоговый общий созвон для вопросов-ответов.</Typography>
                     <Typography>8 апреля с 08:00 до 22:00 состоится генеральная репетиция выборов.</Typography>
-                    <Typography>Всю информацию по репетиции мы вышлем через телеграм-бот, обязательно читайте все сообщения, которые вам приходят.</Typography>
+                    <Typography>Всю информацию мы отправляем только через телеграм-бот.</Typography>
                 </Grid>
                 {tgId.length === 0 ?
                     <Dialog
