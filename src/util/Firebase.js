@@ -17,6 +17,9 @@ const firebaseConfig = {
   // }
 
   const provider = new firebase.auth.GoogleAuthProvider();
+  firebase.firestore().settings({
+    ignoreUndefinedProperties: true,
+  })
   export const signInWithGoogle = () => {
     provider.setCustomParameters({
       prompt: 'select_account'
