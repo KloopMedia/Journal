@@ -33,7 +33,7 @@ def completion(event, context):
 		task['case_type']).collection('stages').document(task['case_stage_id'])
 	stage = stage_ref.get().to_dict()
 
-	starter_task_ref = client.collection('tasks').document(task['case_id'])
+	starter_task_ref = client.collection('tasks').document(str(task['case_id']))
 	starter_task = starter_task_ref.get().to_dict()
 
 	if doc.get('status') == 'complete':
@@ -82,11 +82,19 @@ def completion(event, context):
 						if logic.get('send_to_starter'):
 							assigned_users = starter_task.get('assigned_users')
 							if len(assigned_users) > 0:
-								starter_user = assigned_users[0]
+								starter_user = assigned_users
 							else:
 								starter_user = ''
 							print('starter user', starter_user)
 							nextTask = {'nextTask': logic.get('nextTask'), 'user': starter_user}
+						elif logic.get('return_to_same_user'):
+							assigned_users = task.get('assigned_users')
+							if len(assigned_users) > 0:
+								current_user = assigned_users
+							else:
+								current_user = ''
+							print('starter user', current_user)
+							nextTask = {'nextTask': logic.get('nextTask'), 'user': current_user}
 						else:
 							nextTask = {'nextTask': logic.get('nextTask')}
 							print("no send_to_starter")
@@ -188,8 +196,9 @@ def create_task(variant, big_object, task, stage, collection_path):
 	print("variant: ", variant)
 
 	if variant.get("user") is not None and variant.get("user") != "":
-		user = variant['user'].strip()  # turn str into list
+		# user = variant['user'].strip()  # turn str into list
 		# user = json.loads(user)
+		user = variant.get("user")
 		if user:
 			next_task_doc['assigned_users'].extend(user)
 
@@ -251,8 +260,7 @@ def create_task(variant, big_object, task, stage, collection_path):
 					   "userId": "Kate"}
 		}
 
-		print(big_object)
-		print(sampleData)
+		print(source)
 		# bigobject
 		# {'stage': 'emergency_form_filling', 'userId': ['HKLIN7RndPenfvsrbg6MawmtnU73'], 'source': {'stage': 'emergency_form_filling', 'userId': ['HKLIN7RndPenfvsrbg6MawmtnU73'], 'region': {'Talas': 'г. Талас/ Талас ш.'}}, 'attachedFiles': {'contents': {}}, 'details': 'dfddfdf', 'end': {}, 'name': '333', 'region': {'Talas': 'г. Талас/ Талас ш.'}, 'start': {}, 'telephone': 3333, 'uikNum': '3434', 'violationTime': {'end': '2021-01-12T19:19:00.000Z', 'start': '2021-01-02T19:19:00.000Z'}, 'violationType': 'Массовый подвоз избирателей'}
 
@@ -263,7 +271,7 @@ def create_task(variant, big_object, task, stage, collection_path):
 		# with open(fileName, "r") as read_file:
 		#    sampleData = json.load(read_file)
 
-		response = requests.post(URI, json=big_object)
+		response = requests.post(URI, json=source)
 		print("Status code: ", response.status_code)
 		print("Printing Entire Post Request")
 		print(json.loads(response.content))

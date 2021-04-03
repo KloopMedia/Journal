@@ -823,7 +823,7 @@ const JSchemaTask = () => {
 
 	return (
 		currentUser ?
-			<Grid style={{ padding: 30 }}>
+			<Grid>
 				{dialogType === 'send' && <Dialog
 					state={dialogState}
 					handleClose={handleDialogClose}
@@ -932,7 +932,7 @@ const JSchemaTask = () => {
 					caseStages[taskMetadata.case_stage_id].backgroundStages &&
 					caseStages[taskMetadata.case_stage_id].backgroundStages.length > 0 &&
 					Object.keys(mergedBackgroundForms).length > 0) ?
-					<Grid style={{ padding: 30 }}>
+					<Grid style={{ paddingBottom: 30 }}>
 						{caseStages[taskMetadata.case_stage_id].backgroundStages.map(stage => {
 							return <div key={stage}>
 								{console.log("STAGE: ", stage)}
@@ -940,7 +940,7 @@ const JSchemaTask = () => {
 								{
 									mergedBackgroundForms[stage] ?
 										(Object.keys(mergedBackgroundForms[stage]).map(taskId => (
-											<Grid style={{ padding: 30 }} key={taskId}>
+											<Grid style={{ paddingBottom: 30 }} key={taskId}>
 												<JSchemaForm
 													schema={mergedBackgroundForms[stage][taskId].form_questions}
 													uiSchema={mergedBackgroundForms[stage][taskId].ui_schema}
