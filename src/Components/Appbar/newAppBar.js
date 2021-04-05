@@ -143,23 +143,33 @@ function ResponsiveDrawer(props) {
 			firebase
 				.firestore()
 				.collection('pages')
-				.where("ranks", "array-contains-any", userRanks)
+				// .where("ranks", "array-contains-any", userRanks)
 				.onSnapshot(snapshot => {
-					snapshot.docChanges().forEach(change => {
-						if (change.type === "added" || change.type === "modified") {
-							setUserPages(prevState => {
-								return { ...prevState, [change.doc.id]: change.doc.data() }
-							})
-							console.log("User pages: ", change.doc.id)
-						}
-						if (change.type === "removed") {
-							setUserPages(prevState => {
-								const newState = Object.assign({}, prevState)
-								delete newState[change.doc.id]
-								return newState
-							})
+					// snapshot.docChanges().forEach(change => {
+					// 	if (change.type === "added" || change.type === "modified") {
+					// 		setUserPages(prevState => {
+					// 			return { ...prevState, [change.doc.id]: change.doc.data() }
+					// 		})
+					// 		console.log("User pages: ", change.doc.id)
+					// 	}
+					// 	if (change.type === "removed") {
+					// 		setUserPages(prevState => {
+					// 			const newState = Object.assign({}, prevState)
+					// 			delete newState[change.doc.id]
+					// 			return newState
+					// 		})
+					// 	}
+					// })
+					let allUserPages = {}
+					snapshot.forEach(doc => {
+						if (doc.data().ranks) {
+							let available = doc.data().ranks.some(rank => userRanks.includes(rank))
+							if (available) {
+								allUserPages[doc.id] = doc.data()
+							}
 						}
 					})
+					setUserPages(allUserPages)
 				})
 		}
 	}, [userRanks])

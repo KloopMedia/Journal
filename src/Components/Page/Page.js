@@ -86,8 +86,8 @@ const Page = () => {
 
 
     useEffect(() => {
-        console.log("Page id: ", id)
-        console.log("Current user: ", currentUser)
+        // console.log("Page id: ", id)
+        // console.log("Current user: ", currentUser)
         let unsubscribe = () => { }
         if (currentUser) {
             unsubscribe = firebase
@@ -96,7 +96,7 @@ const Page = () => {
                 .doc(id)
                 .onSnapshot(doc => {
                     setPageData(doc.data())
-                    console.log("Page data: ", doc.data())
+                    // console.log("Page data: ", doc.data())
                 })
         }
         return unsubscribe
@@ -136,7 +136,7 @@ const Page = () => {
                 .collection("cases")
 
             pageData.cases.map(pCase => {
-                console.log("PCASE", pCase)
+                // console.log("PCASE", pCase)
                 casesPath.doc(pCase).get().then(doc => {
                     setCaseData(prevState => {
                         const newState = Object.assign({}, prevState)
@@ -157,7 +157,7 @@ const Page = () => {
                         complexStateFirebaseUpdate(snapshot, setAllCases, pCase)
                     })
             })
-            console.log("ALLCASES", allCases)
+            // console.log("ALLCASES", allCases)
             firebase.firestore()
                 .collection("tasks")
                 .where("assigned_users", "array-contains", currentUser.uid)
@@ -185,9 +185,22 @@ const Page = () => {
             if (pageData.caseWithSelectableTasks) {
                 casesPath.doc(pageData.caseWithSelectableTasks)
                     .collection("stages")
-                    .where("ranks_read", "array-contains-any", userRanks)
+                    // .where("ranks_read", "array-contains-any", userRanks)
                     .onSnapshot(snapshot => {
-                        simpleStateFirebaseUpdate(snapshot, setAvailableStages)
+                        let allAvaiableStages = {}
+                        snapshot.forEach(doc => {
+                            if (doc.data().ranks_read) {
+                                let available = doc.data().ranks_read.some(rank => userRanks.includes(rank))
+                                if (available) {
+                                    allAvaiableStages[doc.id] = doc.data()
+                                }
+                            }
+                        })
+                        setAvailableStages(allAvaiableStages)
+                        
+                        // console.log("TMP", tmp)
+                        // console.log("TMP", snapshot)
+                        // simpleStateFirebaseUpdate(snapshot, setAvailableStages)
                     })
 
                 casesPath.doc(pageData.caseWithSelectableTasks)
@@ -216,7 +229,7 @@ const Page = () => {
     useEffect(() => {
         let fs = () => { }
         if (pageData && Object.entries(pageData).length > 0 && userRanks.length > 0 && pageData.caseWithSelectableTasks) {
-            console.log("filtersData", filterFormData)
+            // console.log("filtersData", filterFormData)
             if (Object.keys(filterFormData).length !== 0) {
                 const stages = availableStages
                 const stageID = Object.keys(stages)[0]
@@ -224,8 +237,8 @@ const Page = () => {
                 const filters = stage.filters
                 filters.emergency_form_filling['violationType'] = { violationType: '==' }
                 filters.emergency_form_filling['violationTime'] = '=='
-                console.log("filters", filters)
-                console.log("filtersData", filterFormData)
+                // console.log("filters", filters)
+                // console.log("filtersData", filterFormData)
                 setAvailableTasks({})
                 let collection = firebase.firestore()
                     .collection("tasks")
@@ -237,13 +250,13 @@ const Page = () => {
 
                 Object.keys(filters).forEach(stageFilter => {
                     Object.keys(filters[stageFilter]).forEach(filterQuestion => {
-                        console.log(stageFilter, filterQuestion)
+                        // console.log(stageFilter, filterQuestion)
                         if (filterFormData[filterQuestion] && filterFormData[filterQuestion][filterQuestion]) {
-                            console.log('filters3', filterFormData[filterQuestion][filterQuestion], filters[stageFilter][filterQuestion][filterQuestion])
+                            // console.log('filters3', filterFormData[filterQuestion][filterQuestion], filters[stageFilter][filterQuestion][filterQuestion])
                             query = query.where(`cardData.${stageFilter}.${filterQuestion}.${filterQuestion}`, filters[stageFilter][filterQuestion][filterQuestion], filterFormData[filterQuestion][filterQuestion])
                         }
                         else if (filterFormData[filterQuestion] && Object.keys(filterFormData[filterQuestion]).length > 0 && !filterFormData[filterQuestion][filterQuestion]) {
-                            console.log('filters4', filterFormData[filterQuestion], filters[stageFilter][filterQuestion])
+                            // console.log('filters4', filterFormData[filterQuestion], filters[stageFilter][filterQuestion])
                             query = query.where(`cardData.${stageFilter}.${filterQuestion}`, filters[stageFilter][filterQuestion], filterFormData[filterQuestion])
                         }
                     })
@@ -510,7 +523,6 @@ const Page = () => {
 
         Object.keys(userCases).forEach((k, i) => {
             let c = userCases[k]
-            console.log('cc', c)
             if (pageData.cases.includes(k)) {
                 schema.definitions.cases.dependencies.case.oneOf.push(
                     {
@@ -546,7 +558,6 @@ const Page = () => {
     const requestTask = () => {
 
         if (caseSelectorResponse.request.case !== 'none' && caseSelectorResponse.request.task !== 'none') {
-            console.log('rrrr', caseSelectorResponse)
             firebase.firestore().collection("task_requests").doc(currentUser.uid).collection("requests").add({
                 status: "pending",
                 user: currentUser.uid,
@@ -565,7 +576,7 @@ const Page = () => {
             await firebase.firestore().collection('schema').doc('structure').collection('ranks').get().then(snap => {
                 snap.forEach(doc => {
                     if (pageData.ranks.includes(doc.id) && doc.data().assign_without_moderator) {
-                        console.log("RANK_ID", doc.id)
+                        // console.log("RANK_ID", doc.id)
                         assignableRanks.push(doc.id)
                     }
                 })
@@ -585,7 +596,7 @@ const Page = () => {
     }, [pageData, userRanks])
 
     const requestRank = (rank) => {
-        console.log("Отправляем запрос")
+        // console.log("Отправляем запрос")
         firebase.firestore().collection('rank_requests').add({
             timestamp: firebase.firestore.FieldValue.serverTimestamp(),
             user_id: currentUser.uid,
@@ -597,7 +608,7 @@ const Page = () => {
 
 
     return (<Grid container justify="center" alignItems="center" direction="column">
-        {console.log("pageData: ", pageData)}
+        {/* {console.log("pageData: ", pageData)}
         {console.log("userRanks: ", userRanks)}
         {console.log("userCases: ", userCases)}
         {console.log("userTasks: ", userTasks)}
@@ -605,7 +616,7 @@ const Page = () => {
         {console.log("availableStages: ", availableStages)}
         {console.log("availableTasks: ", availableTasks)}
         {console.log("caseData", caseData)}
-        {console.log("availableRanks: ", availableRanks)}
+        {console.log("availableRanks: ", availableRanks)} */}
 
         <Home />
 
