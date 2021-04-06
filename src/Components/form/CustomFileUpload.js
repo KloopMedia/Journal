@@ -6,10 +6,6 @@ import ClearIcon from '@material-ui/icons/Clear';
 import IconButton from '@material-ui/core/IconButton';
 
 const CustomFileUpload = props => {
-	console.log("All props: ", props)
-	console.log("ID: ", props.taskID)
-	console.log("Question ID: ", props.name)
-	console.log("User UID: ", props.currentUserUid)
 
 	const [connectingTelegram, setConnectingTelegram] = useState(false)
 	const [telegramConnected, setTelegramConnected] = useState(false)
@@ -42,7 +38,7 @@ const CustomFileUpload = props => {
 		.collection("responses")
 		.doc(props.name)
 
-	console.log("Props formData: ", props.formData)
+	// console.log("Props formData: ", props.formData)
 
 	const removeFile = (path) => {
 		console.log(path)
@@ -50,7 +46,18 @@ const CustomFileUpload = props => {
 			contents: {[path]: firebase.firestore.FieldValue.delete()}
 		}, {merge: true})
 		.then(() => console.log("file removed"))
+		.then(() => props.onChange())
 		.catch(error => console.log(error))
+	}
+
+	let files = {}
+	if (props.formData && Object.keys(props.formData).length > 0) {
+		files = props.formData
+		console.log('files formdata', files)
+	}
+	else if (props.initResp && props.name && props.initResp[props.name] && props.initResp[props.name].contents && Object.keys(props.initResp[props.name].contents).length > 0) {
+		files = props.initResp[props.name].contents
+		console.log('files initresp', files)
 	}
 
 	return (
@@ -76,11 +83,11 @@ const CustomFileUpload = props => {
 					}
 				</div>
 			}
-			{props.formData ?
+			{files ?
 				<div>
-					{Object.keys(props.formData).map(path =>
+					{Object.keys(files).map(path =>
 						<div key={path}>
-							<a href={props.formData[path].url}>{props.formData[path].name}</a>
+							<a href={files[path].url} target="_blank" rel="noreferrer">{files[path].name}</a>
 							{props.metadata && !props.metadata.is_complete && <IconButton onClick={() => removeFile(path)} size="small"><ClearIcon /></IconButton>}
 						</div>
 					)}

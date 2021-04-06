@@ -46,6 +46,7 @@ const JSchemaTask = () => {
 	const [lastUpdated, setLastUpdated] = useState(new Date())
 
 	const [prevFormResponses, setPrevResponses] = useState({})
+	const [initialResponses, setInitialResponses] = useState({})
 
 	const [questions, setQuestions] = useState([])
 	const [responses, setResponses] = useState([])
@@ -146,6 +147,17 @@ const JSchemaTask = () => {
 		}
 
 	}, [id, currentUser])
+
+	useEffect(() => {
+		const unsubscribe = firebase.firestore().collection('tasks').doc(id).collection('responses').onSnapshot(snap => {
+			let initState = {}
+			snap.forEach(doc => {
+				initState[doc.id] = doc.data()
+			})
+			setInitialResponses(initState)
+		})
+		return () => unsubscribe()
+	}, [])
 
 	useEffect(() => {
 		if (Object.entries(taskMetadata).length > 0 && taskMetadata.case_type) {
@@ -337,9 +349,14 @@ const JSchemaTask = () => {
 		if (timeDiff > 5) {
 			setLastUpdated(new Date())
 			Object.keys(e.formData).forEach(k => {
-				gRef.collection("responses")
-					.doc(k)
-					.set({ contents: e.formData[k] ? e.formData[k] : "" }).then(() => console.log("debug blur k: ", k, " response:", formResponses[k] ? formResponses[k] : ""))
+				if (mergedForm.ui_schema.hasOwnProperty(k) && mergedForm.ui_schema[k].hasOwnProperty("ui:field") && mergedForm.ui_schema[k]["ui:field"] === "customFileUpload") {
+
+				}
+				else {
+					gRef.collection("responses")
+						.doc(k)
+						.set({ contents: e.formData[k] ? e.formData[k] : "" }).then(() => console.log("debug blur k: ", k, " response:", formResponses[k] ? formResponses[k] : ""))
+				}
 			})
 		}
 	};
@@ -698,6 +715,15 @@ const JSchemaTask = () => {
 			// console.log(q, "primitive not empty")
 			return true
 		}
+		else if (mergedForm.ui_schema.hasOwnProperty(q) && mergedForm.ui_schema[q].hasOwnProperty("ui:field") && mergedForm.ui_schema[q]["ui:field"] === "customFileUpload") {
+			if (initialResponses[q] && initialResponses[q].contents && Object.keys(initialResponses[q].contents).length > 0) {
+				console.log(q, "file not empty", initialResponses[q])
+				return true
+			}
+			else {
+				return false
+			}
+		}
 		else {
 			// console.log(q, "empty")
 			return false
@@ -706,9 +732,14 @@ const JSchemaTask = () => {
 
 	const handleSubmit = () => {
 		Object.keys(formResponses).forEach(k => {
-			gRef.collection("responses")
-				.doc(k)
-				.set({ contents: formResponses[k] ? formResponses[k] : "" })
+			if (mergedForm.ui_schema.hasOwnProperty(k) && mergedForm.ui_schema[k].hasOwnProperty("ui:field") && mergedForm.ui_schema[k]["ui:field"] === "customFileUpload") {
+
+			}
+			else {
+				gRef.collection("responses")
+					.doc(k)
+					.set({ contents: formResponses[k] ? formResponses[k] : "" })
+			}
 		})
 	}
 
@@ -823,7 +854,7 @@ const JSchemaTask = () => {
 
 	return (
 		currentUser ?
-			<Grid container style={{wordBreak: 'break-word'}}>
+			<Grid container style={{ wordBreak: 'break-word' }}>
 				{dialogType === 'send' && <Dialog
 					state={dialogState}
 					handleClose={handleDialogClose}
@@ -960,13 +991,12 @@ const JSchemaTask = () => {
 					:
 					null
 				}
-
 				{mergedForm && gRef && caseStages && taskMetadata && taskMetadata.case_stage_id && caseStages[taskMetadata.case_stage_id] ?
 					<JSchemaForm
 						schema={mergedForm.form_questions}
 						uiSchema={mergedForm.ui_schema}
 						formData={formResponses}
-						fields={{ CustomUIKField: a => CustomUIKField({ ...a, ...{ metadata: taskMetadata }, ...{ prevResp: prevFormResponses }, ...{ taskID: id } }), customFileUpload: a => CustomFileUpload({ ...a, ...{ taskID: id }, ...{ "currentUserUid": currentUser.uid }, ...{ metadata: taskMetadata }, ...{ stage: caseStages[taskMetadata.case_stage_id] } }) }}
+						fields={{ CustomUIKField: a => CustomUIKField({ ...a, ...{ metadata: taskMetadata }, ...{ prevResp: prevFormResponses }, ...{ taskID: id } }), customFileUpload: a => CustomFileUpload({ ...a, ...{ taskID: id }, ...{ initResp: initialResponses }, ...{ "currentUserUid": currentUser.uid }, ...{ metadata: taskMetadata }, ...{ stage: caseStages[taskMetadata.case_stage_id] } }) }}
 						disabled={formStatus === "loading" || formStatus === "sent" || formStatus === "released"}
 						widgets={widgets}
 						omitExtraData={true}

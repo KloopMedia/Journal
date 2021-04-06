@@ -197,9 +197,6 @@ const Page = () => {
                             }
                         })
                         setAvailableStages(allAvaiableStages)
-                        
-                        // console.log("TMP", tmp)
-                        // console.log("TMP", snapshot)
                         // simpleStateFirebaseUpdate(snapshot, setAvailableStages)
                     })
 
