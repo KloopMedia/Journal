@@ -77,14 +77,14 @@ const CustomFileUpload = props => {
 	const getComponent = (file) => {
 		console.log("debug file viewer", file)
 		if (file) {
-			const extension = file.name.substring(file.name.lastIndexOf('.') + 1, file.name.length) || ''
+			const extension = file.name.substring(file.name.lastIndexOf('.') + 1, file.name.length).toLowerCase() || ''
 			console.log("debug file extension", extension)
 			if (extension === 'jpeg' || extension === 'jpg' || extension === 'png') {
-				return <img src={file.url} alt={file.name}></img>
+				return <img src={file.url} style={{height: '100%', width: 'auto'}} alt={file.name}></img>
 			}
-			else if (extension === 'mp4' || extension === 'ogg' || extension === 'webm') {
+			else if (extension === 'mp4' || extension === 'ogg' || extension === 'webm' || extension === 'mov') {
 				return (
-					<video controls="controls">
+					<video controls="controls" style={{maxHeight: '100%', width: 'auto'}}>
 						<source src={file.url}></source>
 					</video>
 				)

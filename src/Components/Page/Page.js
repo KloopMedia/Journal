@@ -333,7 +333,7 @@ const Page = () => {
     const countTasksPerStage = (stage, tasks, caseId) => {
         let occurrences = 0
         Object.values(tasks).map(task => {
-            if (task.case_stage_id === stage && caseId === task.case_type) {
+            if (task.is_complete === false && task.case_stage_id === stage && caseId === task.case_type) {
                 occurrences++
             }
         })
