@@ -3,12 +3,16 @@ import Loader from "./Loader";
 import React, { useState } from "react";
 import CircularProgress from '@material-ui/core/CircularProgress';
 import ClearIcon from '@material-ui/icons/Clear';
+import VisibilityIcon from '@material-ui/icons/Visibility';
 import IconButton from '@material-ui/core/IconButton';
+import { Dialog, Typography } from "@material-ui/core";
 
 const CustomFileUpload = props => {
 
 	const [connectingTelegram, setConnectingTelegram] = useState(false)
 	const [telegramConnected, setTelegramConnected] = useState(false)
+	const [open, setOpen] = useState(false)
+	const [currentFile, setCurrentFile] = useState(null)
 
 	let pathToFolder = null
 	let handleTgConnectClick = null
@@ -43,11 +47,11 @@ const CustomFileUpload = props => {
 	const removeFile = (path) => {
 		console.log(path)
 		linksToFiles.set({
-			contents: {[path]: firebase.firestore.FieldValue.delete()}
-		}, {merge: true})
-		.then(() => console.log("file removed"))
-		.then(() => props.onChange())
-		.catch(error => console.log(error))
+			contents: { [path]: firebase.firestore.FieldValue.delete() }
+		}, { merge: true })
+			.then(() => console.log("file removed"))
+			.then(() => props.onChange())
+			.catch(error => console.log(error))
 	}
 
 	let files = {}
@@ -60,8 +64,45 @@ const CustomFileUpload = props => {
 		console.log('files initresp', files)
 	}
 
+	const handleClose = () => {
+		setOpen(false)
+	};
+
+	const openDialog = (file) => {
+		let comp = getComponent(file)
+		setCurrentFile(comp)
+		setOpen(true)
+	}
+
+	const getComponent = (file) => {
+		console.log("debug file viewer", file)
+		if (file) {
+			const extension = file.name.substring(file.name.lastIndexOf('.') + 1, file.name.length) || ''
+			console.log("debug file extension", extension)
+			if (extension === 'jpeg' || extension === 'jpg' || extension === 'png') {
+				return <img src={file.url} alt={file.name}></img>
+			}
+			else if (extension === 'mp4' || extension === 'ogg' || extension === 'webm') {
+				return (
+					<video controls="controls">
+						<source src={file.url}></source>
+					</video>
+				)
+			}
+			else {
+				return <Typography>Файл не является фото или видео</Typography>
+			}
+		}
+		else {
+			return null
+		}
+	}
+
 	return (
 		<div>
+			<Dialog onClose={handleClose} open={open}>
+				{currentFile}
+			</Dialog>
 			{props.schema.title ? <div>{props.schema.title}</div> : <div></div>}
 			{props.schema.description ? <div>{props.schema.description}</div> : <div></div>}
 			{props.disabled ? null :
@@ -89,6 +130,7 @@ const CustomFileUpload = props => {
 						<div key={path}>
 							<a href={files[path].url} target="_blank" rel="noreferrer">{files[path].name}</a>
 							{props.metadata && !props.metadata.is_complete && <IconButton onClick={() => removeFile(path)} size="small"><ClearIcon /></IconButton>}
+							<IconButton onClick={() => openDialog(files[path])} size="small"><VisibilityIcon /></IconButton>
 						</div>
 					)}
 				</div>
