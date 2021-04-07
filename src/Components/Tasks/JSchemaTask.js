@@ -20,7 +20,7 @@ import IconButton from '@material-ui/core/IconButton';
 import CloseIcon from '@material-ui/icons/Close';
 import CircularProgress from '@material-ui/core/CircularProgress';
 
-import JSchemaForm from "@rjsf/bootstrap-4";
+import JSchemaForm from "@rjsf/fluent-ui";
 import { cloneDeep, isEqual } from 'lodash'
 import ReactMarkdown from 'react-markdown'
 
@@ -954,7 +954,7 @@ const JSchemaTask = () => {
 				{/*</Grid>*/}
 
 				{/*{console.log("Case stages::: ", caseStages)}*/}
-				{/*{console.log("Task metadata::: ", taskMetadata)}*/}
+				{/* {console.log("Task metadata::: ", JSON.stringify(taskMetadata.source))} */}
 				{/*{console.log("Merged background forms::: ", mergedBackgroundForms)}*/}
 
 				{(Object.keys(caseStages).length > 0 &&

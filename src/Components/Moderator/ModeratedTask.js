@@ -28,8 +28,14 @@ const ModeratedTask = (props) => {
 
 	const getReviewStatus = async () => {
         firebase.firestore().collection("tasks").doc(props.task.id).get().then(doc => {
-				
-			let review_status = doc.data().review_status
+			let review_status
+			if (doc.exists && doc.data() && doc.data().review_status) {
+				review_status = doc.data().review_status
+			}
+			else {
+				review_status = 'pending'
+			}
+			console.log("TEST TEST", doc.data())
 			
 			setPending(review_status === 'pending')
 			setPassed(review_status === 'passed')
