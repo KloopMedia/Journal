@@ -301,7 +301,7 @@ const Page = () => {
                             const setIntersection = intersection(Object.keys(stage.rank_limit_number), userRanks)
                             if (setIntersection.length > 0) {
                                 const maxTasksPerStage = calculatemaxTasksPerStage(setIntersection, stage.rank_limit_number)
-                                const tasksPerStage = countTasksPerStage(stageId, userTasks, caseID)
+                                const tasksPerStage = countTasksPerStage(stageId, userTasks, caseID, userCases[caseID][stageId])
                                 // console.log("caseID: ", caseID)
                                 // console.log("stageId: ", stageId)
                                 // console.log("maxTasksPerStage: ", maxTasksPerStage)
@@ -330,11 +330,19 @@ const Page = () => {
     }, [currentUser, userCases, userTasks, id])
 
 
-    const countTasksPerStage = (stage, tasks, caseId) => {
+    const countTasksPerStage = (stage, tasks, caseId, stageData) => {
         let occurrences = 0
         Object.values(tasks).map(task => {
-            if (task.is_complete === false && task.case_stage_id === stage && caseId === task.case_type) {
-                occurrences++
+            if (task.case_stage_id === stage && caseId === task.case_type) {
+                console.log('countcomplete', stage)
+                let countComplete = true
+                if (stageData && stageData.countComplete === false) {
+                    countComplete = false
+                }
+                if (task.is_complete === countComplete) {
+                    occurrences++
+                }
+                console.log('countcomplete', countComplete)
             }
         })
         return occurrences
