@@ -353,6 +353,10 @@ const JSchemaTask = () => {
 
 		uiSchema = { ...uiSchema, ...{ "ui:order": uiOrder } }
 
+		if (taskMetadata.case_type === 'FAQ' && taskMetadata.case_stage_id === 'answer_the_question') {
+			uiSchema['answer'] = {...uiSchema['answer'], sendOnBlur: true}
+		}
+
 		const form = {
 			properties: properties,
 			definitions: definitions,
@@ -484,12 +488,6 @@ const JSchemaTask = () => {
 		)
 	}
 
-	const customLinkField = (props) => {
-		return (
-			<a href={props.value}>{props.value}</a>
-		)
-	}
-
 	const widgets = {
 		customImageWidget: customImageWidget,
 		customVideoWidget: customVideoWidget,
@@ -585,7 +583,10 @@ const JSchemaTask = () => {
 						schema={mergedForm.form_questions}
 						uiSchema={mergedForm.ui_schema}
 						formData={formResponses}
-						fields={{ CustomUIKField: a => CustomUIKField({ ...a, ...{ metadata: taskMetadata }, ...{ prevResp: prevFormResponses }, ...{ taskID: id } }), customFileUpload: a => CustomFileUpload({ ...a, ...{ taskID: id }, ...{ initResp: initialResponses }, ...{ "currentUserUid": currentUser.uid }, ...{ metadata: taskMetadata }, ...{ stage: caseStages[taskMetadata.case_stage_id] } }) }}
+						fields={{
+							CustomUIKField: a => CustomUIKField({ ...a, ...{ metadata: taskMetadata }, ...{ prevResp: prevFormResponses }, ...{ taskID: id } }),
+							customFileUpload: a => CustomFileUpload({ ...a, ...{ taskID: id }, ...{ initResp: initialResponses }, ...{ "currentUserUid": currentUser.uid }, ...{ metadata: taskMetadata }, ...{ stage: caseStages[taskMetadata.case_stage_id] } })
+						}}
 						disabled={formStatus === "loading" || formStatus === "sent" || formStatus === "released"}
 						widgets={widgets}
 						omitExtraData={true}
