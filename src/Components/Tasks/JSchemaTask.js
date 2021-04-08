@@ -259,7 +259,7 @@ const JSchemaTask = () => {
 			let changedValues = {}
 			if (!isEqual(e.formData[k], formResponses[k])) {
 				changedValues = e.formData[k]
-				// setFormResponses(prevState => ({ ...prevState, [k]: changedValues }))
+				setFormResponses(prevState => ({ ...prevState, [k]: changedValues }))
 				if (mergedForm.ui_schema.hasOwnProperty(k) && mergedForm.ui_schema[k].hasOwnProperty("ui:field") && mergedForm.ui_schema[k]["ui:field"] === "customFileUpload") {
 					// pass
 				}
@@ -481,6 +481,12 @@ const JSchemaTask = () => {
 				frameBorder="0"
 				allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
 				allowFullScreen></iframe>
+		)
+	}
+
+	const customLinkField = (props) => {
+		return (
+			<a href={props.value}>{props.value}</a>
 		)
 	}
 
