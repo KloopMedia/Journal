@@ -255,7 +255,7 @@ const JSchemaTask = () => {
 	}, [backgroundTasks])
 
 	const handleFormChange = e => {
-		Object.keys(e.formData).forEach(async k => {
+		Object.keys(e.formData).forEach(k => {
 			let changedValues = {}
 			if (!isEqual(e.formData[k], formResponses[k])) {
 				changedValues = e.formData[k]
@@ -267,7 +267,7 @@ const JSchemaTask = () => {
 					// pass
 				}
 				else {
-					await gRef.collection("responses")
+					gRef.collection("responses")
 						.doc(k)
 						.set({ contents: changedValues }).then(() => console.log("changed value k: ", k, " response:", changedValues))
 				}
