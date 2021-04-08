@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, useRef } from 'react'
+import React, { useState, useEffect, useContext } from 'react'
 import firebase, { signInWithGoogle } from '../../util/Firebase'
 import { AuthContext } from "../../util/Auth";
 
@@ -7,25 +7,17 @@ import Dialog from "../Dialog/Dialog"
 import DefaultDialog from '@material-ui/core/Dialog';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogActions from '@material-ui/core/DialogActions';
-import DialogFeedback from "../Dialog/FeedbackDialog"
-import Feedback from "../form/feedback"
 import { complexStateFirebaseUpdate, simpleStateFirebaseUpdate } from "../../util/Utilities"
 
-import Loader from "../form/Loader"
 import CustomFileUpload from "../form/CustomFileUpload";
 import CustomUIKField from "../form/CustomUIKField"
-import { Button, DialogContentText, DialogTitle, Divider, Grid, Typography } from '@material-ui/core';
-import Snackbar from '@material-ui/core/Snackbar';
-import IconButton from '@material-ui/core/IconButton';
-import CloseIcon from '@material-ui/icons/Close';
-import CircularProgress from '@material-ui/core/CircularProgress';
+import { Button, DialogContentText, DialogTitle, Grid, Typography } from '@material-ui/core';
 
 import JSchemaForm from "@rjsf/fluent-ui";
 import { cloneDeep, isEqual } from 'lodash'
 import ReactMarkdown from 'react-markdown'
 
 import { Redirect, useParams, useHistory } from 'react-router';
-import { Link } from "react-router-dom";
 
 // import 'semantic-ui-css/semantic.min.css'
 var breaks = require('remark-breaks')
@@ -43,42 +35,18 @@ const JSchemaTask = () => {
 	const [currentFocus, setCurrentFocus] = useState("")
 	const [gRef, setGRef] = useState(null)
 	const [formStatus, setFormStatus] = useState("loading")
-	const [lastUpdated, setLastUpdated] = useState(new Date())
 
 	const [prevFormResponses, setPrevResponses] = useState({})
 	const [initialResponses, setInitialResponses] = useState({})
 
-	const [questions, setQuestions] = useState([])
-	const [responses, setResponses] = useState([])
-	const [answers, setAnswers] = useState({})
-	const [forms, setForms] = useState([])
-	const [uploaded, setUploaded] = useState(false)
-	const [redirect, setRedirect] = useState(false)
-	const [userData, setUserData] = useState({})
-	const [lockButton, setLock] = useState(false)
-	const [caseTasks, setCaseTasks] = useState([])
 	const [dialogState, setDialog] = useState(false)
 	const [dialogType, setDialogType] = useState(null)
 	const [feedbackValue, setFeedback] = useState({})
-	const [releaseFeedbackData, setReleaseFeedbackData] = useState({})
-	const [openSnackbar, setOpenSnackbar] = useState(false);
-	const [files, setFiles] = useState({})
-	const [uploading, setUploading] = useState(false)
 	const [enableButton, setEnableButton] = useState(false)
 
 	const { currentUser } = useContext(AuthContext);
 	const { id } = useParams();
 	const history = useHistory();
-
-	const handleCloseSnackbar = (event, reason) => {
-		if (reason === 'clickaway') {
-			return;
-		}
-
-		setOpenSnackbar(false);
-	};
-
-	// const uploadsRef = useRef();
 
 	useEffect(() => {
 		if (currentUser && id) {
@@ -123,7 +91,6 @@ const JSchemaTask = () => {
 						}
 					});
 					if (modifyResponses) {
-						console.log("DEBUG FIRED MODIFIED")
 						setFormResponses(prevState => {
 							const newState = cloneDeep(prevState)
 							setPrevResponses(newState)
@@ -161,7 +128,6 @@ const JSchemaTask = () => {
 
 	useEffect(() => {
 		if (Object.entries(taskMetadata).length > 0 && taskMetadata.case_type) {
-			console.log("Task metadata: ", taskMetadata)
 			firebase.firestore()
 				.collection("schema")
 				.doc("structure")
@@ -171,7 +137,6 @@ const JSchemaTask = () => {
 				.onSnapshot(snapshot => {
 					snapshot.docChanges().forEach(change => {
 						if (change.type === "added" || change.type === "modified") {
-							console.log("Case stage: ", change.doc.data())
 							setCaseStages(prevState => {
 								return { ...prevState, [change.doc.id]: change.doc.data() }
 							})
@@ -191,7 +156,6 @@ const JSchemaTask = () => {
 
 	useEffect(() => {
 		const mergedBgForms = {}
-		console.log("Bg tasks: ", backgroundTasks)
 		Object.keys(backgroundTasks).map(taskId => {
 			if (taskId !== id) {
 				const stage = backgroundTasks[taskId].case_stage_id
@@ -203,7 +167,6 @@ const JSchemaTask = () => {
 			}
 
 		})
-		console.log("Merged bg forms: ", mergedBgForms)
 		setMergedBackgroundForms(mergedBgForms)
 	}, [backgroundTasks, backgroundTaskForms, caseStages])
 
@@ -225,11 +188,8 @@ const JSchemaTask = () => {
 	useEffect(() => {
 
 		if (Object.keys(caseStages).length > 0 && Object.keys(taskMetadata).length > 0 && caseStages[taskMetadata.case_stage_id]) {
-			console.log("caseStages: ", caseStages)
-			console.log("taskMetadata: ", taskMetadata)
 			const backgroundTasksList = caseStages[taskMetadata.case_stage_id].backgroundStages
 			if (backgroundTasksList && backgroundTasksList.length > 0) {
-				console.log("backgroundTasksList: ", backgroundTasksList.length)
 				firebase.firestore()
 					.collection("tasks")
 					.where("case_id", "==", taskMetadata.case_id)
@@ -238,7 +198,6 @@ const JSchemaTask = () => {
 					.onSnapshot(snapshot => {
 						snapshot.docChanges().forEach(change => {
 							if (change.type === "added" || change.type === "modified") {
-								console.log("Background task: ", change.doc.data())
 								setBackgroundTasks(prevState => {
 									return { ...prevState, [change.doc.id]: change.doc.data() }
 								})
@@ -295,106 +254,38 @@ const JSchemaTask = () => {
 		}
 	}, [backgroundTasks])
 
-	// useEffect( () => {
-	// 	setMergedQuestions(mergeQuestions([caseStages[taskMetadata.case_stage_id]]))
-	// }, [caseStages, taskQuestions])
-
-	// useEffect(() => {
-	// 	const timer = setTimeout(() => {
-	// 		if (formResponsesChanged) {
-	// 			firebase
-	// 				.firestore()
-	// 				.collection("tasks")
-	// 				.doc(id)
-	// 				.collection("responses")
-	// 				.doc("form_responses")
-	// 				.set(formResponses)
-	// 				.then(docRef => {
-	// 					setFormResponsesChanged(false);
-	// 					console.log("Document written with ID: ", docRef.id);
-	// 				})
-	// 				.catch(error => console.error("Error setting document: ", error));
-	// 		}
-	// 	}, AUTOSAVE_INTERVAL);
-	// 	return () => clearTimeout(timer);
-	// }, [formResponsesChanged, formResponses]);
-
-
 	const handleFormChange = e => {
-		setFormResponses(e.formData)
-		// Object.keys(e.formData).forEach(k => {
-		// 	if (mergedForm.ui_schema.hasOwnProperty(k) && mergedForm.ui_schema[k].hasOwnProperty("ui:widget") && mergedForm.ui_schema[k]["ui:widget"] === "radio") {
-		// 		console.log("DEBUG radio", mergedForm.ui_schema[k])
-		// 		gRef.collection("responses")
-		// 			.doc(k)
-		// 			.set({ contents: e.formData[k] ? e.formData[k] : "" })
-		// 	}
-		// 	else if (mergedForm.ui_schema.hasOwnProperty(k) && typeof mergedForm.ui_schema[k] === 'object' && mergedForm.ui_schema[k] !== null) {
-		// 		Object.keys(mergedForm.ui_schema[k]).forEach(nestedKey => {
-		// 			if (typeof mergedForm.ui_schema[k][nestedKey] === 'object'
-		// 				&& mergedForm.ui_schema[k][nestedKey] !== null
-		// 				&& mergedForm.ui_schema[k][nestedKey].hasOwnProperty("ui:widget")
-		// 				&& mergedForm.ui_schema[k][nestedKey]["ui:widget"] === "radio") {
-		// 				console.log("DEBUG radio nested", mergedForm.ui_schema[k][nestedKey])
-		// 				gRef.collection("responses")
-		// 					.doc(k)
-		// 					.set({ contents: e.formData[k] ? e.formData[k] : "" })
-		// 			}
-		// 		})
-		// 	}
-		// })
-
-		let timeDiff = (new Date().getTime() - lastUpdated.getTime()) / 1000;
-		console.log("TIME DIFF", timeDiff)
-		if (timeDiff > 5) {
-			setLastUpdated(new Date())
-			Object.keys(e.formData).forEach(k => {
+		Object.keys(e.formData).forEach(async k => {
+			let changedValues = {}
+			if (!isEqual(e.formData[k], formResponses[k])) {
+				changedValues = e.formData[k]
+				// setFormResponses(prevState => ({ ...prevState, [k]: changedValues }))
 				if (mergedForm.ui_schema.hasOwnProperty(k) && mergedForm.ui_schema[k].hasOwnProperty("ui:field") && mergedForm.ui_schema[k]["ui:field"] === "customFileUpload") {
-
+					// pass
+				}
+				else if (mergedForm.ui_schema.hasOwnProperty(k) && mergedForm.ui_schema[k].hasOwnProperty("sendOnBlur") && mergedForm.ui_schema[k].sendOnBlur) {
+					// pass
 				}
 				else {
-					gRef.collection("responses")
+					await gRef.collection("responses")
 						.doc(k)
-						.set({ contents: e.formData[k] ? e.formData[k] : "" }).then(() => console.log("debug blur k: ", k, " response:", formResponses[k] ? formResponses[k] : ""))
+						.set({ contents: changedValues }).then(() => console.log("changed value k: ", k, " response:", changedValues))
 				}
-			})
-		}
+			}
+		})
 	};
 
-	// const handleBlur = e => {
-	// 	if (gRef) {
-	// 		console.log("Responses: ", formResponses)
-	// 		console.log("That is what was blured", e)
-	// 		if (e === "root") {
-	// 			console.log("e from first option when trigger is root", e)
-	// 			Object.keys(formResponses).map(k => {
-	// 				gRef.collection("responses")
-	// 					.doc(k)
-	// 					.set({contents: formResponses[k] ? formResponses[k] : firebase.firestore.FieldValue.delete()},
-	// 						{merge: true})
-	// 			})
-	// 		} else {
-	// 			console.log("e from second option when trigger is not root", e)
-	// 			const docID = e.split("_")[1]
-	// 			gRef.collection("responses")
-	// 				.doc(docID)
-	// 				.set({contents: formResponses[docID] ? formResponses[docID] : firebase.firestore.FieldValue.delete()},
-	// 					{merge: true})
-	// 		}
-	// 	}
-	// }
-
 	const handleBlur = (e, v) => {
-		console.log("onBlur e", e)
-		console.log("onBlur v", v)
 		if (gRef) {
 			console.log("Responses: ", formResponses)
 			console.log("That is what was blured", e)
 
-			Object.keys(formResponses).map(k => {
-				gRef.collection("responses")
-					.doc(k)
-					.set({ contents: formResponses[k] ? formResponses[k] : "" }).then(() => console.log("debug blur k: ", k, " response:", formResponses[k] ? formResponses[k] : ""))
+			Object.keys(formResponses).forEach(async k => {
+				if (mergedForm.ui_schema.hasOwnProperty(k) && mergedForm.ui_schema[k].hasOwnProperty("sendOnBlur") && mergedForm.ui_schema[k].sendOnBlur) {
+					await gRef.collection("responses")
+						.doc(k)
+						.set({ contents: formResponses[k] }).then(() => console.log("changed value k: ", k, " response:", formResponses[k]))
+				}
 			})
 		}
 	}
@@ -473,229 +364,6 @@ const JSchemaTask = () => {
 
 	}
 
-
-	// useEffect(() => {
-	// 	const getQuestions = async (taskID) => {
-	// 		let q = []
-	//
-	// 		await firebase.firestore().collection("tasks").doc(taskID).collection("questions").get()
-	// 			.then((querySnapshot) => {
-	// 				querySnapshot.forEach((doc) => {
-	// 					q.push({ questionId: doc.id, data: doc.data() })
-	// 				});
-	// 			})
-	// 			.catch((error) => {
-	// 				console.log("Error getting documents: ", error);
-	// 			});
-	//
-	// 		return q
-	// 	}
-	//
-	//
-	// 	const getResponses = async (taskID) => {
-	// 		let r = []
-	//
-	// 		await firebase.firestore().collection("tasks").doc(taskID).collection("responses").get()
-	// 			.then((querySnapshot) => {
-	// 				querySnapshot.forEach((doc) => {
-	// 					r.push({ responseId: doc.id, data: doc.data() })
-	// 				});
-	// 			})
-	// 			.catch((error) => {
-	// 				console.log("Error getting documents: ", error);
-	// 			});
-	//
-	// 		return r
-	// 	}
-	//
-	//
-	// 	const getSameCaseTasks = async () => {
-	// 		let sameCaseTasks = []
-	//
-	// 		await firebase.firestore().collection("tasks").doc(id).get().then(doc => {
-	// 			return doc.data()
-	// 		}).then(async data => {
-	// 			await firebase.firestore().collection("tasks").where("case_id", "==", data.case_id).get().then(snap => {
-	// 				snap.forEach(doc => {
-	// 					if (doc.id !== id) {
-	// 						sameCaseTasks.push({ id: doc.id, ...doc.data() })
-	// 					}
-	// 				})
-	// 			})
-	// 		})
-	// 		return sameCaseTasks
-	// 	}
-	//
-	// 	const getForms = async () => {
-	// 		let f = []
-	// 		let locked = true
-	//
-	// 		setForms(null)
-	//
-	// 		await firebase.firestore().collection("tasks").doc(id).collection("user_editable").doc("user_editable").get().then(doc => {
-	// 			if (doc.data().status === 'complete') {
-	// 				locked = true
-	// 				setLock(true)
-	// 			}
-	// 			else {
-	// 				locked = false
-	// 			}
-	// 		})
-	//
-	// 		let sq = []
-	// 		let sr = []
-	//
-	// 		let sameCaseTasks = await getSameCaseTasks()
-	// 		setCaseTasks(sameCaseTasks)
-	// 		if (sameCaseTasks.length > 0) {
-	// 			let ques = sameCaseTasks.map(t => {
-	// 				return getQuestions(t.id)
-	// 			})
-	// 			let resp = sameCaseTasks.map(t => {
-	// 				return getResponses(t.id)
-	// 			})
-	// 			console.log(ques)
-	// 			await Promise.all(ques).then(data => data.forEach(d => sq.push(...d)))
-	// 			await Promise.all(resp).then(data => data.forEach(d => sr.push(...d)))
-	//
-	// 			console.log(sq)
-	// 			console.log(sr)
-	// 		}
-	//
-	// 		let sf = sq.map((el, i) => {
-	// 			let response = null
-	// 			sr.forEach((res) => {
-	// 				if (el.questionId === res.responseId) {
-	// 					response = res.data.answer
-	// 					returnAnswer(res.data.answer, i)
-	// 				}
-	// 			})
-	// 			return <Form key={el.questionId + '_' + i} question={el.data} index={i} response={response} returnAnswer={returnAnswer} locked={true} askFeedback={true} saveQuestionFeedback={saveQuestionFeedback} id={el.questionId} prevTaskId={sameCaseTasks[0].id} />
-	// 		})
-	//
-	// 		sf.push(<div key={"div_divider_stripped"} style={{ height: 25, margin: '20px 0', background: 'repeating-linear-gradient( 45deg, white, white 10px, grey 10px, grey 25px)' }}><br /></div>)
-	//
-	//
-	// 		let q = await getQuestions(id)
-	// 		let r = await getResponses(id)
-	//
-	//
-	// 		setQuestions(q)
-	// 		setResponses(r)
-	//
-	//
-	// 		// let newQ = sq.concat(q)
-	// 		// let newR = sr.concat(r)
-	//
-	// 		f = q.map((el, i) => {
-	// 			let response = null
-	// 			r.forEach((res) => {
-	// 				if (el.questionId === res.responseId) {
-	// 					response = res.data.answer
-	// 					returnAnswer(res.data.answer, i)
-	// 				}
-	// 			})
-	// 			return (
-	// 				<Form
-	// 					key={el.questionId + '_' + i}
-	// 					question={el.data}
-	// 					index={i}
-	// 					response={response}
-	// 					returnFile={returnFile}
-	// 					returnAnswer={returnAnswer}
-	// 					id={el.questionId}
-	// 					locked={locked}
-	// 					// ref={uploadsRef}
-	// 					uploadFilesData={uploadFilesData} />
-	// 			)
-	// 		})
-	//
-	// 		let newF = sf.concat(f)
-	// 		setForms(newF)
-	// 	}
-	// 	if (currentUser) {
-	// 		getForms()
-	// 	}
-	// }, [currentUser, id, lockButton])
-	//
-	//
-	// const returnAnswer = (answer, index) => {
-	// 	const tmp = answers
-	// 	tmp[index] = answer
-	// 	setAnswers(tmp)
-	// }
-	//
-	// const returnFile = (file, questionId) => {
-	// 	let arr = [...file]
-	// 	let tmp = files
-	// 	tmp[questionId] = arr
-	// 	setFiles(tmp)
-	// 	console.log([...file], questionId)
-	// }
-	//
-	// const upload = async () => {
-	// 	// uploadsRef.current.startUpload()
-	// 	if (Object.keys(files).length > 0) {
-	// 		console.log('files')
-	// 		setUploading(true)
-	// 		for (const [key, value] of Object.entries(files)) {
-	// 			let ref = firebase.storage().ref(id).child(key).child(currentUser.uid)
-	// 			await Promise.all(value.map(async v => {
-	// 				let snap = await ref.child(v.name).put(v)
-	// 				let url = await snap.ref.getDownloadURL()
-	// 				let url_wo_token = url.split("?")[0]
-	// 				await uploadFilesData(v.name, url_wo_token, key)
-	// 			}));
-	// 		}
-	// 		setUploaded(true)
-	// 		setUploading(false)
-	// 	}
-	// }
-	//
-	// const saveQuestionFeedback = (data, questionId, previousTaskId) => {
-	// 	if (previousTaskId) {
-	// 		firebase.firestore().collection('tasks').doc(previousTaskId).collection('feedbacks').doc(questionId).collection('messages')
-	// 			.add({
-	// 				answer: data.reason,
-	// 				text: data.text,
-	// 				user_id: currentUser.uid,
-	// 				timestamp: firebase.firestore.FieldValue.serverTimestamp()
-	// 			})
-	// 			.then(() => setOpenSnackbar(true))
-	// 	}
-	// 	else {
-	// 		alert('Ошибка: Что-то пошло не так при сохранении фидбека. Сообщите программисту!')
-	// 	}
-	// }
-	//
-	// const saveToFirebase = async (lock) => {
-	// 	await upload()
-	// 	questions.forEach(async (q, i) => {
-	// 		if (answers[i] || answers[i] === "") {
-	// 			await firebase.firestore().collection("tasks").doc(id).collection("responses").doc(q.questionId).set({ answer: answers[i] }, { merge: true })
-	// 		}
-	// 	})
-	//
-	// 	if (lock) {
-	// 		await firebase.firestore().collection("tasks").doc(id).collection("user_editable").doc("user_editable").update({ status: 'complete' })
-	// 		setLock(true)
-	// 		console.log("Task Locked")
-	// 		setDialog(false)
-	// 	}
-	// }
-	//
-	// const uploadFilesData = async (filename, url, questionId) => {
-	// 	let rootRef = firebase.firestore().collection("tasks").doc(id).collection("responses").doc(questionId)
-	// 	console.log("Файл отправлен")
-	// 	if (filename && url) {
-	// 		rootRef.set(
-	// 			{
-	// 				files: firebase.firestore.FieldValue.arrayUnion({ public_url: url, filename: filename })
-	// 			}, { merge: true }
-	// 		).then(() => console.log('super'))
-	// 	}
-	// };
-	//
 	const handleDialogClose = () => {
 		setDialog(false);
 		//setFeedback({})
@@ -717,7 +385,7 @@ const JSchemaTask = () => {
 		}
 		else if (mergedForm.ui_schema.hasOwnProperty(q) && mergedForm.ui_schema[q].hasOwnProperty("ui:field") && mergedForm.ui_schema[q]["ui:field"] === "customFileUpload") {
 			if (initialResponses[q] && initialResponses[q].contents && Object.keys(initialResponses[q].contents).length > 0) {
-				console.log(q, "file not empty", initialResponses[q])
+				// console.log(q, "file not empty", initialResponses[q])
 				return true
 			}
 			else {
@@ -756,32 +424,6 @@ const JSchemaTask = () => {
 		}
 	}
 
-	// useEffect(() => {
-	// 	firebase.firestore().collection("schema").doc("structure").collection("feedbacks").doc("release").get().then(doc => {
-	// 		let feedback = <Grid>
-	// 			{/* <Typography>{doc.data().description}</Typography>
-	// 			<Feedback answers={doc.data().answers} returnAnswer={handleFeedbackSave}/> */}
-	// 			<JSchemaForm
-	// 				schema={schm}
-	// 				uiSchema={ui}
-	// 				formData={testData}
-	// 			> </JSchemaForm>
-
-	// 		</Grid>
-	// 		setReleaseFeedbackData(feedback)
-	// 	})
-	// }, [])
-	//
-	// const releaseTask = () => {
-	// 	firebase.firestore().collection("tasks").doc(id).collection("user_editable").doc("user_editable").update({ status: 'open' })
-	// 		.then(() => firebase.firestore().collection("tasks").doc(id).collection("user_editable").doc("user_editable").update({ status: 'released', release_status: feedbackValue.reason, release_description: feedbackValue.text })
-	// 			.then(() => {
-	// 				setDialog(false)
-	// 				setLock(true)
-	// 			}))
-	// 	// alert(feedbackValue)
-	// }
-	//
 	const handleFeedbackSave = (event) => {
 		setFeedback(event.formData)
 		console.log('event', event.formData)
@@ -794,7 +436,6 @@ const JSchemaTask = () => {
 			.collection("user_editable")
 			.doc("user_editable")
 
-		console.log('debug status', status)
 		root.set({ status: status })
 		if (status === 'released') {
 			if (feedbackValue.reasons) {
@@ -809,7 +450,6 @@ const JSchemaTask = () => {
 	}
 
 	const customImageWidget = (props) => {
-		console.log("PROPS", props)
 		return (
 			<img src={props.value} alt={props.schema.title}
 				style={{
@@ -820,7 +460,6 @@ const JSchemaTask = () => {
 	};
 
 	const customVideoWidget = (props) => {
-		console.log("PROPS", props)
 		return (
 			<video title={props.schema.title}
 				style={{
@@ -835,7 +474,6 @@ const JSchemaTask = () => {
 	}
 
 	const customIframeWidget = (props) => {
-		console.log("PROPS", props)
 		return (
 			<iframe
 				title={props.schema.title}
@@ -865,16 +503,6 @@ const JSchemaTask = () => {
 					title={formStatus === "sent" ? "Форма успешно отправлена." : "Отправить форму?"}
 					content={formStatus === "sent" ? "Спасибо" : "Вы собираетесь отправить форму. Это значит, что вы больше не сможете изменять ответы."}
 					dialogFunction={() => { changeTaskStatus('complete') }} />}
-
-				{/* {dialogType === 'release' && <Dialog
-					state={dialogState}
-					handleClose={handleDialogClose}
-					handleOk={handleOk}
-					showOk={formStatus === "released"}
-					answers={releaseFeedbackData.answers}
-					content={formStatus === "released" ? "Спасибо" : releaseFeedbackData}
-					title={formStatus === "released" ? "Форма успешно освобождена. Теперь ею сможет заняться кто-то еще." : "Освободить форму?"}
-					dialogFunction={() => { changeTaskStatus('released') }} />} */}
 
 				{dialogType === 'release' && <DefaultDialog
 					open={dialogState}
@@ -914,49 +542,6 @@ const JSchemaTask = () => {
 					</DialogActions>}
 				</DefaultDialog>}
 
-				{/*{dialogType === 'release' && <DialogFeedback*/}
-				{/*	state={dialogState}*/}
-				{/*	feedbackValue={feedbackValue}*/}
-				{/*	handleClose={handleDialogClose}*/}
-				{/*	title={releaseFeedbackData.title}*/}
-				{/*	dialogFunction={releaseTask}*/}
-				{/*	answers={releaseFeedbackData.answers}*/}
-				{/*	description={releaseFeedbackData.description}*/}
-				{/*	returnFeedback={handleFeedbackSave} />}*/}
-				{/*{redirect && <Redirect to="/tasks" />}*/}
-				{/*<Snackbar*/}
-				{/*	anchorOrigin={{*/}
-				{/*		vertical: 'bottom',*/}
-				{/*		horizontal: 'left',*/}
-				{/*	}}*/}
-				{/*	open={openSnackbar}*/}
-				{/*	autoHideDuration={6000}*/}
-				{/*	onClose={handleCloseSnackbar}*/}
-				{/*	message="Фидбек отправлен"*/}
-				{/*	action={*/}
-				{/*		<React.Fragment>*/}
-				{/*			<IconButton size="small" aria-label="close" color="inherit" onClick={handleCloseSnackbar}>*/}
-				{/*				<CloseIcon fontSize="small" />*/}
-				{/*			</IconButton>*/}
-				{/*		</React.Fragment>*/}
-				{/*	}*/}
-				{/*/>*/}
-				{/*/!* Предыдущие задания{caseTasks.map((t, i) => <Button key={"case_button_"+i} component={ Link } to={"/tasks/" + t.id}>{t.title}</Button>)} *!/*/}
-				{/*{forms}*/}
-				{/*<Grid container style={{ padding: 20 }} justify="center">*/}
-				{/*	<Button variant="outlined" style={{ borderWidth: 2, borderColor: "grey", color: 'grey', margin: 5 }} onClick={() => setRedirect(true)}>Назад</Button>*/}
-				{/*	{!lockButton &&*/}
-				{/*		<div>*/}
-				{/*			<Button variant="outlined" disabled={lockButton} style={{ borderWidth: 2, borderColor: "#003366", color: '#003366', margin: 5 }} onClick={() => saveToFirebase(false)}>Сохранить</Button>*/}
-				{/*			<Button variant="outlined" disabled={lockButton} style={{ borderWidth: 2, borderColor: "red", color: 'red', margin: 5 }} onClick={() => handleDialogOpen('send')}>Отправить</Button>*/}
-				{/*
-				{/*		</div>}*/}
-				{/*</Grid>*/}
-
-				{/*{console.log("Case stages::: ", caseStages)}*/}
-				{/* {console.log("Task metadata::: ", JSON.stringify(taskMetadata.source))} */}
-				{/*{console.log("Merged background forms::: ", mergedBackgroundForms)}*/}
-
 				{(Object.keys(caseStages).length > 0 &&
 					Object.keys(taskMetadata).length > 0 &&
 					caseStages[taskMetadata.case_stage_id] &&
@@ -966,8 +551,6 @@ const JSchemaTask = () => {
 					<Grid style={{ paddingBottom: 30 }}>
 						{caseStages[taskMetadata.case_stage_id].backgroundStages.map(stage => {
 							return <div key={stage}>
-								{console.log("STAGE: ", stage)}
-								{console.log("mergedBackgroundForms: ", mergedBackgroundForms)}
 								{
 									mergedBackgroundForms[stage] ?
 										(Object.keys(mergedBackgroundForms[stage]).map(taskId => (
@@ -1012,7 +595,7 @@ const JSchemaTask = () => {
 						}}
 						onSubmit={() => handleDialogOpen('send')}
 						onBlur={(e, v) => {
-							// handleBlur(e, v)
+							handleBlur(e, v)
 						}}>
 						{formStatus === "sent" ?
 							<div>Форма отправлена успешно</div>

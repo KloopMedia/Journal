@@ -42,26 +42,30 @@ const CustomFileUpload = props => {
 		.collection("responses")
 		.doc(props.name)
 
-	// console.log("Props formData: ", props.formData)
-
 	const removeFile = (path) => {
 		console.log(path)
 		linksToFiles.set({
 			contents: { [path]: firebase.firestore.FieldValue.delete() }
 		}, { merge: true })
-			.then(() => console.log("file removed"))
-			.then(() => props.onChange())
+			.then(() => {
+				delete files[path]
+				console.log('file removed')
+				if (Object.keys(files).length > 0) {
+					props.onChange(files)
+				}
+				else {
+					props.onChange()
+				}
+			})
 			.catch(error => console.log(error))
 	}
 
 	let files = {}
 	if (props.formData && Object.keys(props.formData).length > 0) {
 		files = props.formData
-		console.log('files formdata', files)
 	}
 	else if (props.initResp && props.name && props.initResp[props.name] && props.initResp[props.name].contents && Object.keys(props.initResp[props.name].contents).length > 0) {
 		files = props.initResp[props.name].contents
-		console.log('files initresp', files)
 	}
 
 	const handleClose = () => {
@@ -75,16 +79,15 @@ const CustomFileUpload = props => {
 	}
 
 	const getComponent = (file) => {
-		console.log("debug file viewer", file)
 		if (file) {
 			const extension = file.name.substring(file.name.lastIndexOf('.') + 1, file.name.length).toLowerCase() || ''
 			console.log("debug file extension", extension)
 			if (extension === 'jpeg' || extension === 'jpg' || extension === 'png') {
-				return <img src={file.url} style={{height: '100%', width: 'auto'}} alt={file.name}></img>
+				return <img src={file.url} style={{ height: '100%', width: 'auto' }} alt={file.name}></img>
 			}
 			else if (extension === 'mp4' || extension === 'ogg' || extension === 'webm' || extension === 'mov') {
 				return (
-					<video controls="controls" style={{maxHeight: '100%', width: 'auto'}}>
+					<video controls="controls" style={{ maxHeight: '100%', width: 'auto' }}>
 						<source src={file.url}></source>
 					</video>
 				)
