@@ -334,7 +334,7 @@ const Page = () => {
         let occurrences = 0
         Object.values(tasks).map(task => {
             if (task.case_stage_id === stage && caseId === task.case_type) {
-                console.log('countcomplete', stage)
+                // console.log('countcomplete', stage)
                 let countComplete = true
                 if (stageData && stageData.countComplete === false) {
                     countComplete = false
@@ -342,7 +342,7 @@ const Page = () => {
                 if (task.is_complete === countComplete) {
                     occurrences++
                 }
-                console.log('countcomplete', countComplete)
+                // console.log('countcomplete', countComplete)
             }
         })
         return occurrences
@@ -680,6 +680,23 @@ const Page = () => {
             {/*        </Grid>*/}
             {/*    ))*/}
             {/*))}*/}
+            <Grid container>
+                <Grid container flex justify="center"><Typography variant="h5">СОЗДАТЬ НОВУЮ ФОРМУ</Typography></Grid>
+                <Grid container>
+                    {Object.keys(filteredStages).map(pCase => (
+                        Object.keys(filteredStages[pCase]).map(stage => {
+                            return filteredStages[pCase][stage].hasOwnProperty('countComplete') && filteredStages[pCase][stage].countComplete === false ? <Grid item key={pCase + stage} style={{ padding: 10 }}>
+                                <TaskCard complete={false}
+                                    stage={filteredStages[pCase][stage]}
+                                    stageID={stage}
+                                    user={currentUser}
+                                    pCase={pCase}
+                                    cardType="creatable" />
+                            </Grid> : null
+                        })
+                    ))}
+                </Grid>
+            </Grid>
             <Paper position="static" color="default">
 
                 <Tabs value={tabValue} onChange={handleTabChange} variant="fullWidth" centered
@@ -698,16 +715,16 @@ const Page = () => {
 
         <TabPanel value={tabValue} index={0}>
             {Object.keys(filteredStages).map(pCase => (
-                Object.keys(filteredStages[pCase]).map(stage => (
-                    <Grid key={pCase + stage} style={{ padding: 10 }}>
+                Object.keys(filteredStages[pCase]).map(stage => {
+                    return !filteredStages[pCase][stage].hasOwnProperty('countComplete') || filteredStages[pCase][stage].countComplete === true ? <Grid item key={pCase + stage} style={{ padding: 10 }}>
                         <TaskCard complete={false}
                             stage={filteredStages[pCase][stage]}
                             stageID={stage}
                             user={currentUser}
                             pCase={pCase}
                             cardType="creatable" />
-                    </Grid>
-                ))
+                    </Grid> : null
+                })
             ))}
             {displayTasks(userTasks, false, allCases, "selected", false)}
         </TabPanel>
