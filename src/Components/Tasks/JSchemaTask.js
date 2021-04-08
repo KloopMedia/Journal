@@ -496,7 +496,7 @@ const JSchemaTask = () => {
 
 	return (
 		currentUser ?
-			<Grid container style={{ wordBreak: 'break-word' }}>
+			<Grid style={{ wordBreak: 'break-word' }}>
 				{dialogType === 'send' && <Dialog
 					state={dialogState}
 					handleClose={handleDialogClose}
