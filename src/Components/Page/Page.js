@@ -338,8 +338,11 @@ const Page = () => {
                 let countComplete = true
                 if (stageData && stageData.countComplete === false) {
                     countComplete = false
+                    if (task.is_complete === countComplete) {
+                        occurrences++
+                    }
                 }
-                if (task.is_complete === countComplete) {
+                else {
                     occurrences++
                 }
                 // console.log('countcomplete', countComplete)
