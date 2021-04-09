@@ -35,6 +35,7 @@ const JSchemaTask = () => {
 	const [currentFocus, setCurrentFocus] = useState("")
 	const [gRef, setGRef] = useState(null)
 	const [formStatus, setFormStatus] = useState("loading")
+	const [focusedField, setFocusedField] = useState(null)
 
 	const [prevFormResponses, setPrevResponses] = useState({})
 	const [initialResponses, setInitialResponses] = useState({})
@@ -259,17 +260,37 @@ const JSchemaTask = () => {
 			let changedValues = {}
 			if (!isEqual(e.formData[k], formResponses[k])) {
 				changedValues = e.formData[k]
+				setFocusedField(k)
 				setFormResponses(prevState => ({ ...prevState, [k]: changedValues }))
-				if (mergedForm.ui_schema.hasOwnProperty(k) && mergedForm.ui_schema[k].hasOwnProperty("ui:field") && mergedForm.ui_schema[k]["ui:field"] === "customFileUpload") {
-					// pass
-				}
-				else if (mergedForm.ui_schema.hasOwnProperty(k) && mergedForm.ui_schema[k].hasOwnProperty("sendOnBlur") && mergedForm.ui_schema[k].sendOnBlur) {
-					// pass
+				if (typeof changedValues === 'object' && changedValues !== null) {
+					Object.keys(changedValues).forEach(key => {
+						if (!isEqual(e.formData[k][key], formResponses[k][key])) {
+							if (mergedForm.ui_schema.hasOwnProperty(k) && mergedForm.ui_schema[k].hasOwnProperty(key) && mergedForm.ui_schema[k][key].hasOwnProperty("ui:field") && mergedForm.ui_schema[k][key]["ui:field"] === "customFileUpload") {
+								// pass
+							}
+							else if (mergedForm.ui_schema.hasOwnProperty(k) && mergedForm.ui_schema[k].hasOwnProperty(key) && mergedForm.ui_schema[k][key].hasOwnProperty("sendOnBlur") && mergedForm.ui_schema[k][key].sendOnBlur) {
+								// pass
+							}
+							else {
+								gRef.collection("responses")
+									.doc(k)
+									.set({ contents: changedValues }).then(() => console.log("changed value object k: ", k, " response:", { [key]: changedValues[key] }))
+							}
+						}
+					})
 				}
 				else {
-					gRef.collection("responses")
-						.doc(k)
-						.set({ contents: changedValues }).then(() => console.log("changed value k: ", k, " response:", changedValues))
+					if (mergedForm.ui_schema.hasOwnProperty(k) && mergedForm.ui_schema[k].hasOwnProperty("ui:field") && mergedForm.ui_schema[k]["ui:field"] === "customFileUpload") {
+						// pass
+					}
+					else if (mergedForm.ui_schema.hasOwnProperty(k) && mergedForm.ui_schema[k].hasOwnProperty("sendOnBlur") && mergedForm.ui_schema[k].sendOnBlur) {
+						// pass
+					}
+					else {
+						gRef.collection("responses")
+							.doc(k)
+							.set({ contents: changedValues }).then(() => console.log("changed value k: ", k, " response:", changedValues))
+					}
 				}
 			}
 		})
@@ -280,11 +301,22 @@ const JSchemaTask = () => {
 			console.log("Responses: ", formResponses)
 			console.log("That is what was blured", e)
 
-			Object.keys(formResponses).forEach(async k => {
-				if (mergedForm.ui_schema.hasOwnProperty(k) && mergedForm.ui_schema[k].hasOwnProperty("sendOnBlur") && mergedForm.ui_schema[k].sendOnBlur) {
-					await gRef.collection("responses")
-						.doc(k)
-						.set({ contents: formResponses[k] }).then(() => console.log("changed value k: ", k, " response:", formResponses[k]))
+			Object.keys(formResponses).forEach(k => {
+				if (typeof formResponses[k] === 'object' && formResponses[k] !== null) {
+					Object.keys(formResponses[k]).forEach(key => {
+						if (mergedForm.ui_schema.hasOwnProperty(k) && mergedForm.ui_schema[k].hasOwnProperty(key) && mergedForm.ui_schema[k][key].hasOwnProperty("sendOnBlur") && mergedForm.ui_schema[k][key].sendOnBlur && k === focusedField) {
+							gRef.collection("responses")
+								.doc(k)
+								.set({ contents: { [key]: formResponses[k][key] } }, { merge: true }).then(() => console.log("changed value object k: ", k, " response:", { [key]: formResponses[k][key] }))
+						}
+					})
+				}
+				else {
+					if (mergedForm.ui_schema.hasOwnProperty(k) && mergedForm.ui_schema[k].hasOwnProperty("sendOnBlur") && mergedForm.ui_schema[k].sendOnBlur && k === focusedField) {
+						gRef.collection("responses")
+							.doc(k)
+							.set({ contents: formResponses[k] }).then(() => console.log("changed value k: ", k, " response:", formResponses[k]))
+					}
 				}
 			})
 		}
@@ -354,7 +386,7 @@ const JSchemaTask = () => {
 		uiSchema = { ...uiSchema, ...{ "ui:order": uiOrder } }
 
 		if (taskMetadata.case_type === 'FAQ' && taskMetadata.case_stage_id === 'answer_the_question') {
-			uiSchema['answer'] = {...uiSchema['answer'], sendOnBlur: true}
+			uiSchema['answer'] = { ...uiSchema['answer'], sendOnBlur: true }
 		}
 
 		const form = {
