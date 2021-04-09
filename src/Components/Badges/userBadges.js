@@ -34,12 +34,6 @@ const UserBadges = (props) => {
                 <Grid item>
                     <Typography align="center" variant="h6">Күбөлүк 16.04.21 чейин жарактуу. Биз бул адам «Клооп Медианын» штаттан тышкаркы журналисти экенин тастыктайбыз.</Typography>
                 </Grid>
-                <Grid item>
-                    <Typography align="center" variant="caption">Здравствуйте! Мы не смогли сделать вам бейджик, из-за того, что у вас было очень плохое качество фотографии или вы прикрепили видео. Свяжитесь пожалуйста с координаторами @aigesha05 @aizi_a @osmnlv @ily1424 @Gulzarmaratbek и срочно отправьте качественную фотографию — это для БЕЙДЖИКА.</Typography>
-                </Grid>
-                <Grid item>
-                    <Typography align="center" variant="caption">Саламатсызбы! Сиздин сүрөтүңүздүн сапаты абдан начар болгон үчүн (же сиз видео тиркеп койгон үчүн) сизге бейджик жасай алган жокбуз. Азыр @aigesha05 @aizi_a @osmnlv @ily1424 @Gulzarmaratbek өзүңүздүн жакшы сапаттагы сүрөтүңүздү жөнөтүп коюңуз. Бул БЕЙДЖИК үчүн.</Typography>
-                </Grid>
                 {badges}
             </Grid>
             :

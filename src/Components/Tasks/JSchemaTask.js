@@ -262,7 +262,7 @@ const JSchemaTask = () => {
 				changedValues = e.formData[k]
 				setFocusedField(k)
 				setFormResponses(prevState => ({ ...prevState, [k]: changedValues }))
-				if (typeof changedValues === 'object' && changedValues !== null) {
+				if (formResponses.hasOwnProperty(k) && typeof changedValues === 'object' && changedValues !== null) {
 					Object.keys(changedValues).forEach(key => {
 						if (!isEqual(e.formData[k][key], formResponses[k][key])) {
 							if (mergedForm.ui_schema.hasOwnProperty(k) && mergedForm.ui_schema[k].hasOwnProperty(key) && mergedForm.ui_schema[k][key].hasOwnProperty("ui:field") && mergedForm.ui_schema[k][key]["ui:field"] === "customFileUpload") {
