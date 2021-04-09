@@ -257,6 +257,9 @@ function ResponsiveDrawer(props) {
 					<li>
 						<Link to="/notifications">Уведомления</Link>
 					</li>
+					<li>
+						<Link to="/mybadges">Бэйджик</Link>
+					</li>
 					{moderator ? <li>
 						<Link to="/tasksObserver">Модератор</Link>
 					</li> : null}
