@@ -61,8 +61,7 @@ def completion(event, context):
 			}
 			big_object.update(responses)
 
-			if (path_parts[1] == task['case_id']):
-				big_object['source']['responses'] = responses
+			big_object['source']['responses'] = responses
 
 			print("BIG OBJECT", big_object)
 
@@ -189,11 +188,13 @@ def create_task(variant, big_object, task, stage, collection_path):
 		"cardData": get_card_data(next_stage_doc, collection_path, task),
 		"source": {"stage": task.get("case_stage_id"),
 				   "userId": task.get("assigned_users"),
-				   "source": source
+				   "source": source,
+				   "responses": big_object['source'].get('responses')
 				   }
 	}
 
 	print("variant: ", variant)
+	print('Stage:', next_stage_name, 'Source:', next_task_doc.get('source'))
 
 	if variant.get("user") is not None and variant.get("user") != "":
 		# user = variant['user'].strip()  # turn str into list
@@ -271,7 +272,7 @@ def create_task(variant, big_object, task, stage, collection_path):
 		# with open(fileName, "r") as read_file:
 		#    sampleData = json.load(read_file)
 
-		response = requests.post(URI, json=source)
+		response = requests.post(URI, json=next_task_doc.get('source'))
 		print("Status code: ", response.status_code)
 		print("Printing Entire Post Request")
 		print(json.loads(response.content))
