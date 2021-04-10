@@ -51,9 +51,13 @@ const UserBadges = (props) => {
                 snap.forEach(doc => {
                     if (doc.data().file_url) {
                         tmp.push(
-                            <Grid container item justify="center" key={doc.id}>
-                                <Button variant="contained" color="primary" onClick={() => getPdfFromImage(doc.data().file_url, doc.id)}>Скачать PDF</Button>
-                                <img style={{ maxWidth: '100%' }} src={doc.data().file_url} alt={doc.data().file_url} />
+                            <Grid container item justify="center" style={{ paddingTop: 10 }}>
+                                <Grid container item justify="center">
+                                    <Button variant="contained" color="primary" onClick={() => getPdfFromImage(doc.data().file_url, doc.id)}>Скачать PDF</Button>
+                                </Grid>
+                                <Grid container item justify="center" key={doc.id}>
+                                    <img style={{ maxWidth: '100%' }} src={doc.data().file_url} alt={doc.data().file_url} />
+                                </Grid>
                             </Grid>
                         )
                     }
