@@ -61,53 +61,58 @@ const App = () => {
     <Router>
       <Grid container justify="center">
         <Appbar>
-            {tgId !== "" ? <Switch>
-              <Route exact path="/profile">
-                <Profile />
-              </Route>
-              <Route exact path="/request">
-                <Cases />
-              </Route>
-              <Route exact path="/tasks">
-                <Tasks />
-              </Route>
-              <Route path="/tasks/:id">
-                <Task />
-              </Route>
-              <Route path="/t/:id">
-                <JSchemaTask />
-              </Route>
-              <Route exact path="/tasksObserver">
-                <TasksObserver />
-              </Route>
-              <Route exact path="/notifications">
-                <Notifications />
-              </Route>
-              <Route exact path="/signin">
-                <Signin />
-              </Route>
-              <Route exact path="/faq">
-                <FAQ />
-              </Route>
+          {tgId !== "" ? <Switch>
+            <Route exact path="/profile">
+              <Profile />
+            </Route>
+            <Route exact path="/request">
+              <Cases />
+            </Route>
+            <Route exact path="/tasks">
+              <Tasks />
+            </Route>
+            <Route path="/tasks/:id">
+              <Task />
+            </Route>
+            <Route path="/t/:id">
+              <JSchemaTask />
+            </Route>
+            <Route exact path="/tasksObserver">
+              <TasksObserver />
+            </Route>
+            <Route exact path="/notifications">
+              <Notifications />
+            </Route>
+            <Route exact path="/signin">
+              <Signin />
+            </Route>
+            <Route exact path="/faq">
+              <FAQ />
+            </Route>
+            <Route exact path="/badges/:prefix/:id">
+              <Badge />
+            </Route>
+            <Route exact path="/mybadges">
+              <UserBadges />
+            </Route>
+            <Route path="/p/:id">
+              {currentUser ?
+                <Page />
+                :
+                <Signin />}
+            </Route>
+            <PrivateRoute path="/" component={Home} />
+          </Switch>
+            :
+            <Switch>
               <Route exact path="/badges/:prefix/:id">
                 <Badge />
               </Route>
-              <Route exact path="/mybadges">
-                <UserBadges />
-              </Route>
-              <Route path="/p/:id">
-                {currentUser ?
-                  <Page />
-                  :
-                  <Signin />}
-              </Route>
-              <PrivateRoute path="/" component={Home} />
-            </Switch>
-              :
               <Route>
                 <Home />
               </Route>
-            }
+            </Switch>
+          }
         </Appbar>
       </Grid>
     </Router>
