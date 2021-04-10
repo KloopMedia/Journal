@@ -37,8 +37,8 @@ def upload_to_algolia_index(index, data):
         'autoGenerateObjectIDIfNotExist': True
     })
     # There should be only one raw response
-    records_uploaded = response.raw_responses[0].get("objectIDs")
-    print(f'{records_uploaded} records added')
+    records_uploaded = response.raw_responses[0].get("objectIDs")[0]
+    print(f'{records_uploaded} uploaded to algolia')
     return len(records_uploaded)
 
 

@@ -6,6 +6,7 @@ from google.cloud import firestore
 from json_logic import jsonLogic
 
 from algolia_index import add_to_algolia_index
+from upload_to_mongodb import upload_to_mongodb
 
 
 client = firestore.Client()
@@ -32,6 +33,8 @@ def completion(event, context):
         task_ref.update({'is_complete': True, 'completionTime': firestore.SERVER_TIMESTAMP})
         # add completed task to algolia index
         add_to_algolia_index(client, task_ref)
+        # upload to mongodb
+        upload_to_mongodb(client, task_ref.get())
 
 
         # NEXT TASK
