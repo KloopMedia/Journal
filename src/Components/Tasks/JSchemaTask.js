@@ -11,6 +11,7 @@ import { complexStateFirebaseUpdate, simpleStateFirebaseUpdate } from "../../uti
 
 import CustomFileUpload from "../form/CustomFileUpload";
 import CustomUIKField from "../form/CustomUIKField"
+import NewCustomUIKField from "../form/NewСustomUIKField"
 import { Button, DialogContentText, DialogTitle, Grid, Typography } from '@material-ui/core';
 
 import JSchemaForm from "@rjsf/fluent-ui";
@@ -616,7 +617,8 @@ const JSchemaTask = () => {
 						uiSchema={mergedForm.ui_schema}
 						formData={formResponses}
 						fields={{
-							CustomUIKField: a => CustomUIKField({ ...a, ...{ metadata: taskMetadata }, ...{ prevResp: prevFormResponses }, ...{ taskID: id } }),
+							CustomUIKField: a => CustomUIKField({ ...a, ...{ metadata: taskMetadata }, ...{ initResp: initialResponses }, ...{ prevResp: prevFormResponses }, ...{ taskID: id } }),
+							NewCustomUIKField: a => NewCustomUIKField({ ...a, ...{ metadata: taskMetadata }, ...{ initResp: initialResponses }, ...{ prevResp: prevFormResponses }, ...{ taskID: id } }),
 							customFileUpload: a => CustomFileUpload({ ...a, ...{ taskID: id }, ...{ initResp: initialResponses }, ...{ "currentUserUid": currentUser.uid }, ...{ metadata: taskMetadata }, ...{ stage: caseStages[taskMetadata.case_stage_id] } })
 						}}
 						disabled={formStatus === "loading" || formStatus === "sent" || formStatus === "released"}

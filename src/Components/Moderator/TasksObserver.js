@@ -2,7 +2,7 @@ import React, { useEffect, useState, useContext } from 'react';
 import firebase from '../../util/Firebase'
 import { AuthContext } from "../../util/Auth";
 
-import { Button, Grid } from '@material-ui/core';
+import { Button, FormControl, Grid, InputLabel, MenuItem, Select } from '@material-ui/core';
 
 import PaginatedTasks from '../Moderator/PaginatedTasks'
 
@@ -23,6 +23,8 @@ const TasksObserver = (props) => {
     const [selectedCase, setSelectedCase] = useState(null)
     const [selectedStage, setSelectedStage] = React.useState(null);
     const [taskId, setTaskId] = useState("")
+    const [complete, setComplete] = useState(true)
+    const [userId, setUserId] = useState("")
 
     const casesPath = firebase.firestore().collection('schema').doc('structure').collection('cases')
 
@@ -83,7 +85,7 @@ const TasksObserver = (props) => {
 
     const getTasks = async () => {
         let tasksList = []
-        let tasksRef = firebase.firestore().collection('tasks').where("is_complete", "==", true)
+        let tasksRef = firebase.firestore().collection('tasks').where("is_complete", "==", complete)
 
         // console.log('USER ID')
         console.log(user)
@@ -106,15 +108,21 @@ const TasksObserver = (props) => {
 
         }
 
-        if (taskId !== "") {
-            firebase.firestore().collection('tasks').doc(taskId).get().then(doc => setTasks([{id:doc.id, ...doc.data()}]))
+        if (userId !== "") {
+            tasksRef = tasksRef.where("assigned_users", "array-contains", userId)
+            console.log(userId)
         }
+
+        if (taskId !== "") {
+            firebase.firestore().collection('tasks').doc(taskId).get().then(doc => setTasks([{ id: doc.id, ...doc.data() }]))
+        }
+
         else {
             await tasksRef.get().then(docs => {
                 docs.forEach(doc => {
                     tasksList.push({ id: doc.id, ...doc.data() })
                 })
-    
+
                 setTasks(tasksList)
             })
         }
@@ -170,6 +178,21 @@ const TasksObserver = (props) => {
                     renderInput={(params) => <TextField {...params} fullWidth label="Выберите фильтр по users" variant="outlined" />}
                 />
             </Grid>
+            <Grid container justify="center" style={{ padding: 15 }}>
+                <FormControl style={{ width: 350, margin: 4 }}>
+                    <InputLabel id="demo-simple-select-label">Is complete</InputLabel>
+                    <Select
+                        labelId="demo-simple-select-label"
+                        id="demo-simple-select"
+                        value={complete}
+                        variant="outlined"
+                        onChange={(event) => setComplete(event.target.value)}
+                    >
+                        <MenuItem value={true}>True</MenuItem>
+                        <MenuItem value={false}>False</MenuItem>
+                    </Select>
+                </FormControl>
+            </Grid>
 
             <Grid container justify="center" style={{ padding: 15 }}>
                 <TextField
@@ -178,6 +201,16 @@ const TasksObserver = (props) => {
                     variant="outlined"
                     label="Введите id таска"
                     onChange={(event, newValue) => setTaskId(event.target.value)}
+                />
+            </Grid>
+
+            <Grid container justify="center" style={{ padding: 15 }}>
+                <TextField
+                    style={{ width: 350 }}
+                    value={userId}
+                    variant="outlined"
+                    label="Введите id юзера"
+                    onChange={(event, newValue) => setUserId(event.target.value)}
                 />
             </Grid>
 
