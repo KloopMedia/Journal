@@ -41,58 +41,25 @@ const NewCustomUIKField = (props) => {
                     || props.prevResp.place.subregion !== locality.subregion
                     || props.prevResp.place.locality !== locality.locality
                     || props.prevResp.place.district !== locality.district) {
-                        // if (formContext.role === 'Стационарный наблюдатель / стационардук байкоочу') {
-                        //     taskRef.set({ contents: "" })
-                        // }
-                        // else {
-                        //     taskRef.set({ contents: "mobile" })
-                        // }
-                        taskRef.set({ contents: "" })
-                    // uikDataRef.set({})
-                    // uiksRef.where('observers', 'array-contains', currentUser.uid).get().then(async snap => {
-                    //     snap.forEach(async doc => {
-                    //         await doc.ref.update({ observers: firebase.firestore.FieldValue.arrayRemove(currentUser.uid) })
-                    //     })
-                    // })
+                    taskRef.set({ contents: "" })
                 }
             }
-            // if (formContext.role === 'Стационарный наблюдатель / стационардук байкоочу') {
-            //     setReady(true)
-            //     if (formContext.uik === "mobile" && !props.metadata.is_complete) {
-            //         taskRef.set({ contents: "" })
-            //         uikDataRef.set({})
-            //         uiksRef.where('observers', 'array-contains', currentUser.uid).get().then(async snap => {
-            //             snap.forEach(async doc => {
-            //                 await doc.ref.update({ observers: firebase.firestore.FieldValue.arrayRemove(currentUser.uid) })
-            //             })
-            //         })
-            //     }
-            // }
-            // else {
-            //     if (formContext.uik !== "mobile" && !props.metadata.is_complete) {
-            //         setReady(false)
-            //         taskRef.set({ contents: "mobile" })
-            //         uikDataRef.set({})
-            //         uiksRef.where('observers', 'array-contains', currentUser.uid).get().then(async snap => {
-            //             snap.forEach(async doc => {
-            //                 await doc.ref.update({ observers: firebase.firestore.FieldValue.arrayRemove(currentUser.uid) })
-            //             })
-            //         })
-            //     }
-            // }
 
-            if (locality.region) {
-                uikRef = uikRef.where('region', '==', locality.region)
+            if (locality) {
+                if (locality.region) {
+                    uikRef = uikRef.where('region', '==', locality.region)
+                }
+                if (locality.subregion) {
+                    uikRef = uikRef.where('subregion', '==', locality.subregion)
+                }
+                if (locality.locality) {
+                    uikRef = uikRef.where('locality', '==', locality.locality)
+                }
+                if (locality.district) {
+                    uikRef = uikRef.where('district', '==', locality.district)
+                }
             }
-            if (locality.subregion) {
-                uikRef = uikRef.where('subregion', '==', locality.subregion)
-            }
-            if (locality.locality) {
-                uikRef = uikRef.where('locality', '==', locality.locality)
-            }
-            if (locality.district) {
-                uikRef = uikRef.where('district', '==', locality.district)
-            }
+
             unsubscribe = uikRef.onSnapshot(snap => {
                 let allUiks = {}
                 snap.forEach(doc => {
@@ -173,12 +140,12 @@ const NewCustomUIKField = (props) => {
     }
 
     let data = {}
-	if (props.formData) {
-		data = props.formData
-	}
-	else if (props.initResp && props.name && props.initResp[props.name] && props.initResp[props.name].contents) {
-		data = props.initResp[props.name].contents
-	}
+    if (props.formData) {
+        data = props.formData
+    }
+    else if (props.initResp && props.name && props.initResp[props.name] && props.initResp[props.name].contents) {
+        data = props.initResp[props.name].contents
+    }
 
 
     return (
