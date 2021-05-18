@@ -265,9 +265,9 @@ const JSchemaTask = () => {
 			let changedValues = {}
 			if (!isEqual(e.formData[k], formResponses[k])) {
 				changedValues = e.formData[k]
-				// console.log(changedValues)
+				console.log(changedValues)
 				setFocusedField(k)
-				// setFormResponses(prevState => ({ ...prevState, [k]: changedValues }))
+				setFormResponses(prevState => ({ ...prevState, [k]: changedValues }))
 				if (formResponses.hasOwnProperty(k) && typeof changedValues === 'object' && changedValues !== null && Object.keys(changedValues).length > 0) {
 					// console.log('handleChange if')
 					Object.keys(changedValues).forEach(key => {
