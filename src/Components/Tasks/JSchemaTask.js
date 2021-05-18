@@ -61,15 +61,22 @@ const JSchemaTask = () => {
 			setGRef(ref)
 
 			ref.onSnapshot(doc => {
-				setTaskMetadata(doc.data())
-				if (doc.data().is_complete) {
-					setFormStatus("sent")
-				}
+				// console.log(doc.data())
+				if (doc && doc.exists) {
+					setTaskMetadata(doc.data())
+					// console.log(doc.data())
+					if (doc.data().is_complete) {
+						setFormStatus("sent")
+					}
 
-				if (!doc.data().assigned_users.includes(currentUser.uid)) {
-					setFormStatus("released")
+					if (!doc.data().assigned_users.includes(currentUser.uid)) {
+						setFormStatus("released")
+					}
+					console.log("Task Metadata: ", doc.data());
 				}
-				console.log("Task Metadata: ", doc.data());
+				else {
+					console.log("DOC DOESN't EXIST")
+				}
 			});
 
 			ref.collection("responses")
@@ -82,14 +89,10 @@ const JSchemaTask = () => {
 							const contents = change.doc.data().contents
 							changes[change.doc.id] = contents
 							modifyResponses = true
-							//}
 						}
 						if (change.type === "removed") {
-							//if (formResponses.hasOwnProperty(change.doc.id)) {
-							console.log("Response Removed: ", change.doc.data());
 							deletes.push(change.doc.id)
 							modifyResponses = true
-							//}
 						}
 					});
 					if (modifyResponses) {
@@ -126,7 +129,7 @@ const JSchemaTask = () => {
 			setInitialResponses(initState)
 		})
 		return () => unsubscribe()
-	}, [])
+	}, [id])
 
 	useEffect(() => {
 		if (Object.entries(taskMetadata).length > 0 && taskMetadata.case_type) {
@@ -257,13 +260,16 @@ const JSchemaTask = () => {
 	}, [backgroundTasks])
 
 	const handleFormChange = e => {
+		// console.log(e.formData, formResponses)
 		Object.keys(e.formData).forEach(k => {
 			let changedValues = {}
 			if (!isEqual(e.formData[k], formResponses[k])) {
 				changedValues = e.formData[k]
+				// console.log(changedValues)
 				setFocusedField(k)
-				setFormResponses(prevState => ({ ...prevState, [k]: changedValues }))
-				if (formResponses.hasOwnProperty(k) && typeof changedValues === 'object' && changedValues !== null) {
+				// setFormResponses(prevState => ({ ...prevState, [k]: changedValues }))
+				if (formResponses.hasOwnProperty(k) && typeof changedValues === 'object' && changedValues !== null && Object.keys(changedValues).length > 0) {
+					// console.log('handleChange if')
 					Object.keys(changedValues).forEach(key => {
 						if (!isEqual(e.formData[k][key], formResponses[k][key])) {
 							if (mergedForm.ui_schema.hasOwnProperty(k) && mergedForm.ui_schema[k].hasOwnProperty(key) && mergedForm.ui_schema[k][key].hasOwnProperty("ui:field") && mergedForm.ui_schema[k][key]["ui:field"] === "customFileUpload") {
@@ -281,10 +287,14 @@ const JSchemaTask = () => {
 					})
 				}
 				else {
+					// console.log('handleChange else')
 					if (mergedForm.ui_schema.hasOwnProperty(k) && mergedForm.ui_schema[k].hasOwnProperty("ui:field") && mergedForm.ui_schema[k]["ui:field"] === "customFileUpload") {
 						// pass
 					}
 					else if (mergedForm.ui_schema.hasOwnProperty(k) && mergedForm.ui_schema[k].hasOwnProperty("sendOnBlur") && mergedForm.ui_schema[k].sendOnBlur) {
+						// pass
+					}
+					else if (typeof changedValues === 'object' && changedValues !== null && Object.keys(changedValues).length === 0) {
 						// pass
 					}
 					else {

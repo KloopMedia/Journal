@@ -198,7 +198,7 @@ const ModeratedTask = (props) => {
             {/* {forms} */}
 			<Typography>{"Task ID: " + props.task.id}</Typography>
 			<Typography>{"Case ID: " + props.task.case_id}</Typography>
-			<Typography>{"Created at:" + props.task.created_date.toDate()}</Typography>
+			{/* <Typography>{"Created at:" + props.task.created_date.toDate()}</Typography> */}
 			{props.task.is_compete && <Typography>{"Completion time:" + props.task.completion_time.toDate()}</Typography>}
             <NewForm id={props.task.id} />
 
