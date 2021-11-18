@@ -74,10 +74,10 @@ const UserBadges = (props) => {
         badges.length > 0 ?
             <Grid container direction="column" justify="center" spacing={1}>
                 <Grid item>
-                    <Typography align="center" variant="h6">Удостоверение действительно до 16.04.2021г. Мы подтверждаем, что этот человек является внештатным журналистом «Клооп Медиа».</Typography>
+                    <Typography align="center" variant="h6">Удостоверение действительно до 01.12.2021г. Мы подтверждаем, что этот человек является внештатным журналистом «Клооп Медиа».</Typography>
                 </Grid>
                 <Grid item>
-                    <Typography align="center" variant="h6">Күбөлүк 16.04.21 чейин жарактуу. Биз бул адам «Клооп Медианын» штаттан тышкаркы журналисти экенин тастыктайбыз.</Typography>
+                    <Typography align="center" variant="h6">Күбөлүк 01.12.2021 чейин жарактуу. Биз бул адам «Клооп Медианын» штаттан тышкаркы журналисти экенин тастыктайбыз.</Typography>
                 </Grid>
                 {badges}
             </Grid>
